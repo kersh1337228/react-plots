@@ -1,0 +1,7 @@
+node_modules
+.idea
+public
+src/App.tsx
+src/index.tsx
+src/components/meta
+package-lock.json

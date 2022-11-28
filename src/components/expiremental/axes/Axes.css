@@ -1,0 +1,50 @@
+.axesGrid {
+    display: grid;
+    grid-auto-rows: minmax(min-content, max-content);
+    grid-auto-columns: minmax(min-content, max-content);
+    z-index: 0;
+}
+
+.axesGrid .axes.plot {
+    grid-row-start: 1;
+    grid-row-end: 2;
+    grid-column-start: 2;
+    grid-column-end: 3;
+}
+
+.axesGrid .axes.x {
+    grid-row-start: 2;
+    grid-row-end: 3;
+    grid-column-start: 2;
+    grid-column-end: 3;
+}
+
+.axesGrid .axes.y {
+    grid-row-start: 1;
+    grid-row-end: 2;
+    grid-column-start: 1;
+    grid-column-end: 2;
+}
+
+.axesGrid .axes.scale {
+    z-index: 1;
+}
+
+.axesGrid .axes.tooltip {
+    z-index: 2;
+    cursor: crosshair;
+}
+
+.axesGrid .axes.x.tooltip {
+    cursor: e-resize;
+}
+
+.axesGrid .axes.y.tooltip {
+    cursor: n-resize;
+}
+
+.axesGrid .axes.tooltips {
+    position: absolute;
+    pointer-events: none;
+    user-select: none;
+}
