@@ -1,6 +1,6 @@
 import {CanvasObject, GridObject, TooltipCanvasObject} from "../../types"
 import React from "react"
-import Axes from "../Axes"
+import {AxesReal} from "../Axes"
 
 export default abstract class Axis {
     // Fields
@@ -18,7 +18,7 @@ export default abstract class Axis {
     }
     // Methods
     public constructor(
-        protected readonly axes: Axes,
+        protected readonly axes: AxesReal,
         public readonly label?: string,
     ) {
         this.coordinates = {
@@ -32,7 +32,7 @@ export default abstract class Axis {
                 width: 1
             },
             major: {
-                amount: 10,
+                amount: 5,
                 color: '#d9d9d9',
                 width: 1
             }
@@ -60,8 +60,8 @@ export default abstract class Axis {
     public abstract set_window(): void
     public abstract show_grid(): Promise<void>
     public abstract show_scale(): Promise<void>
-    public abstract show_tooltip(i: number, value: number): Promise<void>
-    public hide_tooltips(): void {
+    public abstract show_tooltip(coordinate: number): Promise<void>
+    public hide_tooltip(): void {
         if (this.canvases.tooltip.ref.current) {
             const context = this.canvases.tooltip.ref.current.getContext('2d')
             context?.clearRect(

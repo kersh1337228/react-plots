@@ -42,10 +42,9 @@ export class yAxis extends Axis {
                 0, 0,
                 this.axes.width, this.axes.height
             )
-            const value_per_pixel = this.axes.spread / this.axes.padded_height
             const step = this.axes.height / (
                 this.grid.major.amount + 1
-            ) * value_per_pixel
+            ) / this.coordinates.scale
             context.save()
             context.font = '10px Arial'
             for (let i = 1; i <= this.grid.major.amount; ++i) {
@@ -67,11 +66,14 @@ export class yAxis extends Axis {
                 )
                 context.stroke()
                 context.closePath()
+                const min = this.coordinates.translate * (
+                    this.axes.spread / this.axes.padded_height - 1 / this.coordinates.scale
+                ) + this.axes.min
                 // Drawing value
-                const value = i * step + this.axes.min - (
+                const value = i * step + min - (
                     this.axes.props.padding ?
                         this.axes.props.padding.bottom : 0
-                ) * this.axes.height * value_per_pixel
+                ) * this.axes.height / this.coordinates.scale
                 let text: number | string = Math.round(
                     (value + Number.EPSILON) * 100
                 ) / 100
@@ -91,7 +93,7 @@ export class yAxis extends Axis {
             context.restore()
         }
     }
-    public async show_tooltip(i: number, y: number): Promise<void> {
+    public async show_tooltip(y: number): Promise<void> {
         const context = this.canvases.tooltip.ref.current?.getContext('2d')
         let grid_step = this.axes.height / this.grid.major.amount
         if (context && this.canvases.tooltip.ref.current) {
@@ -109,14 +111,15 @@ export class yAxis extends Axis {
             context.font = '10px Arial'
             context.fillStyle = '#ffffff'
             // Value tooltip
+            const min = this.coordinates.translate * (
+                this.axes.spread / this.axes.padded_height - 1 / this.coordinates.scale
+            ) + this.axes.min
             let value: number | string = Math.round(
-                (  // dv/dh * (y - hmin) + vmin
-                    this.axes.spread / this.axes.padded_height * (
-                        this.axes.height * (1 - (
-                            this.axes.props.padding ?
-                                this.axes.props.padding.bottom : 0
-                        )) - y
-                    ) + this.axes.min + Number.EPSILON
+                (( // dv/dh * (y - hmin) + vmin
+                    this.axes.height * (1 - (
+                        this.axes.props.padding ?
+                            this.axes.props.padding.bottom : 0
+                    )) - y) / this.coordinates.scale + min + Number.EPSILON
                 ) * 100
             ) / 100
             if (value >= 10 ** 6) {

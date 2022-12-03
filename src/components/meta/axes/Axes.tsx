@@ -4,17 +4,25 @@ import {Callback, CanvasObject, DataRange, GridPosition, Padding2D, Size2D, Tool
 import {xAxis} from "./axis/xAxis"
 import {yAxis} from "./axis/yAxis"
 import './Axes.css'
+import {AxesGroupReal} from "./AxesGroup"
 
-interface AxesProps {
+interface AxesPlaceholderProps {
     drawings: Drawing[]
     position: GridPosition
-    data_range?: DataRange
-    size?: Size2D
     xAxis?: boolean
     yAxis?: boolean
     visible?: boolean
     padding?: Padding2D
     title?: string
+}
+
+export default function Axes(props: AxesPlaceholderProps): JSX.Element {return <></>}
+
+interface AxesProps extends AxesPlaceholderProps {
+    data_range: DataRange | null
+    size: Size2D
+    group?: AxesGroupReal
+    tooltips?: {x: number, y: number}
 }
 
 interface AxesState {
@@ -38,7 +46,7 @@ interface AxesState {
     tooltips: React.ReactNode
 }
 
-export default class Axes extends React.Component<
+export class AxesReal extends React.Component<
     AxesProps, AxesState
 > {
     public constructor(props: AxesProps) {
@@ -49,8 +57,7 @@ export default class Axes extends React.Component<
                 return drawing
             }),
             data_range: {
-                start: 0,
-                end: 1
+                start: 0, end: 1
             },
             axes: {
                 x: new xAxis(this),
@@ -80,6 +87,8 @@ export default class Axes extends React.Component<
             },
             tooltips: null,
         }
+        this.recalculate_metadata = this.recalculate_metadata.bind(this)
+        this.plot = this.plot.bind(this)
         this.mouseMoveHandler = this.mouseMoveHandler.bind(this)
         this.mouseOutHandler = this.mouseOutHandler.bind(this)
         this.mouseDownHandler = this.mouseDownHandler.bind(this)
@@ -180,7 +189,11 @@ export default class Axes extends React.Component<
 
         state.axes.x.dates = new Array(this.data_amount).fill('2002-10-10')
 
-        this.setState({...state, data_range}, callback)
+        this.setState({...state, data_range}, () => {
+            if (this.props.group)
+                this.props.group.recalculate_metadata(data_range, this.data_amount)
+            callback()
+        })
     }
     public async plot(): Promise<void> {
         const context = this.state.canvases.plot.ref.current?.getContext('2d')
@@ -196,10 +209,11 @@ export default class Axes extends React.Component<
         await this.state.axes.x.show_scale()
         await this.state.axes.y.show_scale()
     }
-    public show_tooltips(y: number, i: number, callback?: Callback): void {
+    public show_tooltips(x: number, y: number, callback?: Callback): void {
+        const i = Math.floor(x / this.width * this.data_amount)
         const state = this.state
-        state.axes.x.show_tooltip(i, y)
-        state.axes.y.show_tooltip(i, y)
+        state.axes.x.show_tooltip(i)
+        state.axes.y.show_tooltip(y)
         const context = state.canvases.tooltip.ref.current?.getContext('2d')
         if (context) {
             context.clearRect(
@@ -235,8 +249,8 @@ export default class Axes extends React.Component<
     public hide_tooltips(callback?: Callback): void {
         const state = this.state
         state.canvases.tooltip.mouse_events.drag = false
-        state.axes.x.hide_tooltips()
-        state.axes.y.hide_tooltips()
+        state.axes.x.hide_tooltip()
+        state.axes.y.hide_tooltip()
         const context = state.canvases.tooltip.ref.current?.getContext('2d')
         context?.clearRect(0, 0, this.width, this.height)
         this.setState({
@@ -244,7 +258,7 @@ export default class Axes extends React.Component<
             tooltips: null
         }, callback)
     }
-    //// Mouse events
+    // Event handlers
     public async mouseMoveHandler(event: React.MouseEvent) {
         const window = (event.target as HTMLCanvasElement).getBoundingClientRect()
         const [x, y] = [
@@ -280,8 +294,7 @@ export default class Axes extends React.Component<
                     }
                 }
             }
-            const i = Math.floor(x / this.width * this.data_amount)
-            this.show_tooltips(y, i, async () => {
+            this.show_tooltips(x, y, async () => {
                 if (
                     data_range.start !== this.state.data_range.start &&
                     data_range.end !== this.state.data_range.end
@@ -292,9 +305,9 @@ export default class Axes extends React.Component<
         }
     }
     public mouseOutHandler() {
-        this.setState({tooltips: null}, () => {
-            const state = this.state
-            state.canvases.tooltip.mouse_events.drag = false
+        const state = this.state
+        state.canvases.tooltip.mouse_events.drag = false
+        this.setState({...state, tooltips: null}, () => {
             this.hide_tooltips()
         })
     }
@@ -318,7 +331,25 @@ export default class Axes extends React.Component<
         state.canvases.tooltip.mouse_events.drag = false
         this.setState(state)
     }
-    //// Life cycle
+    // Life cycle
+    public static getDerivedStateFromProps(nextProps: Readonly<AxesProps>, prevState: Readonly<AxesState>) {
+        if (nextProps.data_range)
+            return {...prevState, data_range: nextProps.data_range}
+        return prevState
+    }
+    public componentDidUpdate(prevProps: Readonly<AxesProps>, prevState: Readonly<AxesState>, snapshot?: any) {
+        if (
+            prevProps.data_range?.start !== this.props.data_range?.start ||
+            prevProps.data_range?.end !== this.props.data_range?.end
+        )
+            this.recalculate_metadata(this.state.data_range)
+        if (prevProps.tooltips !== this.props.tooltips)
+            if (this.props.tooltips) {
+                this.show_tooltips(this.props.tooltips.x, this.props.tooltips.y)
+            } else if (!this.props.tooltips && prevProps.tooltips) {
+                this.hide_tooltips()
+            }
+    }
     public componentDidMount(): void {
         this.set_window(async () => {
             const data_amount = Math.max.apply(
@@ -330,12 +361,12 @@ export default class Axes extends React.Component<
             await this.recalculate_metadata(
                 this.props.data_range ?
                     this.props.data_range : {
-                        start: 1 - (
-                            data_amount <= 100 ?
-                                data_amount : 100
-                        ) / data_amount,
-                        end: 1
-                    }
+                    start: 1 - (
+                        data_amount <= 100 ?
+                            data_amount : 100
+                    ) / data_amount,
+                    end: 1
+                }
             )
         })
     }

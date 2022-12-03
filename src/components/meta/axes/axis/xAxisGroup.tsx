@@ -1,6 +1,6 @@
 import React from "react"
 import {CanvasObject, DateString, GridObject, TooltipCanvasObject} from "../../types"
-import AxesGroup from "../AxesGroup"
+import {AxesGroupReal} from "../AxesGroup"
 
 export class xAxisGroup {
     // Fields
@@ -15,7 +15,7 @@ export class xAxisGroup {
     }
     // Methods
     public constructor(
-        protected readonly axesGroup: AxesGroup,
+        protected readonly axesGroup: AxesGroupReal,
         public dates: DateString[] = [],
         public readonly label?: string
     ) {
@@ -47,6 +47,7 @@ export class xAxisGroup {
                 }
             }
         }
+        this.show_scale = this.show_scale.bind(this)
         this.mouseMoveHandler = this.mouseMoveHandler.bind(this)
         this.mouseOutHandler = this.mouseOutHandler.bind(this)
         this.mouseDownHandler = this.mouseDownHandler.bind(this)
@@ -101,7 +102,7 @@ export class xAxisGroup {
             context.restore()
         }
     }
-    public async show_tooltip(i: number, x: number): Promise<void> {
+    public async show_tooltip(i: number): Promise<void> {
         const context = this.canvases.tooltip.ref.current?.getContext('2d')
         if (context && this.canvases.tooltip.ref.current) {
             context.clearRect(
@@ -126,6 +127,17 @@ export class xAxisGroup {
             context.restore()
         }
     }
+    public hide_tooltip(): void {
+        if (this.canvases.tooltip.ref.current) {
+            const context = this.canvases.tooltip.ref.current.getContext('2d')
+            context?.clearRect(
+                0, 0,
+                this.canvases.tooltip.ref.current.width,
+                this.canvases.tooltip.ref.current.height
+            )
+        }
+    }
+    // Event handlers
     public async mouseMoveHandler(event: React.MouseEvent): Promise<void> {
         if (this.canvases.tooltip.mouse_events.drag) {
             const window = (event.target as HTMLCanvasElement).getBoundingClientRect()
@@ -144,14 +156,14 @@ export class xAxisGroup {
                     data_range.start = (data_range.end - (data_range.start + x_offset)) * this.axesGroup.max_data_amount < 5 ?
                         data_range.start : data_range.start + x_offset
                 }
-                if (data_range.start !== this.axesGroup.state.data_range.start) {
-                    await this.axesGroup.recalculate_metadata(data_range, () => {
+                if (data_range.start !== this.axesGroup.state.data_range?.start) {
+                    await this.axesGroup.setState({data_range}, () => {
                         let state = this.axesGroup.state
                         state.xAxis.canvases.tooltip.mouse_events.position = {
                             x: event.clientX - window.left,
                             y: event.clientY - window.top,
                         }
-                        this.axesGroup.setState(state, this.axesGroup.plot)
+                        this.axesGroup.setState(state)
                     })
                 }
             }
@@ -189,16 +201,20 @@ export class xAxisGroup {
                     ref={this.canvases.scale.ref}
                     className={'axes x scale'}
                     style={{
-                        width: this.axesGroup.props.size?.width,
-                        height: 50
+                        width: this.axesGroup.props.size.width,
+                        height: 50,
+                        gridRowStart: this.axesGroup.state.children.length + 1,
+                        gridRowEnd: this.axesGroup.state.children.length + 2
                     }}
                 ></canvas>
                 <canvas
                     ref={this.canvases.tooltip.ref}
                     className={'axes x tooltip'}
                     style={{
-                        width: this.axesGroup.props.size?.width,
-                        height: 50
+                        width: this.axesGroup.props.size.width,
+                        height: 50,
+                        gridRowStart: this.axesGroup.state.children.length + 1,
+                        gridRowEnd: this.axesGroup.state.children.length + 2
                     }}
                     onMouseMove={this.mouseMoveHandler}
                     onMouseOut={this.mouseOutHandler}

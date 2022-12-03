@@ -1,6 +1,6 @@
 import React from 'react'
 import {DataRange, PlotData} from "../types"
-import Axes from "../axes/Axes"
+import {AxesReal} from "../axes/Axes"
 
 export default abstract class Drawing {
     // Fields
@@ -15,7 +15,7 @@ export default abstract class Drawing {
         [key: string]: any
     }
     public visible: boolean
-    public axes?: Axes
+    public axes?: AxesReal
     // Methods
     public constructor(
         public readonly name: string,

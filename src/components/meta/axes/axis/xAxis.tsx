@@ -1,11 +1,11 @@
-import Axes from "../Axes"
+import {AxesReal} from "../Axes"
 import Axis from "./Axis"
 import {DateString} from "../../types"
 import React from "react"
 
 export class xAxis extends Axis {
     public constructor(
-        axes: Axes,
+        axes: AxesReal,
         public dates: DateString[] = [],
         label?: string
     ) {
@@ -75,7 +75,7 @@ export class xAxis extends Axis {
             context.restore()
         }
     }
-    public async show_tooltip(i: number, x: number): Promise<void> {
+    public async show_tooltip(i: number): Promise<void> {
         const context = this.canvases.tooltip.ref.current?.getContext('2d')
         if (context && this.canvases.tooltip.ref.current) {
             context.clearRect(

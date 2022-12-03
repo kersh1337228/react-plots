@@ -94,18 +94,21 @@ export default class Line extends Drawing {
     public show_tooltip(i: number): React.ReactNode {
         const context = this.axes?.state.canvases.tooltip.ref.current?.getContext('2d')
         if (context && this.axes) {
+            context.save()
             context.beginPath()
             context.arc(
                 (2 * i + 1.1) * this.axes.state.axes.x.coordinates.scale / 2,
                 this.axes.state.axes.y.coordinates.translate -
                 this.meta_data.observed_data[i] *
                 this.axes.state.axes.y.coordinates.scale,
-                5,
+                3,
                 0,
                 2 * Math.PI
             )
-            context.stroke()
+            context.fillStyle = this.style.color
+            context.fill()
             context.closePath()
+            context.restore()
         }
         return (
             <span key={this.name}>

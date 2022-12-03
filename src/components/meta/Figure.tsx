@@ -1,5 +1,12 @@
 import React from 'react'
 import './Figure.css'
+import {AxesReal} from "./axes/Axes"
+import {AxesGroupReal} from "./axes/AxesGroup"
+
+enum FigureChildren {
+    Axes = 'Axes',
+    AxesGroup = 'AxesGroup'
+}
 
 interface FigureProps {
     width: number
@@ -37,26 +44,30 @@ export default class Figure extends React.Component<
                 )
             ]
             this.state = {
-                children: children.map(child => {
-                    return React.cloneElement(
-                        child, {
-                            ...child.props,
-                            size: {
-                                width: (
-                                    child.props.position.column.end -
-                                    child.props.position.column.start
-                                ) * this.props.width / (maxCol - 1) - (
-                                    child.props.yAxis === false ? 0 : 50
-                                ),
-                                height: (
-                                    child.props.position.row.end -
-                                    child.props.position.row.start
-                                ) * this.props.height / (maxRow - 1) - (
-                                    child.props.xAxis === false ? 0 : 50
-                                ),
-                            }
-                        }
-                    )
+                children: children.map((child, index) => {
+                    const size = {
+                        width: (
+                            child.props.position.column.end -
+                            child.props.position.column.start
+                        ) * this.props.width / (maxCol - 1) - (
+                            child.props.yAxis === false ? 0 : 50
+                        ),
+                        height: (
+                            child.props.position.row.end -
+                            child.props.position.row.start
+                        ) * this.props.height / (maxRow - 1) - (
+                            child.props.xAxis === false ? 0 : 50
+                        ),
+                    }
+                    if (child.type.name === FigureChildren.Axes) {
+                        return React.createElement(AxesReal, {...child.props, size, key: index})
+                    } else if (child.type.name === FigureChildren.AxesGroup) {
+                        return React.createElement(AxesGroupReal, {...child.props, size, key: index})
+                    } else {
+                        throw Error(
+                            "Only <Axes> and <AxesGroup> can appear as <Figure> child."
+                        )
+                    }
                 })
             }
         }
