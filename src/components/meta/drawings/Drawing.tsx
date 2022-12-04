@@ -14,6 +14,7 @@ export default abstract class Drawing {
     protected style: {
         [key: string]: any
     }
+    protected settings: boolean
     public visible: boolean
     public axes?: AxesReal
     // Methods
@@ -30,6 +31,7 @@ export default abstract class Drawing {
         }
         this.style = {}
         this.visible = true
+        this.settings = false
     }
     //// Meta data
     public get min(): number {

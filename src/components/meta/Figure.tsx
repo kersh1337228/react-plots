@@ -1,7 +1,7 @@
 import React from 'react'
 import './Figure.css'
 import {AxesReal} from "./axes/Axes"
-import {AxesGroupReal} from "./axes/AxesGroup"
+import {AxesGroupReal} from "./axesGroup/AxesGroup"
 
 enum FigureChildren {
     Axes = 'Axes',

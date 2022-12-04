@@ -4,7 +4,8 @@ import {Callback, CanvasObject, DataRange, GridPosition, Padding2D, Size2D, Tool
 import {xAxis} from "./axis/xAxis"
 import {yAxis} from "./axis/yAxis"
 import './Axes.css'
-import {AxesGroupReal} from "./AxesGroup"
+import {AxesGroupReal} from "../axesGroup/AxesGroup"
+import AxesSettings from "./settings/AxesSettings"
 
 interface AxesPlaceholderProps {
     drawings: Drawing[]
@@ -87,33 +88,43 @@ export class AxesReal extends React.Component<
             },
             tooltips: null,
         }
+        // Methods binding
         this.recalculate_metadata = this.recalculate_metadata.bind(this)
         this.plot = this.plot.bind(this)
         this.mouseMoveHandler = this.mouseMoveHandler.bind(this)
         this.mouseOutHandler = this.mouseOutHandler.bind(this)
         this.mouseDownHandler = this.mouseDownHandler.bind(this)
         this.mouseUpHandler = this.mouseUpHandler.bind(this)
+        if (props.group) {
+            let state = props.group.state
+            state.axes.push(this)
+            props.group.setState(state)
+        }
     }
     //// Meta data
     public get min(): number {
-        return this.state.meta_data.value.min
+        return this.state.meta_data.value.min ?
+            this.state.meta_data.value.min : 0
     }
     public get max(): number {
-        return this.state.meta_data.value.max
+        return this.state.meta_data.value.max ?
+            this.state.meta_data.value.max : 0
     }
     public get spread(): number {
         return this.max - this.min
     }
     public get data_amount(): number {
-        return this.state.meta_data.data_amount
+        return this.state.meta_data.data_amount ?
+            this.state.meta_data.data_amount : 0
     }
     public get max_data_amount(): number {
-        return Math.max.apply(
+        const max =  Math.max.apply(
             null, Array.from(
-                this.state.drawings,
+                this.state.drawings.filter(drawing => drawing.visible),
                 drawing => drawing.data.length
             )
         )
+        return max ? max : 0
     }
     //// Properties
     public get width(): number {
@@ -160,35 +171,36 @@ export class AxesReal extends React.Component<
     ): Promise<void> {
         const state = this.state
         const drawings = state.drawings.filter(drawing => drawing.visible)
-        drawings.forEach(
-            async drawing =>
-                await drawing.recalculate_metadata(data_range)
-        )
-        state.meta_data.value.min = Math.min.apply(
-            null, drawings.map(drawing => drawing.min)
-        )
-        state.meta_data.value.max = Math.max.apply(
-            null, drawings.map(drawing => drawing.max)
-        )
-        state.meta_data.data_amount = Math.max.apply(
-            null, drawings.map(drawing => drawing.data_amount)
-        )
-        // Rescaling
-        state.axes.y.coordinates.scale = this.padded_height / this.spread
-        state.axes.x.coordinates.scale = this.padded_width / this.data_amount
-        // Moving coordinates system
-        state.axes.y.coordinates.translate =
-            this.max * state.axes.y.coordinates.scale + (
+        if (drawings.length) {
+            drawings.forEach(
+                async drawing =>
+                    await drawing.recalculate_metadata(data_range)
+            )
+            state.meta_data.value.min = Math.min.apply(
+                null, drawings.map(drawing => drawing.min)
+            )
+            state.meta_data.value.max = Math.max.apply(
+                null, drawings.map(drawing => drawing.max)
+            )
+            state.meta_data.data_amount = Math.max.apply(
+                null, drawings.map(drawing => drawing.data_amount)
+            )
+            // Rescaling
+            state.axes.y.coordinates.scale = this.padded_height / this.spread
+            state.axes.x.coordinates.scale = this.padded_width / this.data_amount
+            // Moving coordinates system
+            state.axes.y.coordinates.translate =
+                this.max * state.axes.y.coordinates.scale + (
+                    this.props.padding ?
+                        this.props.padding.top: 0
+                ) * this.height
+            state.axes.x.coordinates.translate = (
                 this.props.padding ?
-                    this.props.padding.top: 0
-            ) * this.height
-        state.axes.x.coordinates.translate = (
-            this.props.padding ?
-                this.props.padding.left : 0
-        ) * this.width
+                    this.props.padding.left : 0
+            ) * this.width
 
-        state.axes.x.dates = new Array(this.data_amount).fill('2002-10-10')
-
+            state.axes.x.dates = new Array(this.data_amount).fill('2002-10-10')
+        }
         this.setState({...state, data_range}, () => {
             if (this.props.group)
                 this.props.group.recalculate_metadata(data_range, this.data_amount)
@@ -203,7 +215,9 @@ export class AxesReal extends React.Component<
         )
         this.state.axes.x.show_grid()
         this.state.axes.y.show_grid()
-        this.props.drawings.forEach(
+        this.state.drawings.filter(
+            drawing => drawing.visible
+        ).forEach(
             async drawing => await drawing.plot()
         )
         await this.state.axes.x.show_scale()
@@ -241,7 +255,9 @@ export class AxesReal extends React.Component<
         }
         this.setState({
             ...state,
-            tooltips: this.props.drawings.map(
+            tooltips: this.state.drawings.filter(
+                drawing => drawing.visible
+            ).map(
                 drawing => drawing.show_tooltip(i)
             )
         }, callback)
@@ -271,7 +287,7 @@ export class AxesReal extends React.Component<
             if (this.state.canvases.tooltip.mouse_events.drag) {
                 const x_offset = (
                     x - this.state.canvases.tooltip.mouse_events.position.x
-                ) * this.data_amount / 100000000
+                ) * this.data_amount / 1000000
                 if (x_offset) {
                     if (x_offset < 0) {
                         data_range.end =
@@ -299,7 +315,11 @@ export class AxesReal extends React.Component<
                     data_range.start !== this.state.data_range.start &&
                     data_range.end !== this.state.data_range.end
                 ) {
-                    await this.recalculate_metadata(data_range)
+                    await this.recalculate_metadata(data_range, () => {
+                        let state = this.state
+                        state.canvases.tooltip.mouse_events.position = {x, y}
+                        this.setState(state, this.plot)
+                    })
                 }
             })
         }
@@ -332,12 +352,19 @@ export class AxesReal extends React.Component<
         this.setState(state)
     }
     // Life cycle
-    public static getDerivedStateFromProps(nextProps: Readonly<AxesProps>, prevState: Readonly<AxesState>) {
+    public static getDerivedStateFromProps(
+        nextProps: Readonly<AxesProps>,
+        prevState: Readonly<AxesState>
+    ) {
         if (nextProps.data_range)
             return {...prevState, data_range: nextProps.data_range}
         return prevState
     }
-    public componentDidUpdate(prevProps: Readonly<AxesProps>, prevState: Readonly<AxesState>, snapshot?: any) {
+    public componentDidUpdate(
+        prevProps: Readonly<AxesProps>,
+        prevState: Readonly<AxesState>,
+        snapshot?: any
+    ) {
         if (
             prevProps.data_range?.start !== this.props.data_range?.start ||
             prevProps.data_range?.end !== this.props.data_range?.end
@@ -414,6 +441,7 @@ export class AxesReal extends React.Component<
                 ></canvas>
                 {this.state.axes.x.render()}
                 {this.state.axes.y.render()}
+                {this.props.group ? null : <AxesSettings axes={this}/>}
             </div>
         )
     }

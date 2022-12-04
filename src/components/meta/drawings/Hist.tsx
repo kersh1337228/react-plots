@@ -66,7 +66,7 @@ export default class Hist extends Drawing {
                         defaultValue={this.style.color.pos}
                         onChange={async (event) => {
                             this.style.color.pos = event.target.value
-                            await this.plot()
+                            await this.axes?.plot()
                         }}
                     /></li>
                     <li>Negative color: <input
@@ -74,7 +74,7 @@ export default class Hist extends Drawing {
                         defaultValue={this.style.color.neg}
                         onChange={async (event) => {
                             this.style.color.neg = event.target.value
-                            await this.plot()
+                            await this.axes?.plot()
                         }}
                     /></li>
                 </ul>

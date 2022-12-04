@@ -1,17 +1,18 @@
 import Drawing from "./Drawing"
 import {PlotData} from "../types"
-import React from "react";
+import React from "react"
+import './Drawing.css'
 
-export interface LineStyle {
+export interface CurveStyle {
     color: string,
     width: number
 }
 
-export default class Line extends Drawing {
+export default class Curve extends Drawing {
     public constructor(
         name: string,
         data: PlotData,
-        style?: LineStyle
+        style?: CurveStyle
     ) {
         super(name, data)
         this.style = style ? style : {
@@ -73,7 +74,7 @@ export default class Line extends Drawing {
                         defaultValue={this.style.color}
                         onChange={async (event) => {
                             this.style.color = event.target.value
-                            await this.plot()
+                            await this.axes?.plot()
                         }} type={'color'}/>
                     </li>
                     <li>
@@ -83,7 +84,7 @@ export default class Line extends Drawing {
                         defaultValue={this.style.width}
                         onChange={async (event) => {
                             this.style.width = event.target.valueAsNumber
-                            await this.plot()
+                            await this.axes?.plot()
                         }}
                     />
                     </li>
@@ -91,7 +92,7 @@ export default class Line extends Drawing {
             </div>
         )
     }
-    public show_tooltip(i: number): React.ReactNode {
+    public show_tooltip(i: number): JSX.Element {
         const context = this.axes?.state.canvases.tooltip.ref.current?.getContext('2d')
         if (context && this.axes) {
             context.save()
@@ -111,11 +112,11 @@ export default class Line extends Drawing {
             context.restore()
         }
         return (
-            <span key={this.name}>
+            <div key={this.name} className={'drawing curve tooltips'}>
                 {this.name}: {Math.round((
                     this.meta_data.observed_data[i] + Number.EPSILON
                 ) * 100) / 100}
-            </span>
+            </div>
         )
     }
 }

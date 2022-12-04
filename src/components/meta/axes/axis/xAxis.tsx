@@ -103,10 +103,13 @@ export class xAxis extends Axis {
     public async mouseMoveHandler(event: React.MouseEvent): Promise<void> {
         if (this.canvases.tooltip.mouse_events.drag) {
             const window = (event.target as HTMLCanvasElement).getBoundingClientRect()
+            const [x, y] = [
+                event.clientX - window.left,
+                event.clientY - window.top
+            ]
             const x_offset = (
-                this.canvases.tooltip.mouse_events.position.x - (
-                    event.clientX - window.left
-                )) * this.axes.data_amount / 1000000
+                this.canvases.tooltip.mouse_events.position.x - x
+            ) * this.axes.data_amount / 1000000
             if (x_offset) {
                 let data_range = {start: 0, end: 1}
                 Object.assign(data_range, this.axes.state.data_range)
@@ -121,10 +124,7 @@ export class xAxis extends Axis {
                 if (data_range.start !== this.axes.state.data_range.start) {
                     await this.axes.recalculate_metadata(data_range, () => {
                         let state = this.axes.state
-                        state.axes.x.canvases.tooltip.mouse_events.position = {
-                            x: event.clientX - window.left,
-                            y: event.clientY - window.top,
-                        }
+                        state.axes.x.canvases.tooltip.mouse_events.position = {x, y}
                         this.axes.setState(state, this.axes.plot)
                     })
                 }

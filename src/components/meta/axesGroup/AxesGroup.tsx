@@ -1,9 +1,9 @@
 import React from 'react'
 import {Callback, DataRange, GridPosition, Size2D, TooltipCanvasObject} from "../types"
-import Drawing from "../drawings/Drawing"
 import {xAxisGroup} from "./axis/xAxisGroup"
-import {AxesReal} from "./Axes"
+import {AxesReal} from "../axes/Axes"
 import './AxesGroup.css'
+import AxesGroupSettings from "./settings/AxesGroupSettings"
 
 interface AxesGroupPlaceholderProps {
     position: GridPosition
@@ -21,7 +21,8 @@ interface AxesGroupProps extends AxesGroupPlaceholderProps {
 }
 
 interface AxesGroupState {
-    children: JSX.Element[]
+    children: React.ComponentElement<any, AxesReal>[]
+    axes: AxesReal[]
     data_range: DataRange | null
     data_amount: number
     tooltip: TooltipCanvasObject
@@ -80,6 +81,7 @@ export class AxesGroupReal extends React.Component<
         })
         this.state = {
             children: stateChildren,
+            axes: [],
             data_range: null,
             data_amount: 0,
             tooltip: {
@@ -104,11 +106,11 @@ export class AxesGroupReal extends React.Component<
     public get max_data_amount(): number {
         return Math.max.apply(
             null, Array.from(
-                this.state.children,
+                this.state.axes,
                 child => Math.max.apply(
                     null, Array.from(
-                        child.props.drawings,
-                        (drawing: Drawing) => drawing.data.length
+                        child.state.drawings.filter(drawing => drawing.visible),
+                        drawing => drawing.data.length
                     )
                 )
             )
@@ -156,7 +158,7 @@ export class AxesGroupReal extends React.Component<
             if (this.state.tooltip.mouse_events.drag) {
                 const x_offset = (
                     x - this.state.tooltip.mouse_events.position.x
-                ) * this.data_amount / 100000000
+                ) * this.data_amount / 1000000
                 if (x_offset) {
                     if (x_offset < 0) {
                         data_range.end =
@@ -180,9 +182,12 @@ export class AxesGroupReal extends React.Component<
                 }
             }
             this.setState({tooltips: {x, y}, data_range}, () => {
-                this.state.xAxis.show_tooltip(
+                let state = this.state
+                state.xAxis.show_tooltip(
                     Math.floor(x / this.width * this.data_amount)
                 )
+                state.tooltip.mouse_events.position = {x, y}
+                this.setState(state)
             })
         }
     }
@@ -239,7 +244,7 @@ export class AxesGroupReal extends React.Component<
                             tooltips: this.state.tooltips ? {
                                 ...this.state.tooltips,
                                 y: this.state.tooltips?.y - child.props.size.height * index
-                            } : null,
+                            } : undefined,
                             key: index
                         }
                     )
@@ -254,6 +259,7 @@ export class AxesGroupReal extends React.Component<
                         gridRowEnd: this.state.children.length + 1
                     }}
                 ></div>
+                <AxesGroupSettings axesGroup={this}/>
                 <canvas
                     ref={this.state.tooltip.ref}
                     className={'axesGroup tooltip'}

@@ -1,0 +1,17 @@
+.axesGroupSettings {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+}
+
+.axesGroupSettings .groupObjectTree {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.axesGroupSettings .groupObjectTreeElement {
+    display: flex;
+    flex-direction: column;
+}
