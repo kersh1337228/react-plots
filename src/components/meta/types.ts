@@ -1,8 +1,10 @@
 import React from "react"
 
+// General purpose types
 export type Callback = () => void | Promise<void>
+export type Constructor<T extends {}> = new (...args: any[]) => T
 
-export interface DataRange {
+export interface DataRange {  // Time series view interval
     start: number
     end: number
 }
@@ -19,7 +21,7 @@ export interface Padding2D {
     bottom: number
 }
 
-export interface GridPosition {
+export interface GridPosition {  // CSS grid display position
     row: {
         start: number,
         end: number
@@ -30,18 +32,19 @@ export interface GridPosition {
     }
 }
 
-export interface GridObject {
+export interface GridObject {  // Plot axes grid
     amount: number
     color: string
     width: number
 }
 
-export interface CanvasObject {
+// HTML elements
+export interface CanvasObject {  // Drawing canvas
     ref: React.RefObject<HTMLCanvasElement>
     density: number
 }
 
-export interface TooltipCanvasObject {
+export interface TooltipCanvasObject {  // Event handling canvas
     ref: React.RefObject<HTMLCanvasElement>,
     mouse_events: {
         drag: boolean,
@@ -52,6 +55,12 @@ export interface TooltipCanvasObject {
     }
 }
 
+export interface ComponentChildren<T extends React.Component> {  // Container-component children
+    components: T[]  // Children components must append themselves directly
+    nodes: JSX.Element[]  // Source is props
+}
+
+//// Plotting types
 // Date string representation
 export type DecimalPoint = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9
 type YearString = `19${DecimalPoint}${DecimalPoint}` | `20${DecimalPoint}${DecimalPoint}`
@@ -60,9 +69,11 @@ type DayString = `0${1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9}` | `${1 | 2}${DecimalPoi
 export type DateString = `${YearString}-${MonthString}-${DayString}`
 
 // Axes data types
-type DataPoints = [number, number][]
-type DataDateValue = [DateString, number][]
-type Quotes = {
+export type Point2D = [number, number]
+export type TimeSeriesArray = [DateString, number]
+export type TimeSeriesObject = {date: DateString, value: number, [key: string]: any}
+export type TimeSeries = TimeSeriesArray | TimeSeriesObject
+export type Quotes = {
     date: DateString,
     open: number,
     high: number,
@@ -70,6 +81,5 @@ type Quotes = {
     close: number,
     volume: number
 }
-type DataFinancial = Quotes[]
 
-export type PlotData = DataPoints | DataDateValue | DataFinancial | number[]
+export type PlotData = Point2D | TimeSeries | Quotes

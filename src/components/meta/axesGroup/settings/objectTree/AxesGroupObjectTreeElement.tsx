@@ -3,7 +3,7 @@ import EyeIcon from "../../../icons/EyeIcon"
 import CrossIcon from "../../../icons/CrossIcon"
 import SettingsIcon from "../../../icons/SettingsIcon"
 import Dialog from "../../../../utils/dialog/Dialog"
-import Drawing from "../../../drawings/Drawing"
+import Drawing from "../../../drawings/Drawing/Drawing"
 import {AxesReal} from "../../../axes/Axes"
 import AxesObjectTree from "../../../axes/settings/objectTree/AxesObjectTree"
 

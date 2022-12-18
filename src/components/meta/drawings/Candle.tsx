@@ -1,11 +1,11 @@
-import Drawing from "./Drawing"
-import {DataRange, PlotData} from "../types"
+import Drawing from "./Drawing/Drawing"
+import {DataRange, Quotes} from "../types"
 import {HistStyle} from "./Hist"
 
-export default class Candle extends Drawing {
+export default class Candle extends Drawing<Quotes> {
     public constructor(
         name: string,
-        data: PlotData,
+        data: Quotes[],
         style?: HistStyle
     ) {
         super(name, data)
@@ -16,22 +16,18 @@ export default class Candle extends Drawing {
     public async recalculate_metadata(data_range: DataRange): Promise<void> {
         if (data_range) {
             const [start, end] = [
-                Math.floor(this.data.length * data_range.start),
-                Math.ceil(this.data.length * data_range.end)
+                Math.floor(this.data.full.length * data_range.start),
+                Math.ceil(this.data.full.length * data_range.end)
             ]
-            this.meta_data.observed_data = this.data.slice(start, end)
-            this.meta_data.value.min = Math.min.apply(
-                null, Array.from(
-                    this.meta_data.observed_data,
-                        obj => obj.low
-                )
-            )
-            this.meta_data.value.max = Math.max.apply(
-                null, Array.from(
-                    this.meta_data.observed_data,
-                        obj => obj.high
-                )
-            )
+            this.data.observed.full = this.data.full.slice(start, end)
+            this.value.y = {
+                min: Math.min.apply(null, Array.from(
+                    this.data.observed.full, obj => obj.low
+                )),
+                max: Math.max.apply(null, Array.from(
+                    this.data.observed.full, obj => obj.high
+                ))
+            }
         }
     }
     public async plot(): Promise<void> {
@@ -39,7 +35,7 @@ export default class Candle extends Drawing {
         if (this.visible && context && this.axes) {
             context.save()
             for (let i = 0; i < this.data_amount; ++i) {
-                const {open, high, low, close} = this.meta_data.observed_data[i]
+                const {open, high, low, close} = this.data.observed.full[i]
                 const style = close - open > 0 ?
                     this.style.color.pos :
                     this.style.color.neg
@@ -80,7 +76,7 @@ export default class Candle extends Drawing {
         }
     }
     public show_tooltip(i: number): React.ReactElement {
-        const {open, high, low, close} = this.meta_data.observed_data[i]
+        const {open, high, low, close} = this.data.observed.full[i]
         return (
             <div key={this.name}>
                 <span>open: {Math.round((open + Number.EPSILON) * 100) / 100}</span>

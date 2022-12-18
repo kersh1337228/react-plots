@@ -1,79 +1,78 @@
-import Axis from "./Axis"
-import React from "react";
+import React from "react"
+import Axis from "../Axis"
+import Drawing from "../../../drawings/Drawing/Drawing"
+import {round} from "../../../functions";
+import {axisSize} from "../../../Figure/Figure";
 
-export class yAxis extends Axis {
+export default class yAxis extends Axis {
+    // Coordinates transform
+    public transform_coordinates(drawings: Drawing<any>[]): void {
+        this.value.min = Math.min.apply(
+            null, drawings.map(drawing => drawing.min('y'))
+        )
+        this.value.max = Math.max.apply(
+            null, drawings.map(drawing => drawing.max('y'))
+        )
+        this.coordinates.scale = this.axes.padded_height / this.spread
+        this.coordinates.translate =
+            this.max * this.coordinates.scale +
+            this.axes.padding.top * this.axes.height
+    }
+    // Display
     public set_window(): void {
         if (this.canvases.scale.ref.current && this.canvases.tooltip.ref.current) {
-            this.canvases.scale.ref.current.width = 50
-            this.canvases.scale.ref.current.height = this.axes.height
-            this.canvases.tooltip.ref.current.width = 50
-            this.canvases.tooltip.ref.current.height = this.axes.height
+            this.canvases.scale.ref.current.width = axisSize.y
+            this.canvases.scale.ref.current.height = this.axes.props.size.height
+            this.canvases.tooltip.ref.current.width = axisSize.y
+            this.canvases.tooltip.ref.current.height = this.axes.props.size.height
         }
     }
     public async show_grid(): Promise<void> {
         const context = this.axes.state.canvases.plot.ref.current?.getContext('2d')
         if (context) {
             context.save()
-            Object.values(this.grid).forEach(grid => {
-                context.beginPath()
-                for (let i = 1; i <= grid.amount; ++i) {
-                    const y = i * (
-                        this.axes.props.size ?
-                            this.axes.props.size.height : 0
-                    ) / (grid.amount + 1)
-                    context.moveTo(0, y)
-                    context.lineTo((
-                        this.axes.props.size ?
-                            this.axes.props.size.width : 0
-                    ), y)
-                }
-                context.lineWidth = grid.width
-                context.strokeStyle = grid.color
-                context.stroke()
-                context.closePath()
-            })
+            context.beginPath()
+            for (let i = 1; i <= this.grid.amount; ++i) {
+                const y = i * this.axes.height / (this.grid.amount + 1)
+                context.moveTo(0, y)
+                context.lineTo(this.axes.width, y)
+            }
+            context.lineWidth = this.grid.width
+            context.strokeStyle = this.grid.color
+            context.stroke()
+            context.closePath()
             context.restore()
         }
     }
     public async show_scale(): Promise<void> {
+        // TODO: Show label
         const context = this.canvases.scale.ref.current?.getContext('2d')
         if (context && this.canvases.scale.ref.current) {  // Drawing value scale
-            context.clearRect(
-                0, 0,
-                this.axes.width, this.axes.height
-            )
-            const step = this.axes.height / (
-                this.grid.major.amount + 1
-            ) / this.coordinates.scale
+            context.clearRect(0, 0, this.axes.props.size.width, this.axes.props.size.height)
+            const step = this.axes.height / (this.grid.amount + 1) / this.coordinates.scale
             context.save()
             context.font = '10px Arial'
-            for (let i = 1; i <= this.grid.major.amount; ++i) {
+            for (let i = 1; i <= this.grid.amount; ++i) {
                 context.beginPath()
-                const y = (1 - i / (this.grid.major.amount + 1)) * this.axes.height
+                const y = (1 - i / (this.grid.amount + 1)) * this.axes.props.size.height
                 context.moveTo(
                     this.canvases.scale.ref.current.width *
-                    (1 - (
-                        this.axes.props.padding ?
-                            this.axes.props.padding.right : 0
-                    )), y
+                    (1 - this.axes.padding.right), y
                 )
                 context.lineTo(
                     this.canvases.scale.ref.current.width *
-                    (0.9 - (
-                        this.axes.props.padding ?
-                            this.axes.props.padding.right : 0
-                    )), y
+                    (0.9 - (this.axes.padding.right)), y
                 )
                 context.stroke()
                 context.closePath()
                 const min = this.coordinates.translate * (
-                    this.axes.spread / this.axes.padded_height - 1 / this.coordinates.scale
-                ) + this.axes.min
+                    this.spread / this.axes.padded_height - 1 / this.coordinates.scale
+                ) + this.min
                 // Drawing value
                 const value = i * step + min - (
                     this.axes.props.padding ?
                         this.axes.props.padding.bottom : 0
-                ) * this.axes.height / this.coordinates.scale
+                ) * this.axes.props.size.height / this.coordinates.scale
                 let text: number | string = Math.round(
                     (value + Number.EPSILON) * 100
                 ) / 100
@@ -95,14 +94,19 @@ export class yAxis extends Axis {
     }
     public async show_tooltip(y: number): Promise<void> {
         const context = this.canvases.tooltip.ref.current?.getContext('2d')
-        let grid_step = this.axes.height / this.grid.major.amount
+        let grid_step = this.axes.props.size.height / this.grid.amount
         if (context && this.canvases.tooltip.ref.current) {
+            // Drawing horizontal line
+            const axesContext = this.axes.state.canvases.tooltip.ref.current?.getContext('2d')
+            axesContext?.moveTo(0, y * this.axes.state.canvases.plot.density)
+            axesContext?.lineTo(this.axes.width, y * this.axes.state.canvases.plot.density)
+            axesContext?.stroke()
+            // Drawing tooltip
             context.clearRect(
                 0, 0,
                 this.canvases.tooltip.ref.current.width,
                 this.canvases.tooltip.ref.current.height
             )
-            context.save()
             context.fillStyle = '#323232'
             context.fillRect(
                 0, y - grid_step / 4,
@@ -112,16 +116,14 @@ export class yAxis extends Axis {
             context.fillStyle = '#ffffff'
             // Value tooltip
             const min = this.coordinates.translate * (
-                this.axes.spread / this.axes.padded_height - 1 / this.coordinates.scale
-            ) + this.axes.min
-            let value: number | string = Math.round(
-                (( // dv/dh * (y - hmin) + vmin
-                    this.axes.height * (1 - (
-                        this.axes.props.padding ?
-                            this.axes.props.padding.bottom : 0
-                    )) - y) / this.coordinates.scale + min + Number.EPSILON
-                ) * 100
-            ) / 100
+                this.spread / this.axes.padded_height - 1 / this.coordinates.scale
+            ) + this.min
+            let value: number | string = round(  // dy/dh * (y - hmin) + ymin
+                (this.axes.height * (
+                    1 - this.axes.padding.bottom
+                ) - y * this.axes.state.canvases.plot.density) /
+                this.coordinates.scale + min, 2
+            )
             if (value >= 10 ** 6) {
                 value = `${Math.round(
                     (value / 10 ** 6 + Number.EPSILON) * 100
@@ -143,7 +145,7 @@ export class yAxis extends Axis {
             const y_offset = (
                 this.canvases.tooltip.mouse_events.position.y - (
                     event.clientY - window.top
-                )) * this.axes.spread / 100000
+                )) * this.spread / 100000
             if (y_offset) {
                 let state = this.axes.state
                 state.axes.y.coordinates.scale = this.coordinates.scale + y_offset > 0 ?
@@ -188,7 +190,7 @@ export class yAxis extends Axis {
                     ref={this.canvases.scale.ref}
                     className={'axes y scale'}
                     style={{
-                        width: 50,
+                        width: axisSize.y,
                         height: this.axes.props.size?.height
                     }}
                 ></canvas>
@@ -196,7 +198,7 @@ export class yAxis extends Axis {
                     ref={this.canvases.tooltip.ref}
                     className={'axes y tooltip'}
                     style={{
-                        width: 50,
+                        width: axisSize.y,
                         height: this.axes.props.size?.height
                     }}
                     onMouseMove={this.mouseMoveHandler}

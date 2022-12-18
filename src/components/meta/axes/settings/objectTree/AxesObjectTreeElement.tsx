@@ -3,10 +3,11 @@ import EyeIcon from "../../../icons/EyeIcon"
 import CrossIcon from "../../../icons/CrossIcon"
 import SettingsIcon from "../../../icons/SettingsIcon"
 import Dialog from "../../../../utils/dialog/Dialog"
-import Drawing from "../../../drawings/Drawing"
+import Drawing from "../../../drawings/Drawing/Drawing"
+import {PlotData} from "../../../types"
 
 interface AxesObjectTreeElementProps {
-    drawing: Drawing
+    drawing: Drawing<PlotData>
 }
 
 interface AxesObjectTreeElementState {

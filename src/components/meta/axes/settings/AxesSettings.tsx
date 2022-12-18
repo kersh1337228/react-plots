@@ -2,8 +2,8 @@ import React from 'react'
 import {AxesReal} from "../Axes"
 import Dialog from "../../../utils/dialog/Dialog"
 import './AxesSettings.css'
-import AxesObjectTree from "./objectTree/AxesObjectTree";
-import SettingsIcon from "../../icons/SettingsIcon";
+import AxesObjectTree from "./objectTree/AxesObjectTree"
+import SettingsIcon from "../../icons/SettingsIcon"
 
 interface AxesSettingsProps {
     axes: AxesReal

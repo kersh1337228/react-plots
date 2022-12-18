@@ -1,5 +1,8 @@
-import Drawing from "./Drawing"
-import {PlotData} from "../types"
+import Drawing from "./Drawing/Drawing"
+import {DataRange, Point2D, Quotes, TimeSeries, TimeSeriesArray, TimeSeriesObject} from "../types"
+import DrawingScalar from "./Drawing/DrawingScalar"
+import DrawingVector from "./Drawing/DrawingVector"
+import {plotDataType} from "../functions"
 
 export interface HistStyle {
     color: {
@@ -8,10 +11,11 @@ export interface HistStyle {
     }
 }
 
-export default class Hist extends Drawing {
+// @ts-ignore
+export class HistBase<T extends Point2D | TimeSeries | Quotes> extends Drawing<T> {
     public constructor(
         name: string,
-        data: PlotData,
+        data: T[],
         style?: HistStyle
     ) {
         super(name, data)
@@ -19,6 +23,7 @@ export default class Hist extends Drawing {
             color: {pos: '#53e9b5', neg: '#da2c4d'}
         }
     }
+    // Drawing
     public async plot(): Promise<void> {
         const context = this.axes?.state.canvases.plot.ref.current?.getContext('2d')
         if (this.visible && context && this.axes) {
@@ -29,24 +34,23 @@ export default class Hist extends Drawing {
                 this.axes.state.axes.y.coordinates.translate
             )
             context.scale(
-                1, -this.axes.state.axes.y.coordinates.scale
+                this.axes.state.axes.x.coordinates.scale,
+                -this.axes.state.axes.y.coordinates.scale
             )
             // Drawing
             for (let i = 0; i < this.data_amount; ++i) {
-                const value = this.meta_data.observed_data[i]
+                const value = this.data.observed.numeric[i]
                 context.fillStyle = value > 0 ?
                     this.style.color.pos :
                     this.style.color.neg
                 context.fillRect(
-                    (i + 0.1) * this.axes.state.axes.x.coordinates.scale,
-                    0,
-                    this.axes.state.axes.x.coordinates.scale * 0.9,
-                    value
+                    i + 0.1, 0, 0.9, value
                 )
             }
             context.restore()
         }
     }
+    // Events
     public show_style(): React.ReactElement {
         return (
             <div key={this.name}>
@@ -81,4 +85,17 @@ export default class Hist extends Drawing {
             </div>
         )
     }
+}
+
+class HistScalar extends DrawingScalar(HistBase<Point2D | TimeSeriesArray>) {}
+class HistVector extends DrawingVector(HistBase<TimeSeriesObject>) {}
+
+export default function Hist(
+    name: string,
+    data: Point2D[] | TimeSeries[],
+    style?: HistStyle
+) {
+    return plotDataType(data) === 'TimeSeriesObject' ?
+        new HistVector(name, data as TimeSeriesObject[], style) :
+        new HistScalar(name, data as Point2D[] | TimeSeriesArray[], style)
 }

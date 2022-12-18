@@ -1,37 +1,22 @@
-import Hist, {HistStyle} from "./Hist"
-import {DataRange, PlotData} from "../types"
 import React from "react"
+import {HistBase} from "./Hist"
+import {DataRange, Quotes} from "../types"
+import {round} from "../functions"
 
-export class VolumeHist extends Hist {
-    public constructor(
-        name: string,
-        data: PlotData,
-        style?: HistStyle
-    ) {
-        super(name, data)
-        this.style = style ? style : {
-            color: {pos: '#53e9b5', neg: '#da2c4d'}
-        }
-    }
+export class VolumeHist extends HistBase<Quotes> {
+    // Drawing
     public async recalculate_metadata(data_range: DataRange): Promise<void> {
         if (data_range) {
             const [start, end] = [
-                Math.floor(this.data.length * data_range.start),
-                Math.ceil(this.data.length * data_range.end)
+                Math.floor(this.data.full.length * data_range.start),
+                Math.ceil(this.data.full.length * data_range.end)
             ]
-            this.meta_data.observed_data = this.data.slice(start, end)
-            this.meta_data.value.min = Math.min.apply(
-                null, Array.from(
-                    this.meta_data.observed_data,
-                        obj => obj.volume
-                )
-            )
-            this.meta_data.value.max = Math.max.apply(
-                null, Array.from(
-                    this.meta_data.observed_data,
-                        obj => obj.volume
-                )
-            )
+            this.data.observed.full = this.data.full.slice(start, end)
+            const volumes = Array.from(this.data.observed.full, obj => obj.volume)
+            this.value.y = {
+                min: Math.min.apply(null, volumes),
+                max: Math.max.apply(null, volumes)
+            }
         }
     }
     public async plot(): Promise<void> {
@@ -39,7 +24,7 @@ export class VolumeHist extends Hist {
         if (this.visible && context && this.axes) {
             context.save()
             for (let i = 0; i < this.data_amount; ++i) {
-                const {open, close, volume} = this.meta_data.observed_data[i]
+                const {open, close, volume} = this.data.observed.full[i]
                 context.fillStyle = close - open > 0 ?
                     this.style.color.pos :
                     this.style.color.neg
@@ -53,23 +38,17 @@ export class VolumeHist extends Hist {
             context.restore()
         }
     }
+    // Events
     public show_tooltip(i: number): React.ReactElement {
-        let {volume} = this.meta_data.observed_data[i]
-        if (volume >= 10 ** 6) {
-            volume = `${Math.round((
-                volume / 10 ** 6 + Number.EPSILON
-            ) * 100) / 100}M`
-        } else if (volume >= 10 ** 9) {
-            volume = `${Math.round((
-                volume / 10 ** 9 + Number.EPSILON
-            ) * 100) / 100}B`
-        } else {
-            volume = Math.round((
-                volume / 10 ** 9 + Number.EPSILON
-            ) * 100) / 100
-        }
+        const {volume} = this.data.observed.full[i]
         return (
-            <span key={this.name}>volume: {volume}</span>
+            <span key={this.name}>volume: {
+                volume >= 10 ** 9 ?
+                    `${round(volume / 10 ** 9, 2)}B` :
+                    volume >= 10 ** 6 ?
+                        `${round(volume / 10 ** 6, 2)}M` :
+                        round(volume, 2)
+            }</span>
         )
     }
 }

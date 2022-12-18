@@ -1,57 +1,74 @@
-import Drawing from "./Drawing"
-import {PlotData} from "../types"
 import React from "react"
-import './Drawing.css'
+import {Point2D, TimeSeries, TimeSeriesArray, TimeSeriesObject} from "../types"
+import Drawing from "./Drawing/Drawing"
+import DrawingScalar from "./Drawing/DrawingScalar"
+import DrawingVector from "./Drawing/DrawingVector"
+import {plotDataType} from "../functions"
 
-export interface CurveStyle {
+export interface LineStyle {
     color: string,
     width: number
 }
 
-export default class Curve extends Drawing {
+// @ts-ignore
+class LineBase<T extends Point2D | TimeSeries> extends Drawing<T> {
     public constructor(
         name: string,
-        data: PlotData,
-        style?: CurveStyle
+        data: T[],
+        style?: LineStyle
     ) {
         super(name, data)
         this.style = style ? style : {
             color: '#000000', width: 1
         }
     }
+     // Drawing
     public async plot(): Promise<void> {
         const context = this.axes?.state.canvases.plot.ref.current?.getContext('2d')
         if (this.visible && context && this.axes) {
-            // Transforming coordinates
             context.save()
+            // Coordinates transform
             context.translate(
                 this.axes.state.axes.x.coordinates.translate,
                 this.axes.state.axes.y.coordinates.translate
             )
             context.scale(
-                1, -this.axes.state.axes.y.coordinates.scale
+                this.axes.state.axes.x.coordinates.scale,
+                -this.axes.state.axes.y.coordinates.scale
             )
             // Drawing
             context.beginPath()
-            context.moveTo(
-                1.1 * this.axes.state.axes.x.coordinates.scale / 2,
-                this.meta_data.observed_data[0]
-            )
-            for (let i = 1; i < this.data_amount; ++i) {
-                context.lineTo(
-                    (2 * i + 1.1) * this.axes.state.axes.x.coordinates.scale / 2,
-                    this.meta_data.observed_data[i]
-                )
-            }
+            context.moveTo(0.55, this.data.observed.numeric[0])
+            for (let i = 1; i < this.data_amount; ++i)
+                context.lineTo(i + 0.55, this.data.observed.numeric[i])
             // Stroking
             context.restore()
             context.save()
-            context.lineWidth = this.style.width
+            context.lineWidth = this.style.width * this.axes.state.canvases.plot.density
             context.strokeStyle = this.style.color
             context.stroke()
             context.closePath()
             context.restore()
         }
+    }
+    // Events
+    public draw_tooltip(i: number): React.ReactNode {
+        const context = this.axes?.state.canvases.tooltip.ref.current?.getContext('2d')
+        if (context && this.axes) {  // Drawing circle
+            context.save()
+            context.beginPath()
+            context.arc(
+                (i + 0.55) * this.axes.state.axes.x.coordinates.scale,
+                this.axes.state.axes.y.coordinates.translate -
+                this.data.observed.numeric[i] *
+                this.axes.state.axes.y.coordinates.scale,
+                3 * this.axes.state.canvases.plot.density, 0, 2 * Math.PI
+            )
+            context.fillStyle = this.style.color
+            context.fill()
+            context.closePath()
+            context.restore()
+        } return
     }
     public show_style(): React.ReactElement {
         return (
@@ -92,31 +109,17 @@ export default class Curve extends Drawing {
             </div>
         )
     }
-    public show_tooltip(i: number): JSX.Element {
-        const context = this.axes?.state.canvases.tooltip.ref.current?.getContext('2d')
-        if (context && this.axes) {
-            context.save()
-            context.beginPath()
-            context.arc(
-                (2 * i + 1.1) * this.axes.state.axes.x.coordinates.scale / 2,
-                this.axes.state.axes.y.coordinates.translate -
-                this.meta_data.observed_data[i] *
-                this.axes.state.axes.y.coordinates.scale,
-                3,
-                0,
-                2 * Math.PI
-            )
-            context.fillStyle = this.style.color
-            context.fill()
-            context.closePath()
-            context.restore()
-        }
-        return (
-            <div key={this.name} className={'drawing curve tooltips'}>
-                {this.name}: {Math.round((
-                    this.meta_data.observed_data[i] + Number.EPSILON
-                ) * 100) / 100}
-            </div>
-        )
-    }
+}
+
+class LineScalar extends DrawingScalar(LineBase<Point2D | TimeSeriesArray>) {}
+class LineVector extends DrawingVector(LineBase<TimeSeriesObject>) {}
+
+export default function Line(
+    name: string,
+    data: Point2D[] | TimeSeries[],
+    style?: LineStyle
+) {
+    return plotDataType(data) === 'TimeSeriesObject' ?
+        new LineVector(name, data as TimeSeriesObject[], style) :
+        new LineScalar(name, data as Point2D[] | TimeSeriesArray[], style)
 }

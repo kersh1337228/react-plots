@@ -28,8 +28,8 @@ export default class AxesGroupSettings extends React.Component<
             <div
                 className={'axesGroupSettings'}
                 style={{
-                    gridRowStart: this.props.axesGroup.state.children.length + 1,
-                    gridRowEnd: this.props.axesGroup.state.children.length + 2
+                    gridRowStart: this.props.axesGroup.state.children.nodes.length + 1,
+                    gridRowEnd: this.props.axesGroup.state.children.nodes.length + 2
                 }}
                 onClick={() => {this.setState({active: !this.state.active})}}
             >
