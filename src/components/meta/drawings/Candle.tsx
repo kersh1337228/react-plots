@@ -1,88 +1,75 @@
 import Drawing from "./Drawing/Drawing"
 import {DataRange, Quotes} from "../types"
 import {HistStyle} from "./Hist"
+import {round} from "../functions";
 
 export default class Candle extends Drawing<Quotes> {
-    public constructor(
-        name: string,
-        data: Quotes[],
-        style?: HistStyle
-    ) {
+    public constructor(name: string, data: Quotes[], style?: HistStyle) {
         super(name, data)
-        this.style = style ? style : {
-            color: {pos: '#53e9b5', neg: '#da2c4d'}
-        }
+        this.style = style ? style : { color: {pos: '#53e9b5', neg: '#da2c4d'} }
     }
     public async recalculate_metadata(data_range: DataRange): Promise<void> {
-        if (data_range) {
-            const [start, end] = [
-                Math.floor(this.data.full.length * data_range.start),
-                Math.ceil(this.data.full.length * data_range.end)
-            ]
-            this.data.observed.full = this.data.full.slice(start, end)
-            this.value.y = {
-                min: Math.min.apply(null, Array.from(
-                    this.data.observed.full, obj => obj.low
-                )),
-                max: Math.max.apply(null, Array.from(
-                    this.data.observed.full, obj => obj.high
-                ))
-            }
+        const [start, end] = [
+            Math.floor(this.data.full.length * data_range.start),
+            Math.ceil(this.data.full.length * data_range.end)
+        ]
+        this.data.observed.full = this.data.full.slice(start, end)
+        this.value.y = {
+            min: Math.min.apply(null, Array.from(
+                this.data.observed.full, obj => obj.low
+            )),
+            max: Math.max.apply(null, Array.from(
+                this.data.observed.full, obj => obj.high
+            ))
         }
     }
     public async plot(): Promise<void> {
-        const context = this.axes?.state.canvases.plot.ref.current?.getContext('2d')
-        if (this.visible && context && this.axes) {
-            context.save()
-            for (let i = 0; i < this.data_amount; ++i) {
-                const {open, high, low, close} = this.data.observed.full[i]
-                const style = close - open > 0 ?
-                    this.style.color.pos :
-                    this.style.color.neg
-                // Shadow
-                context.beginPath()
-                context.moveTo(
-                    (2 * i + 1.1) * this.axes.state.axes.x.coordinates.scale / 2,
-                    low
+        if (this.axes) {
+            const context = this.axes.state.canvases.plot.ref.current?.getContext('2d')
+            if (this.visible && context) {
+                // Transforming coordinates
+                context.save()
+                context.translate(
+                    this.axes.state.axes.x.coordinates.translate,
+                    this.axes.state.axes.y.coordinates.translate
                 )
-                context.lineTo(
-                    (2 * i + 1.1) * this.axes.state.axes.x.coordinates.scale / 2,
-                    high
+                context.scale(
+                    this.axes.state.axes.x.coordinates.scale,
+                    -this.axes.state.axes.y.coordinates.scale
                 )
-                context.strokeStyle = style
-                context.stroke()
-                context.closePath()
-                // Body
-                if (close - open) {  // Rectangle (non-empty body)
-                    context.fillStyle = style
-                    context.fillRect(
-                        (i + 0.1) * this.axes.state.axes.x.coordinates.scale,
-                        open,
-                        this.axes.state.axes.x.coordinates.scale * 0.9,
-                        close - open
-                    )
-                } else {  // Line (empty body)
-                    context.moveTo(
-                        (i + 0.1) * this.axes.state.axes.x.coordinates.scale,
-                        open
-                    )
-                    context.lineTo(
-                        (i + 1) * this.axes.state.axes.x.coordinates.scale,
-                        close
-                    )
+                // Drawing
+                for (let i = 0; i < this.data_amount; ++i) {
+                    const {open, high, low, close} = this.data.observed.full[i]
+                    const style = close - open > 0 ?
+                        this.style.color.pos : this.style.color.neg
+                    // Candle wick
+                    context.beginPath()
+                    context.moveTo(i + 0.55, low)
+                    context.moveTo(i + 0.55, high)
+                    context.strokeStyle = style
+                    context.stroke()
+                    context.closePath()
+                    // Candle body
+                    if (close - open) {  // Rectangle (non-empty body)
+                        context.fillStyle = style
+                        context.fillRect(i + 0.1, open, 0.9, close - open)
+                    } else {  // Line (empty body)
+                        context.moveTo(i + 0.1, open)
+                        context.lineTo(i + 1, close)
+                    }
                 }
+                context.restore()
             }
-            context.restore()
         }
     }
     public show_tooltip(i: number): React.ReactElement {
         const {open, high, low, close} = this.data.observed.full[i]
         return (
             <div key={this.name}>
-                <span>open: {Math.round((open + Number.EPSILON) * 100) / 100}</span>
-                <span>high: {Math.round((high + Number.EPSILON) * 100) / 100}</span>
-                <span>low: {Math.round((low + Number.EPSILON) * 100) / 100}</span>
-                <span>close: {Math.round((close + Number.EPSILON) * 100) / 100}</span>
+                <span>open: {round(open, 2)}</span>
+                <span>high: {round(high, 2)}</span>
+                <span>low: {round(low, 2)}</span>
+                <span>close: {round(close, 2)}</span>
             </div>
         )
     }

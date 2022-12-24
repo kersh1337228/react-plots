@@ -2,20 +2,25 @@ import {CanvasObject, GridObject, TooltipCanvasObject} from "../../types"
 import React from "react"
 import {AxesReal} from "../Axes"
 import Drawing from "../../drawings/Drawing/Drawing"
+import {AxesGroupReal} from "../../axesGroup/AxesGroup"
 
-export default abstract class Axis {
+
+export default abstract class Axis<T extends AxesReal | AxesGroupReal> {
     // Fields
     public coordinates: { translate: number, scale: number }
     public grid: GridObject
+    public font: { name: string, size: number }
     public readonly canvases: { scale: CanvasObject, tooltip: TooltipCanvasObject }
     protected value: { min: number, max: number }
+    public scroll_speed: number
     // Methods
     public constructor(
-        protected readonly axes: AxesReal,
+        protected readonly axes: T,
         public readonly label?: string
     ) {
         this.coordinates = { translate: 0, scale: 1 }
         this.grid = { amount: 5, color: '#d9d9d9', width: 1 }
+        this.font = { name: 'Arial', size: 10 }
         this.canvases = {
             scale: { ref: React.createRef(), density: 1 },
             tooltip: {
@@ -24,6 +29,7 @@ export default abstract class Axis {
             }
         }
         this.value = { min: 0, max: 0 }
+        this.scroll_speed = 1
         // Events binding
         this.mouseMoveHandler = this.mouseMoveHandler.bind(this)
         this.mouseOutHandler = this.mouseOutHandler.bind(this)
@@ -34,7 +40,6 @@ export default abstract class Axis {
     public get min() { return this.value.min }
     public get max() { return this.value.max }
     public get spread() { return this.max - this.min }
-    // Coordinates transform
     public abstract transform_coordinates(drawings: Drawing<any>[]): void
     // Display
     public abstract set_window(): void

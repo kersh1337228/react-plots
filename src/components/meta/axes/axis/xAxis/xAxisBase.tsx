@@ -1,9 +1,10 @@
 import Axis from "../Axis"
 import React from "react"
 import Drawing from "../../../drawings/Drawing/Drawing"
-import {axisSize} from "../../../Figure/Figure";
+import {axisSize} from "../../../Figure/Figure"
+import {AxesReal} from "../../Axes"
 
-export default abstract class xAxisBase extends Axis {
+export default abstract class xAxisBase extends Axis<AxesReal> {
     // Coordinates transform
     public transform_coordinates(drawings: Drawing<any>[]): void {
         this.value.min = Math.min.apply(null, drawings.map(drawing => drawing.min('x')))

@@ -1,5 +1,5 @@
 import Drawing from "./Drawing/Drawing"
-import {DataRange, Point2D, Quotes, TimeSeries, TimeSeriesArray, TimeSeriesObject} from "../types"
+import {Point2D, Quotes, TimeSeries, TimeSeriesArray, TimeSeriesObject} from "../types"
 import DrawingScalar from "./Drawing/DrawingScalar"
 import DrawingVector from "./Drawing/DrawingVector"
 import {plotDataType} from "../functions"
@@ -13,41 +13,34 @@ export interface HistStyle {
 
 // @ts-ignore
 export class HistBase<T extends Point2D | TimeSeries | Quotes> extends Drawing<T> {
-    public constructor(
-        name: string,
-        data: T[],
-        style?: HistStyle
-    ) {
+    public constructor(name: string, data: T[], style?: HistStyle) {
         super(name, data)
-        this.style = style ? style : {
-            color: {pos: '#53e9b5', neg: '#da2c4d'}
-        }
+        this.style = style ? style : { color: { pos: '#53e9b5', neg: '#da2c4d' } }
     }
     // Drawing
     public async plot(): Promise<void> {
-        const context = this.axes?.state.canvases.plot.ref.current?.getContext('2d')
-        if (this.visible && context && this.axes) {
-            // Transforming coordinates
-            context.save()
-            context.translate(
-                this.axes.state.axes.x.coordinates.translate,
-                this.axes.state.axes.y.coordinates.translate
-            )
-            context.scale(
-                this.axes.state.axes.x.coordinates.scale,
-                -this.axes.state.axes.y.coordinates.scale
-            )
-            // Drawing
-            for (let i = 0; i < this.data_amount; ++i) {
-                const value = this.data.observed.numeric[i]
-                context.fillStyle = value > 0 ?
-                    this.style.color.pos :
-                    this.style.color.neg
-                context.fillRect(
-                    i + 0.1, 0, 0.9, value
+        if (this.axes) {
+            const context = this.axes.state.canvases.plot.ref.current?.getContext('2d')
+            if (this.visible && context) {
+                // Transforming coordinates
+                context.save()
+                context.translate(
+                    this.axes.state.axes.x.coordinates.translate,
+                    this.axes.state.axes.y.coordinates.translate
                 )
+                context.scale(
+                    this.axes.state.axes.x.coordinates.scale,
+                    -this.axes.state.axes.y.coordinates.scale
+                )
+                // Drawing
+                for (let i = 0; i < this.data_amount; ++i) {
+                    const [x, y] = this.point(i)
+                    context.fillStyle = y > 0 ?
+                        this.style.color.pos : this.style.color.neg
+                    context.fillRect(x - 0.45, 0, 0.9, y)
+                }
+                context.restore()
             }
-            context.restore()
         }
     }
     // Events

@@ -5,69 +5,63 @@ import DrawingScalar from "./Drawing/DrawingScalar"
 import DrawingVector from "./Drawing/DrawingVector"
 import {plotDataType} from "../functions"
 
-export interface LineStyle {
-    color: string,
-    width: number
-}
+export interface LineStyle { color: string, width: number }
 
 // @ts-ignore
 class LineBase<T extends Point2D | TimeSeries> extends Drawing<T> {
-    public constructor(
-        name: string,
-        data: T[],
-        style?: LineStyle
-    ) {
+    public constructor(name: string, data: T[], style?: LineStyle) {
         super(name, data)
-        this.style = style ? style : {
-            color: '#000000', width: 1
-        }
+        this.style = style ? style : { color: '#000000', width: 1 }
     }
-     // Drawing
     public async plot(): Promise<void> {
-        const context = this.axes?.state.canvases.plot.ref.current?.getContext('2d')
-        if (this.visible && context && this.axes) {
-            context.save()
-            // Coordinates transform
-            context.translate(
-                this.axes.state.axes.x.coordinates.translate,
-                this.axes.state.axes.y.coordinates.translate
-            )
-            context.scale(
-                this.axes.state.axes.x.coordinates.scale,
-                -this.axes.state.axes.y.coordinates.scale
-            )
-            // Drawing
-            context.beginPath()
-            context.moveTo(0.55, this.data.observed.numeric[0])
-            for (let i = 1; i < this.data_amount; ++i)
-                context.lineTo(i + 0.55, this.data.observed.numeric[i])
-            // Stroking
-            context.restore()
-            context.save()
-            context.lineWidth = this.style.width * this.axes.state.canvases.plot.density
-            context.strokeStyle = this.style.color
-            context.stroke()
-            context.closePath()
-            context.restore()
+        if (this.axes) {
+            const context = this.axes.state.canvases.plot.ref.current?.getContext('2d')
+            if (this.visible && context) {
+                context.save()
+                // Coordinates transform
+                context.translate(
+                    this.axes.state.axes.x.coordinates.translate,
+                    this.axes.state.axes.y.coordinates.translate
+                )
+                context.scale(
+                    this.axes.state.axes.x.coordinates.scale,
+                    -this.axes.state.axes.y.coordinates.scale
+                )
+                // Drawing
+                context.beginPath()
+                context.moveTo(...this.point(0))
+                for (let i = 1; i < this.data_amount; ++i)
+                    context.lineTo(...this.point(i))
+                // Stroking
+                context.restore()
+                context.save()
+                context.lineWidth = this.style.width * this.axes.state.canvases.plot.density
+                context.strokeStyle = this.style.color
+                context.stroke()
+                context.closePath()
+                context.restore()
+            }
         }
     }
     // Events
     public draw_tooltip(i: number): React.ReactNode {
-        const context = this.axes?.state.canvases.tooltip.ref.current?.getContext('2d')
-        if (context && this.axes) {  // Drawing circle
-            context.save()
-            context.beginPath()
-            context.arc(
-                (i + 0.55) * this.axes.state.axes.x.coordinates.scale,
-                this.axes.state.axes.y.coordinates.translate -
-                this.data.observed.numeric[i] *
-                this.axes.state.axes.y.coordinates.scale,
-                3 * this.axes.state.canvases.plot.density, 0, 2 * Math.PI
-            )
-            context.fillStyle = this.style.color
-            context.fill()
-            context.closePath()
-            context.restore()
+        if (this.axes) {
+            const context = this.axes.state.canvases.tooltip.ref.current?.getContext('2d')
+            if (context) {  // Drawing circle
+                context.save()
+                context.beginPath()
+                context.arc(
+                    this.point(i)[0] * this.axes.state.axes.x.coordinates.scale + this.axes.state.axes.x.coordinates.translate,
+                    this.axes.state.axes.y.coordinates.translate -
+                    this.data.observed.numeric[i] *
+                    this.axes.state.axes.y.coordinates.scale,
+                    3 * this.axes.state.canvases.plot.density, 0, 2 * Math.PI
+                )
+                context.fillStyle = this.style.color
+                context.fill()
+                context.closePath()
+                context.restore()
+            }
         } return
     }
     public show_style(): React.ReactElement {

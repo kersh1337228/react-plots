@@ -14,10 +14,11 @@ import './Axes.css'
 import {AxesGroupReal} from "../axesGroup/AxesGroup"
 import AxesSettings from "./settings/AxesSettings"
 import xAxis from "./axis/xAxis/xAxis"
-import xAxisDates from "./axis/xAxis/xAxisDates"
+import xAxisDateTime from "./axis/xAxis/xAxisDateTime"
 import yAxis from "./axis/yAxis/yAxis"
 import Figure, {axisSize} from "../Figure/Figure"
 import {plotDataType} from "../functions"
+import xAxisBase from "./axis/xAxis/xAxisBase"
 
 interface AxesPlaceholderProps {
     drawings: Drawing<PlotData>[]
@@ -35,6 +36,8 @@ export default function Axes(props: AxesPlaceholderProps): JSX.Element {return <
 interface AxesProps extends AxesPlaceholderProps {
     size: Size2D
     parent: AxesGroupReal | Figure
+    data_range?: DataRange,
+    tooltips?: { x: number, y: number }
 }
 
 interface AxesState {
@@ -45,22 +48,22 @@ interface AxesState {
         plot: CanvasObject
         tooltip: TooltipCanvasObject
     }
-    axes: { x: xAxis | xAxisDates, y: yAxis }
+    axes: { x: xAxisBase, y: yAxis }
     tooltips: React.ReactNode
 }
 
 export class AxesReal extends React.Component<AxesProps, AxesState> {
     public constructor(props: AxesProps) {
         super(props)
-        // Drawing data type check
-        let xAxisInit: xAxis | xAxisDates
+        // Drawings data type check
+        let xAxisInit: xAxisBase
         if (props.drawings.length) {
             if (props.drawings.every(
                 drawing => plotDataType(drawing.data.full) === 'Point2D'
             )) xAxisInit = new xAxis(this)  // Numeric data
             else if (props.drawings.every(
                 drawing => plotDataType(drawing.data.full) !== 'Point2D'
-            )) xAxisInit = new xAxisDates(this)  // Time series data
+            )) xAxisInit = new xAxisDateTime(this)  // Time series data
             else throw Error("<Axes> drawings data must have either time series or numeric type")
         } else throw Error("<Axes> must contain at least a single drawing.")
         // State initialization
@@ -95,6 +98,9 @@ export class AxesReal extends React.Component<AxesProps, AxesState> {
         props.parent.setState(state)
 }
     //// Meta data
+    public get drawings(): Drawing<PlotData>[] {
+        return this.state.drawings.filter(drawing => drawing.visible)
+    }
     public get total_data_amount(): number {
         return Math.max.apply(
             null, [1, ...Array.from(
@@ -141,7 +147,6 @@ export class AxesReal extends React.Component<AxesProps, AxesState> {
             state.canvases.tooltip.ref.current.width = this.width
             state.canvases.tooltip.ref.current.height = this.height
             const context = state.canvases.plot.ref.current.getContext('2d')
-            console.log(context)
             if (context) {
                 context.lineJoin = 'round'
                 context.lineCap = 'round'
@@ -158,8 +163,8 @@ export class AxesReal extends React.Component<AxesProps, AxesState> {
     ): Promise<void> {
         const state = this.state
         const drawings = state.drawings.filter(drawing => drawing.visible)
-        drawings.forEach(
-            async drawing => await drawing.recalculate_metadata(data_range)
+        drawings.forEach(async drawing =>
+            await drawing.recalculate_metadata(data_range)
         )
         this.setState({
             data_range, data_amount: Math.max.apply(
@@ -176,33 +181,35 @@ export class AxesReal extends React.Component<AxesProps, AxesState> {
         this.state.canvases.plot.ref.current?.getContext('2d')?.clearRect(
             0, 0, this.width, this.height
         )
-        this.state.axes.x.show_grid()
-        this.state.axes.y.show_grid()
-        this.state.drawings.filter(
-            drawing => drawing.visible
-        ).forEach(async drawing => await drawing.plot())
-        await this.state.axes.x.show_scale()
-        await this.state.axes.y.show_scale()
+        if (this.drawings.length) {
+            this.state.axes.x.show_grid()
+            this.state.axes.y.show_grid()
+            this.drawings.forEach(async drawing => await drawing.plot())
+            await this.state.axes.x.show_scale()
+            await this.state.axes.y.show_scale()
+        }
     }
     public show_tooltips(x: number, y: number, callback?: Callback): void {
-        const i = Math.floor(x / this.props.size.width * this.state.data_amount)
         const state = this.state
         const context = state.canvases.tooltip.ref.current?.getContext('2d')
-        if (context) {
-            context.clearRect(0, 0, this.width, this.height)
-            context.save()
-            context.lineWidth = this.state.canvases.plot.density
-            context.strokeStyle = '#696969'
-            context.setLineDash([5, 5])
-            state.axes.x.show_tooltip(x)
-            state.axes.y.show_tooltip(y)
-            context.restore()
+        context?.clearRect(0, 0, this.width, this.height)
+        if (this.drawings.length) {
+            if (context) {
+                context.save()
+                context.lineWidth = this.state.canvases.plot.density
+                context.strokeStyle = '#696969'
+                context.setLineDash([5, 5])
+                state.axes.x.show_tooltip(x)
+                state.axes.y.show_tooltip(y)
+                context.restore()
+            }
+            const i = Math.floor(x / this.props.size.width * this.state.data_amount)
+            this.setState({
+                ...state, tooltips: this.state.drawings.filter(
+                    drawing => drawing.visible
+                ).map(drawing => drawing.show_tooltip(i))
+            }, callback)
         }
-        this.setState({
-            ...state, tooltips: this.state.drawings.filter(
-                drawing => drawing.visible
-            ).map(drawing => drawing.show_tooltip(i))
-        }, callback)
     }
     public hide_tooltips(callback?: Callback): void {
         const state = this.state
@@ -226,7 +233,7 @@ export class AxesReal extends React.Component<AxesProps, AxesState> {
             if (this.state.canvases.tooltip.mouse_events.drag) {
                 const x_offset = (
                     x - this.state.canvases.tooltip.mouse_events.position.x
-                ) * this.state.data_amount / 1000000
+                ) * 0.001 / this.state.axes.x.coordinates.scale * this.state.axes.x.scroll_speed
                 if (x_offset) {
                     if (x_offset < 0) {
                         data_range.end =
@@ -291,6 +298,23 @@ export class AxesReal extends React.Component<AxesProps, AxesState> {
         this.setState(state)
     }
     // Life cycle
+    public static getDerivedStateFromProps(nextProps: Readonly<AxesProps>, prevState: Readonly<AxesState>) {
+        return nextProps.data_range ?
+            {...prevState, data_range: nextProps.data_range} :
+            prevState
+    }
+    public componentDidUpdate(prevProps: Readonly<AxesProps>, prevState: Readonly<AxesState>, snapshot?: any) {
+        // Data range
+        if (prevProps.data_range?.start !== this.props.data_range?.start ||
+            prevProps.data_range?.end !== this.props.data_range?.end
+        ) this.recalculate_metadata(this.state.data_range)
+        // Tooltips
+        if (prevProps.tooltips !== this.props.tooltips)
+            if (this.props.tooltips)
+                this.show_tooltips(this.props.tooltips.x, this.props.tooltips.y)
+            else if (!this.props.tooltips && prevProps.tooltips)
+                this.hide_tooltips()
+    }
     public componentDidMount(): void {
         const data_range = {
             start: 1 - (

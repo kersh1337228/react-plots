@@ -27,6 +27,12 @@ export default function DrawingScalar<T extends Constructor<Drawing<Point2D | Ti
                 )),
             } : { min: 0, max: 0 }
         }
+        public point(i: number): [number, number] {
+            return plotDataType(this.data.full) === 'Point2D' ? [
+                (this.data.observed.full[i] as Point2D)[0],
+                this.data.observed.numeric[i]
+            ] : [i + 0.55, this.data.observed.numeric[i]]
+        }
         public show_tooltip(i: number): React.ReactNode {
             super.draw_tooltip(i)
             return (
