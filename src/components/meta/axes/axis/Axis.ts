@@ -1,8 +1,9 @@
-import {CanvasObject, GridObject, TooltipCanvasObject} from "../../types"
 import React from "react"
 import {AxesReal} from "../Axes"
 import Drawing from "../../drawings/Drawing/Drawing"
 import {AxesGroupReal} from "../../axesGroup/AxesGroup"
+import {GridObject} from "../../utils/types/display"
+import {CanvasObject, TooltipCanvasObject} from "../../utils/types/react"
 
 
 export default abstract class Axis<T extends AxesReal | AxesGroupReal> {

@@ -1,37 +1,13 @@
-import {Quotes, TimeSeries} from "../../types"
-import {AxesGroupReal} from "../AxesGroup"
 import Drawing from "../../drawings/Drawing/Drawing"
-import {plotDateRange} from "../../functions"
 import xAxisGroupBase from "./xAxisGroupBase"
+import DateTimeRange, {plotDateTimeRange} from "../../utils/classes/iterable/DateTimeRange"
 
-export default class xAxisDateTimeGroup extends xAxisGroupBase {
-    private timestamps: { full: string[], observed: string[] }
-    public constructor(
-        axes: AxesGroupReal,
-        label?: string
-    ) {
-        super(axes, label)
-        this.timestamps = { full: [], observed: [] }
-    }
+export default class xAxisDateTimeGroup extends xAxisGroupBase<DateTimeRange> {
     // Coordinates transform
     public transform_coordinates(drawings: Drawing<any>[]): void {
+        this.data.full = plotDateTimeRange(drawings)
         super.transform_coordinates(drawings)
         this.coordinates.scale = this.axes.width / this.axes.state.data_amount
-        this.timestamps.observed = this.timestamps.full.slice(
-            Math.floor(this.timestamps.full.length * this.axes.state.data_range.start),
-            Math.ceil(this.timestamps.full.length * this.axes.state.data_range.end)
-        )
-    }
-    public set_window(): void {
-        this.timestamps.full = plotDateRange(
-            ([] as Array<Drawing<TimeSeries | Quotes>>).concat(
-                ...this.axes.state.children.components.map(
-                    axes => axes.state.drawings.filter(
-                        drawing => drawing.visible
-                    ) as Drawing<TimeSeries | Quotes>[]
-                ))
-        ).format('%Y-%m-%d')
-        super.set_window()
     }
     public async show_scale(): Promise<void> {
         // TODO: Show label
@@ -55,8 +31,10 @@ export default class xAxisDateTimeGroup extends xAxisGroupBase {
                     )
                     context.stroke()
                     context.closePath()
+                    const text = this.data.observed?.at(i)?.format('%Y-%m-%d')
                     context.fillText(
-                        this.timestamps.observed[i], (i + 0.55) * this.coordinates.scale - 25,
+                        text ? text : '',
+                        (i + 0.55) * this.coordinates.scale - 25,
                         this.canvases.scale.ref.current.height * 0.3
                     )
                 }
@@ -73,13 +51,11 @@ export default class xAxisDateTimeGroup extends xAxisGroupBase {
             )
             // Drawing vertical line
             const axesContext = this.axes.state.tooltip.ref.current?.getContext('2d')
-            axesContext?.save()
             axesContext?.beginPath()
             axesContext?.moveTo((i + 0.55) * this.coordinates.scale, 0)
             axesContext?.lineTo((i + 0.55) * this.coordinates.scale, this.axes.height)
             axesContext?.stroke()
             axesContext?.beginPath()
-            axesContext?.restore()
             // Drawing tooltip
             context.save()
             context.clearRect(
@@ -91,8 +67,10 @@ export default class xAxisDateTimeGroup extends xAxisGroupBase {
             context.fillRect((i + 0.55) * this.coordinates.scale - 30, 0, 60, 25)
             context.font = `${this.font.size}px ${this.font.name}`
             context.fillStyle = '#ffffff'
+            const text = this.data.observed?.at(i)?.format('%Y-%m-%d')
             context.fillText(
-                this.timestamps.observed[i], (i + 0.55) * this.coordinates.scale - 26,
+                text ? text : '',
+                (i + 0.55) * this.coordinates.scale - 26,
                 this.canvases.tooltip.ref.current.height * 0.3
             )
             context.restore()

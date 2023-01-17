@@ -1,7 +1,10 @@
 import React from 'react'
-import {Constructor, DataRange, Point2D, TimeSeriesArray} from "../../types"
-import {plotDataType, round} from "../../functions"
 import Drawing from "./Drawing"
+import {DataRange} from "../../utils/types/display"
+import {Point2D, TimeSeriesArray} from "../../utils/types/plotData"
+import {plotDataType} from "../../utils/functions/dataTypes"
+import {Constructor} from "../../utils/types/callable"
+import {round} from "../../utils/functions/numeric"
 
 export default function DrawingScalar<T extends Constructor<Drawing<Point2D | TimeSeriesArray>>>(Base: T) {
     // @ts-ignore

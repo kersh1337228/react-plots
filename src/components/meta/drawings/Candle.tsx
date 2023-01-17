@@ -1,7 +1,8 @@
 import Drawing from "./Drawing/Drawing"
-import {DataRange, Quotes} from "../types"
 import {HistStyle} from "./Hist"
-import {round} from "../functions";
+import {DataRange} from "../utils/types/display"
+import {Quotes} from "../utils/types/plotData"
+import {round} from "../utils/functions/numeric"
 
 export default class Candle extends Drawing<Quotes> {
     public constructor(name: string, data: Quotes[], style?: HistStyle) {

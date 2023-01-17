@@ -4,7 +4,7 @@ import CrossIcon from "../../../icons/CrossIcon"
 import SettingsIcon from "../../../icons/SettingsIcon"
 import Dialog from "../../../../utils/dialog/Dialog"
 import Drawing from "../../../drawings/Drawing/Drawing"
-import {PlotData} from "../../../types"
+import {PlotData} from "../../../utils/types/plotData"
 
 interface AxesObjectTreeElementProps {
     drawing: Drawing<PlotData>

@@ -70,35 +70,3 @@ export class DateTime {
         return Duration.milliseconds(new DateTime(dt1).object - new DateTime(dt2).object)
     }
 }
-
-export class DateTimeRange {
-    private readonly container: DateTime[]
-    constructor(
-        start: DateTime | Date | string,
-        end: DateTime | Date | string,
-        public readonly freq: Duration = Duration.days(1)
-    ) {
-        this.container = []
-        const [first, last] = [new DateTime(start), new DateTime(end)]
-        for(let i = first.object; i <= last.object; i = new Date(i.getTime() + freq.milliseconds))
-            this.container.push(new DateTime(i))
-    }
-    public format(format_string: string): string[] {
-        return this.container.map(dt => dt.format(format_string))
-    }
-    public at(i: number): DateTime {
-        return i in this.container ?
-            this.container.at(i) as DateTime :
-            new DateTime(new Date())
-    }
-    public [Symbol.iterator]() {
-        let i = -1
-        return {
-            next: () => ({
-                value: this.container[++i],
-                done: !(i in this.container)
-            })
-        }
-    }
-    public get length() { return this.container.length }
-}

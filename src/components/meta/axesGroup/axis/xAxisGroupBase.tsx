@@ -3,10 +3,21 @@ import {AxesGroupReal} from "../AxesGroup"
 import Drawing from "../../drawings/Drawing/Drawing"
 import Axis from "../../axes/axis/Axis"
 import {axisSize} from "../../Figure/Figure"
+import NumberRange from "../../utils/classes/iterable/NumberRange"
+import DateTimeRange from "../../utils/classes/iterable/DateTimeRange"
 
-export default abstract class xAxisGroupBase extends Axis<AxesGroupReal> {
+export default abstract class xAxisGroupBase<T extends NumberRange | DateTimeRange> extends Axis<AxesGroupReal> {
+    protected data: { full: T | undefined, observed: T | undefined }
+    public constructor(axes: AxesGroupReal, label?: string) {
+        super(axes, label)
+        this.data = { full: undefined, observed: undefined }
+    }
     // Methods
     public transform_coordinates(drawings: Drawing<any>[]): void {
+        this.data.observed = (this.axes.state.data_range ? this.data.full?.slice(
+            Math.floor(this.data.full.length * this.axes.state.data_range.start),
+            Math.ceil(this.data.full.length * this.axes.state.data_range.end)
+        ) : undefined) as T
         this.value.min = Math.min.apply(null, drawings.map(drawing => drawing.min('x')))
         this.value.max = Math.max.apply(null, drawings.map(drawing => drawing.max('x')))
     }
@@ -29,16 +40,16 @@ export default abstract class xAxisGroupBase extends Axis<AxesGroupReal> {
             const x_offset = (
                 this.canvases.tooltip.mouse_events.position.x - (
                     event.clientX - window.left
-                )) * this.axes.state.data_amount / 1000000
+                )) * 0.001 / this.coordinates.scale * this.scroll_speed
             if (x_offset) {
                 let data_range = {start: 0, end: 1}
                 Object.assign(data_range, this.axes.state.data_range)
                 if (x_offset < 0) {
                     data_range.start = data_range.start + x_offset <= 0 ?
-                        0 : (data_range.end - (data_range.start + x_offset)) * this.axes.total_data_amount > 1000 ?
+                        0 : (data_range.end - (data_range.start + x_offset)) * this.axes.max_data_amount > 1000 ?
                             data_range.start : data_range.start + x_offset
                 } else if (x_offset > 0) {
-                    data_range.start = (data_range.end - (data_range.start + x_offset)) * this.axes.total_data_amount < 5 ?
+                    data_range.start = (data_range.end - (data_range.start + x_offset)) * this.axes.max_data_amount < 5 ?
                         data_range.start : data_range.start + x_offset
                 }
                 if (data_range.start !== this.axes.state.data_range?.start) {

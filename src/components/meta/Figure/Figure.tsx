@@ -2,14 +2,9 @@ import React from 'react'
 import {AxesReal} from "../axes/Axes"
 import {AxesGroupReal} from "../axesGroup/AxesGroup"
 import './Figure.css'
-import {ComponentChildren} from "../types"
+import {ComponentChildren} from "../utils/types/react"
 
 export const axisSize = { x: 50, y: 50 }
-
-enum FigureChildren {
-    Axes = 'Axes',
-    AxesGroup = 'AxesGroup'
-}
 
 interface FigureProps {
     width: number
@@ -64,9 +59,9 @@ export default class Figure extends React.Component<
                                 child.props.xAxis === false ? 0 : axisSize.x
                             ),
                         }
-                        if (child.type.name === FigureChildren.Axes) // <Axes>
+                        if (child.type.name === 'Axes') // <Axes>
                             return React.createElement(AxesReal, {...child.props, parent: this, size, key: index})
-                        else if (child.type.name === FigureChildren.AxesGroup) // <AxesGroup>
+                        else if (child.type.name === 'AxesGroup') // <AxesGroup>
                             return React.createElement(AxesGroupReal, {...child.props, parent: this, size, key: index})
                         else  // any other tag
                             throw Error("Only <Axes> and <AxesGroup> can appear as <Figure> children.")

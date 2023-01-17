@@ -1,7 +1,8 @@
 import React from "react"
 import {HistBase} from "./Hist"
-import {DataRange, Quotes} from "../types"
-import {numberPower, round} from "../functions"
+import {Quotes} from "../utils/types/plotData"
+import {DataRange} from "../utils/types/display"
+import {numberPower} from "../utils/functions/numeric"
 
 export class VolumeHist extends HistBase<Quotes> {
     public async recalculate_metadata(data_range: DataRange): Promise<void> {

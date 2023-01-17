@@ -1,15 +1,5 @@
 import React from 'react'
 import Drawing from "../drawings/Drawing/Drawing"
-import {
-    Callback,
-    CanvasObject,
-    DataRange,
-    GridPosition,
-    Padding2D,
-    PlotData,
-    Size2D,
-    TooltipCanvasObject
-} from "../types"
 import './Axes.css'
 import {AxesGroupReal} from "../axesGroup/AxesGroup"
 import AxesSettings from "./settings/AxesSettings"
@@ -17,8 +7,14 @@ import xAxis from "./axis/xAxis/xAxis"
 import xAxisDateTime from "./axis/xAxis/xAxisDateTime"
 import yAxis from "./axis/yAxis/yAxis"
 import Figure, {axisSize} from "../Figure/Figure"
-import {plotDataType} from "../functions"
+import {plotDataType} from "../utils/functions/dataTypes"
 import xAxisBase from "./axis/xAxis/xAxisBase"
+import {PlotData} from "../utils/types/plotData";
+import {DataRange, GridPosition, Padding2D, Size2D} from "../utils/types/display"
+import {CanvasObject, TooltipCanvasObject} from "../utils/types/react"
+import NumberRange from "../utils/classes/iterable/NumberRange"
+import DateTimeRange from "../utils/classes/iterable/DateTimeRange"
+import {Callback} from "../utils/types/callable"
 
 interface AxesPlaceholderProps {
     drawings: Drawing<PlotData>[]
@@ -48,15 +44,15 @@ interface AxesState {
         plot: CanvasObject
         tooltip: TooltipCanvasObject
     }
-    axes: { x: xAxisBase, y: yAxis }
+    axes: { x: xAxisBase<NumberRange | DateTimeRange>, y: yAxis }
     tooltips: React.ReactNode
 }
 
 export class AxesReal extends React.Component<AxesProps, AxesState> {
     public constructor(props: AxesProps) {
         super(props)
-        // Drawings data type check
-        let xAxisInit: xAxisBase
+        // Drawings dType check
+        let xAxisInit: xAxisBase<NumberRange | DateTimeRange>
         if (props.drawings.length) {
             if (props.drawings.every(
                 drawing => plotDataType(drawing.data.full) === 'Point2D'
@@ -97,11 +93,12 @@ export class AxesReal extends React.Component<AxesProps, AxesState> {
         // @ts-ignore
         props.parent.setState(state)
 }
-    //// Meta data
+    // All drawings visible
     public get drawings(): Drawing<PlotData>[] {
         return this.state.drawings.filter(drawing => drawing.visible)
     }
-    public get total_data_amount(): number {
+    // Max visible drawing data amount
+    public get max_data_amount(): number {
         return Math.max.apply(
             null, [1, ...Array.from(
                 this.state.drawings.filter(drawing => drawing.visible),
@@ -109,33 +106,37 @@ export class AxesReal extends React.Component<AxesProps, AxesState> {
             )]
         )
     }
-    //// Properties
+    // Canvas inner width
     public get width(): number {
-        return this.props.size?
+        return this.props.size ?
             this.props.size.width *
             this.state.canvases.plot.density : 0
     }
+    // Canvas inner height
     public get height(): number {
-        return this.props.size?
+        return this.props.size ?
             this.props.size.height *
             this.state.canvases.plot.density : 0
     }
+    // Image padding
     public get padding(): Padding2D {
         return this.props.padding ? this.props.padding : {
             top: 0, left: 0, bottom: 0, right: 0
         }
     }
+    // Canvas inner width with padding
     public get padded_width(): number {
         return  this.width * (
             1 - this.padding.left - this.padding.right
         )
     }
+    // Canvas inner height with padding
     public get padded_height(): number {
         return this.height * (
             1 - this.padding.top - this.padding.bottom
         )
     }
-    //// Utilities
+    // Change canvas resolution
     public set_window(callback?: Callback) {
         const state = this.state
         if (
@@ -157,10 +158,8 @@ export class AxesReal extends React.Component<AxesProps, AxesState> {
         state.axes.y.set_window()
         this.setState(state, callback)
     }
-    public async recalculate_metadata(
-        data_range: DataRange,
-        callback: Callback = this.plot
-    ): Promise<void> {
+    // Set new meta-data for data range given
+    public async recalculate_metadata(data_range: DataRange, callback: Callback = this.plot): Promise<void> {
         const state = this.state
         const drawings = state.drawings.filter(drawing => drawing.visible)
         drawings.forEach(async drawing =>
@@ -177,10 +176,12 @@ export class AxesReal extends React.Component<AxesProps, AxesState> {
             callback()
         })
     }
+    // Draw plots
     public async plot(): Promise<void> {
         this.state.canvases.plot.ref.current?.getContext('2d')?.clearRect(
             0, 0, this.width, this.height
         )
+        console.log(this.state.axes.y.coordinates.scale)
         if (this.drawings.length) {
             this.state.axes.x.show_grid()
             this.state.axes.y.show_grid()
@@ -189,6 +190,7 @@ export class AxesReal extends React.Component<AxesProps, AxesState> {
             await this.state.axes.y.show_scale()
         }
     }
+    // Draw crosshair and tooltips
     public show_tooltips(x: number, y: number, callback?: Callback): void {
         const state = this.state
         const context = state.canvases.tooltip.ref.current?.getContext('2d')
@@ -211,6 +213,7 @@ export class AxesReal extends React.Component<AxesProps, AxesState> {
             }, callback)
         }
     }
+    // Clear crosshair and tooltips
     public hide_tooltips(callback?: Callback): void {
         const state = this.state
         state.canvases.tooltip.mouse_events.drag = false
@@ -316,17 +319,15 @@ export class AxesReal extends React.Component<AxesProps, AxesState> {
                 this.hide_tooltips()
     }
     public componentDidMount(): void {
-        const data_range = {
-            start: 1 - (
-                this.total_data_amount <= 100 ?
-                    this.total_data_amount : 100
-            ) / this.total_data_amount,
-            end: 1
-        }
         this.set_window(async () =>
-            this.props.parent instanceof AxesGroupReal ?
-                await this.props.parent.recalculate_metadata(data_range) :
-                await this.recalculate_metadata(data_range)
+            await this.recalculate_metadata(
+                this.props.data_range ?
+                    this.props.data_range : {
+                    start: 1 - (
+                        this.max_data_amount <= 100 ?
+                            this.max_data_amount : 100
+                    ) / this.max_data_amount, end: 1
+                })
         )
     }
     public render(): React.ReactNode {

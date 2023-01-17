@@ -1,8 +1,8 @@
 import Drawing from "./Drawing/Drawing"
-import {Point2D, Quotes, TimeSeries, TimeSeriesArray, TimeSeriesObject} from "../types"
 import DrawingScalar from "./Drawing/DrawingScalar"
 import DrawingVector from "./Drawing/DrawingVector"
-import {plotDataType} from "../functions"
+import {plotDataType} from "../utils/functions/dataTypes"
+import {Point2D, TimeSeries, TimeSeriesArray, TimeSeriesObject} from "../utils/types/plotData"
 
 export interface HistStyle {
     color: {

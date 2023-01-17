@@ -1,9 +1,9 @@
 import React from "react"
 import Axis from "../Axis"
 import Drawing from "../../../drawings/Drawing/Drawing"
-import {numberPower, round} from "../../../functions"
 import {axisSize} from "../../../Figure/Figure"
 import {AxesReal} from "../../Axes"
+import {numberPower, round} from "../../../utils/functions/numeric"
 
 export default class yAxis extends Axis<AxesReal> {
     // Coordinates transform
@@ -83,9 +83,11 @@ export default class yAxis extends Axis<AxesReal> {
         if (context && this.canvases.tooltip.ref.current) {
             // Drawing horizontal line
             const axesContext = this.axes.state.canvases.tooltip.ref.current?.getContext('2d')
+            axesContext?.beginPath()
             axesContext?.moveTo(0, y * this.axes.state.canvases.plot.density)
             axesContext?.lineTo(this.axes.width, y * this.axes.state.canvases.plot.density)
             axesContext?.stroke()
+            axesContext?.closePath()
             // Drawing tooltip
             context.clearRect(
                 0, 0,
@@ -130,7 +132,7 @@ export default class yAxis extends Axis<AxesReal> {
             const y_offset = (
                 this.canvases.tooltip.mouse_events.position.y - (
                     event.clientY - window.top
-                )) * this.spread / 100000
+                )) / this.spread
             if (y_offset) {
                 let state = this.axes.state
                 state.axes.y.coordinates.scale = this.coordinates.scale + y_offset > 0 ?
@@ -176,7 +178,7 @@ export default class yAxis extends Axis<AxesReal> {
                     className={'axes y scale'}
                     style={{
                         width: axisSize.y,
-                        height: this.axes.props.size?.height
+                        height: this.axes.props.size.height
                     }}
                 ></canvas>
                 <canvas
@@ -184,7 +186,7 @@ export default class yAxis extends Axis<AxesReal> {
                     className={'axes y tooltip'}
                     style={{
                         width: axisSize.y,
-                        height: this.axes.props.size?.height
+                        height: this.axes.props.size.height
                     }}
                     onMouseMove={this.mouseMoveHandler}
                     onMouseOut={this.mouseOutHandler}

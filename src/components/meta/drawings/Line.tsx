@@ -1,9 +1,9 @@
 import React from "react"
-import {Point2D, TimeSeries, TimeSeriesArray, TimeSeriesObject} from "../types"
 import Drawing from "./Drawing/Drawing"
 import DrawingScalar from "./Drawing/DrawingScalar"
 import DrawingVector from "./Drawing/DrawingVector"
-import {plotDataType} from "../functions"
+import {plotDataType} from "../utils/functions/dataTypes"
+import {Point2D, TimeSeries, TimeSeriesArray, TimeSeriesObject} from "../utils/types/plotData"
 
 export interface LineStyle { color: string, width: number }
 

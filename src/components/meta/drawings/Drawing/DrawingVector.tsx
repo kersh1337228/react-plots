@@ -1,7 +1,9 @@
 import React from 'react'
-import {Constructor, DataRange, TimeSeriesObject} from "../../types"
-import {numberPower} from "../../functions"
 import Drawing from "./Drawing"
+import {TimeSeriesObject} from "../../utils/types/plotData"
+import {Constructor} from "../../utils/types/callable"
+import {DataRange} from "../../utils/types/display"
+import {numberPower} from "../../utils/functions/numeric"
 
 export default function DrawingVector<T extends Constructor<Drawing<TimeSeriesObject>>>(Base: T) {
     // @ts-ignore

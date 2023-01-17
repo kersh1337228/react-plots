@@ -1,5 +1,4 @@
 import React from 'react'
-import {Callback, ComponentChildren, DataRange, GridPosition, PlotData, Size2D, TooltipCanvasObject} from "../types"
 import xAxisGroup from "./axis/xAxisGroup"
 import xAxisDateTimeGroup from "./axis/xAxisDateTimeGroup"
 import {AxesReal} from "../axes/Axes"
@@ -7,8 +6,14 @@ import './AxesGroup.css'
 import AxesGroupSettings from "./settings/AxesGroupSettings"
 import {axisSize} from "../Figure/Figure"
 import Drawing from "../drawings/Drawing/Drawing"
-import {plotDataType} from "../functions"
+import {plotDataType} from "../utils/functions/dataTypes"
 import xAxisGroupBase from "./axis/xAxisGroupBase"
+import {DataRange, GridPosition, Size2D} from "../utils/types/display"
+import {ComponentChildren, TooltipCanvasObject} from '../utils/types/react'
+import {PlotData} from "../utils/types/plotData"
+import {Callback} from "../utils/types/callable"
+import NumberRange from "../utils/classes/iterable/NumberRange";
+import DateTimeRange from "../utils/classes/iterable/DateTimeRange";
 
 interface AxesGroupPlaceholderProps {
     children: React.ReactNode
@@ -27,24 +32,23 @@ interface AxesGroupProps extends AxesGroupPlaceholderProps {
 
 interface AxesGroupState {
     children: ComponentChildren<AxesReal>
-    data_range: DataRange
+    data_range: DataRange | undefined
     data_amount: number
     tooltips: { x: number, y: number } | null
     tooltip: TooltipCanvasObject
-    xAxis: xAxisGroupBase
+    xAxis: xAxisGroupBase<NumberRange | DateTimeRange>
 }
 
-export class AxesGroupReal extends React.Component<
-    AxesGroupProps, AxesGroupState
-> {
+export class AxesGroupReal extends React.Component<AxesGroupProps, AxesGroupState> {
     public constructor(props: AxesGroupProps) {
         super(props)
-        // Making sure children variable has array type
+        // Children nodes array
         let children: JSX.Element[]
         if ((props.children as any[]).length)
             children = props.children as JSX.Element[]
         else
             children = [props.children as JSX.Element]
+        // Grid borders
         const [maxRow, maxCol] = [
             Math.max.apply(null, Array.from(
                 children, child => child.props.position.row.end
@@ -53,8 +57,9 @@ export class AxesGroupReal extends React.Component<
                 children, child => child.props.position.column.end
             ))
         ]
+        // Children nodes finally rendered
         let stateChildren = children.map((child, index) => {
-            const size = {
+            const size = {  // Children node actual size
                 width: (child.props.position.column.end -
                     child.props.position.column.start
                 ) * (this.props.size ?
@@ -74,8 +79,8 @@ export class AxesGroupReal extends React.Component<
             else
                 throw Error("Only <Axes> can appear as <AxesGroup> children.")
         })
-        // Children drawings data type check
-        let xAxisInit: xAxisGroup | xAxisDateTimeGroup
+        // Children drawings dType
+        let xAxisInit: xAxisGroupBase<NumberRange | DateTimeRange>
         if (children.every(
             axes => plotDataType(axes.props.drawings[0].data.full) === 'Point2D'
         )) xAxisInit = new xAxisGroup(this)  // Numeric data
@@ -83,9 +88,10 @@ export class AxesGroupReal extends React.Component<
             axes => plotDataType(axes.props.drawings[0].data.full) !== 'Point2D'
         )) xAxisInit = new xAxisDateTimeGroup(this)  // Time series data
         else throw Error("All <Axes> inside of <AxesGroup> must have either numeric or time series X axis.")
+        // State initialization
         this.state = {
             children: { nodes: stateChildren, components: [] },
-            data_range: { start: 0, end: 1 },
+            data_range: undefined,
             data_amount: 1,
             tooltips: null,
             tooltip: {
@@ -100,27 +106,38 @@ export class AxesGroupReal extends React.Component<
         this.mouseDownHandler = this.mouseDownHandler.bind(this)
         this.mouseUpHandler = this.mouseUpHandler.bind(this)
     }
-    //// Meta data
+    // All Drawing objects inside
+    public get children(): JSX.Element[] | AxesReal[] {
+        return this.state.children.components.length < this.state.children.nodes.length ?
+            this.state.children.nodes : this.state.children.components
+    }
     public get drawings(): Drawing<PlotData> [] {
         return ([] as Array<Drawing<PlotData>>).concat(
-            ...this.state.children.components.map(axes => axes.drawings)
+            ...this.children.map(axes => (
+                axes instanceof AxesReal ?
+                    axes.drawings : axes.props.drawings
+            ))
         )
     }
-    public get total_data_amount(): number {
+    // Max data amount inside
+    public get max_data_amount(): number {
         return Math.max.apply(null, [1, ...Array.from(
-            this.state.children.components, child => Math.max.apply(
-                null, Array.from(child.drawings, drawing => drawing.data.full.length)
+            this.children as any[], axes => Math.max.apply(
+                null, Array.from((axes instanceof AxesReal ?
+                        axes.drawings : axes.props.drawings
+                ), drawing => (drawing as Drawing<any>).data.full.length)
             )
-        )])
+        )] as number[])
     }
-    //// Properties
+    // Actual component width
     public get width(): number {
         return this.props.size.width
     }
+    // Actual component height
     public get height(): number {
         return this.props.size.height
     }
-    //// Utilities
+    // Change components size and canvases resolution
     public set_window(callback?: Callback) {
         const state = this.state
         if (state.tooltip.ref.current) {
@@ -130,10 +147,8 @@ export class AxesGroupReal extends React.Component<
         state.xAxis.set_window()
         this.setState(state, callback)
     }
-    public async recalculate_metadata(
-        data_range: DataRange,
-        callback?: Callback
-    ): Promise<void> {
+    // Set new meta-data for data range given
+    public async recalculate_metadata(data_range: DataRange, callback?: Callback): Promise<void> {
         const state = this.state
         const drawings = ([] as Array<Drawing<PlotData>>).concat(
             ...state.children.components.map(axes => {
@@ -157,6 +172,7 @@ export class AxesGroupReal extends React.Component<
             }
         )
     }
+    // Draw crosshair and tooltips
     public show_tooltips(x: number, y: number, callback?: Callback): void {
         const state = this.state
         const context = state.tooltip.ref.current?.getContext('2d')
@@ -185,7 +201,7 @@ export class AxesGroupReal extends React.Component<
             if (this.state.tooltip.mouse_events.drag) {
                 const x_offset = (
                     x - this.state.tooltip.mouse_events.position.x
-                ) * 0.001 / this.state.xAxis.coordinates.scale
+                ) * 0.001 / this.state.xAxis.coordinates.scale * this.state.xAxis.scroll_speed
                 if (x_offset) {
                     if (x_offset < 0) {
                         data_range.end =
@@ -246,7 +262,17 @@ export class AxesGroupReal extends React.Component<
         })
     }
     // Life cycle
-    public componentDidMount(): void { this.set_window() }
+    public componentDidMount(): void {
+        this.set_window(async () => {
+            await this.recalculate_metadata({
+                start: 1 - (
+                    this.max_data_amount <= 100 ?
+                        this.max_data_amount : 100
+                ) / this.max_data_amount,
+                end: 1
+            })
+        })
+    }
     public render(): React.ReactNode {
         return (
             <div

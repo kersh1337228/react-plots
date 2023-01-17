@@ -1,6 +1,7 @@
 import React from 'react'
-import {DataRange, PlotData} from "../../types"
 import {AxesReal} from "../../axes/Axes"
+import {PlotData} from "../../utils/types/plotData"
+import {DataRange} from "../../utils/types/display"
 
 export default abstract class Drawing<T extends PlotData> {
     //// Fields

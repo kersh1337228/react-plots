@@ -1,6 +1,6 @@
 import React from 'react'
 import {AxesReal} from "../../Axes"
-import AxesObjectTreeElement from "./AxesObjectTreeElement";
+import AxesObjectTreeElement from "./AxesObjectTreeElement"
 
 interface AxesObjectTreeProps {
     axes: AxesReal

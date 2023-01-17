@@ -1,16 +1,23 @@
 import React from "react"
 import xAxisBase from "./xAxisBase"
-import {numberPower} from "../../../functions"
 import Drawing from "../../../drawings/Drawing/Drawing"
 import {AxesReal} from "../../Axes"
+import NumberRange, {plotNumberRange} from "../../../utils/classes/iterable/NumberRange"
+import {Point2D} from "../../../utils/types/plotData"
+import {numberPower} from "../../../utils/functions/numeric"
 
-export default class xAxis extends xAxisBase {
+export default class xAxis extends xAxisBase<NumberRange> {
     public constructor(axes: AxesReal, label?: string) {
         super(axes, label)
         this.scroll_speed = 100
     }
     // Coordinates transform
     public transform_coordinates(drawings: Drawing<any>[]): void {
+        this.data.full = plotNumberRange(
+            this.axes.state.drawings.filter(
+                drawing => drawing.visible
+            ) as Drawing<Point2D>[]
+        )
         super.transform_coordinates(drawings)
         this.coordinates.scale = this.axes.padded_width / this.spread
         this.coordinates.translate =
@@ -49,17 +56,23 @@ export default class xAxis extends xAxisBase {
     public async show_tooltip(x: number): Promise<void> {
         if (this.canvases.tooltip.ref.current) {
             const context = this.canvases.tooltip.ref.current.getContext('2d')
-            let grid_step = this.axes.width / this.grid.amount
             if (context) {
+                const scale = this.axes.padded_width / this.axes.state.data_amount
+                const [segment_width, i] = [
+                    this.axes.props.size.width * (
+                        1 - this.axes.padding.left - this.axes.padding.right
+                    ) / this.axes.state.data_amount,
+                    Math.floor(
+                        x * this.axes.state.canvases.plot.density / scale
+                    )
+                ]
                 // Drawing vertical line
                 const axesContext = this.axes.state.canvases.tooltip.ref.current?.getContext('2d')
-                axesContext?.save()
                 axesContext?.beginPath()
-                axesContext?.moveTo(x, 0)
-                axesContext?.lineTo(x, this.axes.height)
+                axesContext?.moveTo((i + 0.55) * scale, 0)
+                axesContext?.lineTo((i + 0.55) * scale, this.axes.height)
                 axesContext?.stroke()
                 axesContext?.closePath()
-                axesContext?.restore()
                 // Drawing tooltip
                 context.clearRect(
                     0, 0,
@@ -68,50 +81,17 @@ export default class xAxis extends xAxisBase {
                 )
                 context.save()
                 context.fillStyle = '#323232'
-                context.fillRect(x - grid_step / 8, 0, grid_step / 4, 25)
+                context.fillRect((i + 0.55) * segment_width - 15, 0, 30, 25)
                 context.font = `${this.font.size}px ${this.font.name}`
                 context.fillStyle = '#ffffff'
-                // Value tooltip
-                const min = this.coordinates.translate * (
-                    this.spread / this.axes.padded_width - 1 / this.coordinates.scale
-                ) + this.min
-                context.fillText(numberPower(
-                    (x - this.axes.width * this.axes.padding.left)
-                    / this.coordinates.scale + min, 2
-                ), x - 10, this.canvases.tooltip.ref.current.height * 0.3)
+                const text = this.data.observed?.format('%.2f').at(i)
+                context.textAlign = 'center'
+                context.fillText(
+                    text ? text : '',
+                    (i + 0.55) * segment_width,
+                    this.canvases.tooltip.ref.current.height * 0.3
+                )
                 context.restore()
-            }
-        }
-    }
-    public async mouseMoveHandler(event: React.MouseEvent): Promise<void> {
-        // TODO: change implementation (probably)
-        if (this.canvases.tooltip.mouse_events.drag) {
-            const window = (event.target as HTMLCanvasElement).getBoundingClientRect()
-            const [x, y] = [
-                event.clientX - window.left,
-                event.clientY - window.top
-            ]
-            const x_offset = (
-                this.canvases.tooltip.mouse_events.position.x - x
-            ) * this.axes.state.data_amount / 100000
-            if (x_offset) {
-                let data_range = {start: 0, end: 1}
-                Object.assign(data_range, this.axes.state.data_range)
-                if (x_offset < 0) {
-                    data_range.start = data_range.start + x_offset <= 0 ?
-                        0 : (data_range.end - (data_range.start + x_offset)) * this.axes.total_data_amount > 1000 ?
-                            data_range.start : data_range.start + x_offset
-                } else if (x_offset > 0) {
-                    data_range.start = (data_range.end - (data_range.start + x_offset)) * this.axes.total_data_amount < 5 ?
-                        data_range.start : data_range.start + x_offset
-                }
-                if (data_range.start !== this.axes.state.data_range.start) {
-                    await this.axes.recalculate_metadata(data_range, () => {
-                        let state = this.axes.state
-                        state.axes.x.canvases.tooltip.mouse_events.position = {x, y}
-                        this.axes.setState(state, this.axes.plot)
-                    })
-                }
             }
         }
     }
