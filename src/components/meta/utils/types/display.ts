@@ -1,12 +1,6 @@
-export interface DataRange {  // Time series view interval
-    start: number
-    end: number
-}
+export interface DataRange { start: number, end: number }
 
-export interface Size2D {
-    width: number
-    height: number
-}
+export interface Size2D { width: number, height: number }
 
 export interface Padding2D {
     left: number
@@ -15,15 +9,9 @@ export interface Padding2D {
     bottom: number
 }
 
-export interface GridPosition {  // CSS grid display position
-    row: {
-        start: number,
-        end: number
-    }
-    column: {
-        start: number,
-        end: number
-    }
+export interface GridPosition {  // CSS grid position
+    row: { start: number, end: number }
+    column: { start: number, end: number }
 }
 
 export interface GridObject {  // Plot axes grid

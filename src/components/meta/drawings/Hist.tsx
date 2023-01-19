@@ -35,9 +35,11 @@ export class HistBase<T extends Point2D | TimeSeries | Quotes> extends Drawing<T
                 // Drawing
                 for (let i = 0; i < this.data_amount; ++i) {
                     const [x, y] = this.point(i)
-                    context.fillStyle = y > 0 ?
-                        this.style.color.pos : this.style.color.neg
-                    context.fillRect(x - 0.45, 0, 0.9, y)
+                    if (y) {
+                        context.fillStyle = y > 0 ?
+                            this.style.color.pos : this.style.color.neg
+                        context.fillRect(x - 0.45, 0, 0.9, y)
+                    }
                 }
                 context.restore()
             }

@@ -7,7 +7,7 @@ import NumberRange from "../../../utils/classes/iterable/NumberRange"
 import DateTimeRange from "../../../utils/classes/iterable/DateTimeRange"
 
 export default abstract class xAxisBase<T extends NumberRange | DateTimeRange> extends Axis<AxesReal> {
-    protected data: { full: T | undefined, observed: T | undefined}
+    public data: { full: T | undefined, observed: T | undefined}
     constructor(axes: AxesReal, label?: string) {
         super(axes, label)
         this.data = { full: undefined, observed: undefined }
@@ -28,23 +28,6 @@ export default abstract class xAxisBase<T extends NumberRange | DateTimeRange> e
             this.canvases.scale.ref.current.height = axisSize.x
             this.canvases.tooltip.ref.current.width = this.axes.props.size.width
             this.canvases.tooltip.ref.current.height = axisSize.x
-        }
-    }
-    public async show_grid(): Promise<void> {
-        const context = this.axes.state.canvases.plot.ref.current?.getContext('2d')
-        if (context) {
-            context.save()
-            context.beginPath()
-            for (let i = 1; i <= this.grid.amount; ++i) {
-                const x = i * this.axes.width / (this.grid.amount + 1)
-                context.moveTo(x, 0)
-                context.lineTo(x, this.axes.height)
-            }
-            context.lineWidth = this.grid.width
-            context.strokeStyle = this.grid.color
-            context.stroke()
-            context.closePath()
-            context.restore()
         }
     }
     public async mouseMoveHandler(event: React.MouseEvent): Promise<void> {

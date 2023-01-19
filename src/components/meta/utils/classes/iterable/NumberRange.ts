@@ -3,7 +3,7 @@ import Drawing from "../../../drawings/Drawing/Drawing"
 import {Point2D} from "../../types/plotData"
 
 export default class NumberRange extends TypedRange<number> {
-    constructor(private readonly arrays: number[][]) {
+    constructor(arrays: number[][]) {
         super([...new Set(([] as Array<number>).concat(...arrays).sort(
             (a, b) => a < b ? -1 : a > b ? 1 : 0
         ))])
@@ -20,25 +20,21 @@ export default class NumberRange extends TypedRange<number> {
             return fstr
         })
     }
-    public at(i: number, j: number = -1): number | undefined {
-        return j < 0 ? this.container.at(i) : this.arrays.at(j)?.at(i)
+    public at(i: number): number | undefined {
+        return this.container.at(i)
     }
     public slice(begin: number, end: number): NumberRange {
-        return new NumberRange(
-            this.arrays.map(arr => arr.slice(begin, end))
-        )
+        return new NumberRange([this.container.slice(begin, end)])
     }
-    public nearest(x: number, tolerance: number = 1.): number | undefined {
-        const nearest_value = this.container.sort(
+    public nearest(x: number, tolerance: number = Infinity): number | undefined {
+        const nearest_value = [...this.container].sort(
             (a, b) => Math.abs(a - x) < Math.abs(b - x) ? -1 : 1
         ).at(0) as number
         return Math.abs(nearest_value - x) < tolerance ? nearest_value : undefined
     }
-    public indexOf(value: number, tolerance: number = 1.): number[] | undefined {
+    public indexOf(value: number, tolerance: number = Infinity): number | undefined {
         const nearest_value = this.nearest(value, tolerance)
-        return nearest_value ? this.arrays.map(
-            (value, index) => [value.indexOf(nearest_value), index]
-        ).filter(pair => pair[0] > -1)[0] : undefined
+        return nearest_value ? this.container.indexOf(nearest_value) : undefined
     }
 }
 

@@ -12,8 +12,8 @@ export default class yAxis extends Axis<AxesReal> {
         this.value.max = Math.max.apply(null, drawings.map(drawing => drawing.max('y')))
         this.coordinates.scale = this.axes.padded_height / this.spread
         this.coordinates.translate =
-            -this.min * this.coordinates.scale +
-            this.axes.padding.top * this.axes.height
+            this.axes.padding.top * this.axes.height +
+            this.max * this.coordinates.scale
     }
     // Display
     public set_window(): void {
@@ -24,30 +24,19 @@ export default class yAxis extends Axis<AxesReal> {
             this.canvases.tooltip.ref.current.height = this.axes.props.size.height
         }
     }
-    public async show_grid(): Promise<void> {
-        const context = this.axes.state.canvases.plot.ref.current?.getContext('2d')
-        if (context) {
-            context.save()
-            context.beginPath()
-            for (let i = 1; i <= this.grid.amount; ++i) {
-                const y = i * this.axes.height / (this.grid.amount + 1)
-                context.moveTo(0, y)
-                context.lineTo(this.axes.width, y)
-            }
-            context.lineWidth = this.grid.width
-            context.strokeStyle = this.grid.color
-            context.stroke()
-            context.closePath()
-            context.restore()
-        }
-    }
     public async show_scale(): Promise<void> {
         // TODO: Show label
         if (this.canvases.scale.ref.current) {
-            const context = this.canvases.scale.ref.current.getContext('2d')
-            if (context) {  // Drawing value scale
+            const [context, gridContext] = [
+                this.canvases.scale.ref.current.getContext('2d'),
+                this.axes.state.canvases.plot.ref.current?.getContext('2d')
+            ]
+            if (context && gridContext) {  // Drawing value scale
                 const step = this.axes.height / (this.grid.amount + 1) / this.coordinates.scale
                 context.save()
+                gridContext.save()
+                gridContext.lineWidth = this.grid.width
+                gridContext.strokeStyle = this.grid.color
                 context.clearRect(0, 0, this.axes.props.size.width, this.axes.props.size.height)
                 context.font = `${this.font.size}px ${this.font.name}`
                 for (let i = 1; i <= this.grid.amount; ++i) {
@@ -63,6 +52,11 @@ export default class yAxis extends Axis<AxesReal> {
                     )
                     context.stroke()
                     context.closePath()
+                    gridContext.beginPath()
+                    gridContext.moveTo(0, y)
+                    gridContext.lineTo(this.axes.width, y)
+                    gridContext.stroke()
+                    gridContext.closePath()
                     // Drawing value
                     context.fillText(
                         String(numberPower(
@@ -74,6 +68,7 @@ export default class yAxis extends Axis<AxesReal> {
                     )
                 }
                 context.restore()
+                gridContext.restore()
             }
         }
     }

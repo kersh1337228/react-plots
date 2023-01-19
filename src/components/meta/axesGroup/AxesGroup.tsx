@@ -6,14 +6,14 @@ import './AxesGroup.css'
 import AxesGroupSettings from "./settings/AxesGroupSettings"
 import {axisSize} from "../Figure/Figure"
 import Drawing from "../drawings/Drawing/Drawing"
-import {plotDataType} from "../utils/functions/dataTypes"
+import {fillData, plotDataTypeVectorised} from "../utils/functions/dataTypes"
 import xAxisGroupBase from "./axis/xAxisGroupBase"
 import {DataRange, GridPosition, Size2D} from "../utils/types/display"
 import {ComponentChildren, TooltipCanvasObject} from '../utils/types/react'
-import {PlotData} from "../utils/types/plotData"
+import {PlotData, Point2D, TimeSeries} from "../utils/types/plotData"
 import {Callback} from "../utils/types/callable"
-import NumberRange from "../utils/classes/iterable/NumberRange";
-import DateTimeRange from "../utils/classes/iterable/DateTimeRange";
+import NumberRange, {plotNumberRange} from "../utils/classes/iterable/NumberRange"
+import DateTimeRange, {plotDateTimeRange} from "../utils/classes/iterable/DateTimeRange"
 
 interface AxesGroupPlaceholderProps {
     children: React.ReactNode
@@ -57,6 +57,21 @@ export class AxesGroupReal extends React.Component<AxesGroupProps, AxesGroupStat
                 children, child => child.props.position.column.end
             ))
         ]
+        // Children drawings dType
+        const drawings = [].concat(...Array.from(children, axes => axes.props.drawings))
+        const dType = plotDataTypeVectorised(drawings)
+        let xAxisInit: xAxisGroupBase<NumberRange | DateTimeRange>
+        let labels: number[] | string[]
+        if (dType) {
+            if (dType === 'Point2D') {
+                xAxisInit = new xAxisGroup(this)
+                labels = [...plotNumberRange(drawings as Drawing<Point2D>[])]
+            } else {
+                xAxisInit = new xAxisDateTimeGroup(this)
+                labels = [...plotDateTimeRange(drawings as Drawing<TimeSeries>[]).format('%Y-%m-%d')]
+            }
+        }
+        else throw Error("<AxesGroup> nested <Axes> drawings must have uniform data type")
         // Children nodes finally rendered
         let stateChildren = children.map((child, index) => {
             const size = {  // Children node actual size
@@ -71,34 +86,28 @@ export class AxesGroupReal extends React.Component<AxesGroupProps, AxesGroupStat
                         this.props.size.height : 0
                 ) / (maxRow - 1),
             }
-            if (child.type.name === 'Axes')
+            if (child.type.name === 'Axes') {
+                const drawing = child.props.drawings[0]
+                drawing.data.full = fillData(drawing.data.full, labels)
                 return React.createElement(AxesReal, {
                     ...child.props, size, xAxis: false, parent: this, key: index,
-                    position: {...child.props.position, column: {start: 1, end: 3}}
+                    position: {...child.props.position, column: {start: 1, end: 3}},
+                    drawings: [drawing, ...child.props.drawings.slice(1)]
                 })
-            else
-                throw Error("Only <Axes> can appear as <AxesGroup> children.")
+            }
+            else throw Error("Only <Axes> can appear as <AxesGroup> children.")
         })
-        // Children drawings dType
-        let xAxisInit: xAxisGroupBase<NumberRange | DateTimeRange>
-        if (children.every(
-            axes => plotDataType(axes.props.drawings[0].data.full) === 'Point2D'
-        )) xAxisInit = new xAxisGroup(this)  // Numeric data
-        else if (children.every(
-            axes => plotDataType(axes.props.drawings[0].data.full) !== 'Point2D'
-        )) xAxisInit = new xAxisDateTimeGroup(this)  // Time series data
-        else throw Error("All <Axes> inside of <AxesGroup> must have either numeric or time series X axis.")
         // State initialization
         this.state = {
             children: { nodes: stateChildren, components: [] },
             data_range: undefined,
-            data_amount: 1,
+            data_amount: 0,
             tooltips: null,
             tooltip: {
                 ref: React.createRef(),
                 mouse_events: { drag: false, position: {x: 0, y: 0} }
             },
-            xAxis: xAxisInit
+            xAxis: xAxisInit,
         }
         // Methods binding
         this.mouseMoveHandler = this.mouseMoveHandler.bind(this)
@@ -159,12 +168,14 @@ export class AxesGroupReal extends React.Component<AxesGroupProps, AxesGroupStat
                 return drawings
             })
         )
-        const data_amount = Math.max.apply(
-            null, [1, ...drawings.map(drawing => drawing.data_amount)]
-        )
-        this.setState(
-            {...state, data_range, data_amount},
-            () => {
+        this.setState({
+            ...state, data_range,
+            data_amount: this.state.children.components[0].state.data_amount ?
+                this.state.children.components[0].state.data_amount :
+                Math.max.apply(
+                    null, [1, ...drawings.map(drawing => drawing.data_amount)]
+                )
+        }, () => {
                 const state = this.state
                 state.xAxis.transform_coordinates(drawings)
                 state.xAxis.show_scale()
@@ -223,8 +234,8 @@ export class AxesGroupReal extends React.Component<AxesGroupProps, AxesGroupStat
                             )
                     }
                 }
-            }
-            this.recalculate_metadata(data_range, () => { this.show_tooltips(x, y) })
+                this.recalculate_metadata(data_range, () => { this.show_tooltips(x, y) })
+            } else this.show_tooltips(x, y)
         }
     }
     public mouseOutHandler() {

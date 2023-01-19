@@ -2,50 +2,62 @@ import React from "react"
 import xAxisBase from "./xAxisBase"
 import Drawing from "../../../drawings/Drawing/Drawing"
 import DateTimeRange, {plotDateTimeRange} from "../../../utils/classes/iterable/DateTimeRange"
-import {Quotes, TimeSeries} from "../../../utils/types/plotData"
 
 export default class xAxisDateTime extends xAxisBase<DateTimeRange> {
     // Coordinates transform
     public transform_coordinates(drawings: Drawing<any>[]): void {
-        this.data.full = plotDateTimeRange(
-            this.axes.drawings as Drawing<TimeSeries | Quotes>[]
-        )
+        this.data.full = plotDateTimeRange(drawings)
         super.transform_coordinates(drawings)
         this.coordinates.scale = this.axes.padded_width / this.axes.state.data_amount
         this.coordinates.translate = this.axes.padding.left * this.axes.width
     }
     // Display
     public async show_scale(): Promise<void> {
-        const context = this.canvases.scale.ref.current?.getContext('2d')
-        if (context && this.canvases.scale.ref.current) {
+        const [context, gridContext] = [
+            this.canvases.scale.ref.current?.getContext('2d'),
+            this.axes.state.canvases.plot.ref.current?.getContext('2d')
+        ]
+        if (context && this.canvases.scale.ref.current || gridContext) {
             const [step, scale] = [
-                Math.ceil(this.axes.state.data_amount * 0.1),
+                Math.ceil(this.axes.state.data_amount * 0.15),
                 this.coordinates.scale / this.axes.state.canvases.plot.density
             ]
-            context.save()
-            context.clearRect(
+            context?.save()
+            context?.clearRect(
                 0, 0,
-                this.canvases.scale.ref.current.width,
-                this.canvases.scale.ref.current.height
+                this.canvases.scale.ref.current?.width as number,
+                this.canvases.scale.ref.current?.height as number
             )
-            context.font = `${this.font.size}px ${this.font.name}`
-            for (let i = step; i <= this.axes.state.data_amount - step * 0.5; i += step) {
-                context.beginPath()
-                context.moveTo((i + 0.55) * scale, 0)
-                context.lineTo(
+            if (context) context.font = `${this.font.size}px ${this.font.name}`
+            gridContext?.save()
+            if (gridContext) {
+                gridContext.lineWidth = this.grid.width
+                gridContext.strokeStyle = this.grid.color
+            }
+            for (let i = step; i < this.axes.state.data_amount - step * 0.7; i += step) {
+                context?.beginPath()
+                context?.moveTo((i + 0.55) * scale, 0)
+                context?.lineTo(
                     (i + 0.55) * scale,
-                    this.canvases.scale.ref.current.height * 0.1
+                    (this.canvases.scale.ref.current?.height as number) * 0.1
                 )
-                context.stroke()
-                context.closePath()
+                context?.stroke()
+                context?.closePath()
+                gridContext?.beginPath()
+                gridContext?.moveTo((i + 0.55) * scale, 0)
+                gridContext?.lineTo((i + 0.55) * scale, this.axes.height)
+                gridContext?.stroke()
+                gridContext?.closePath()
                 const text = this.data.observed?.at(i)?.format('%Y-%m-%d')
-                context.fillText(
+                if (context) context.textAlign = 'center'
+                context?.fillText(
                     text ? text : '',
-                    (i + 0.55) * scale - 25,
-                    this.canvases.scale.ref.current.height * 0.3
+                    (i + 0.55) * scale,
+                    (this.canvases.scale.ref.current?.height as number) * 0.3
                 )
             }
-            context.restore()
+            context?.restore()
+            gridContext?.restore()
         }
     }
     public async show_tooltip(x: number): Promise<void> {

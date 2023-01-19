@@ -1,16 +1,13 @@
-// plotData types
-import {DateString} from "./dateTime"
-
-export type Point2D = [number, number]
-export type TimeSeriesArray = [DateString, number]
-export type TimeSeriesObject = {date: DateString, value: number, [key: string]: any}
-export type TimeSeries = TimeSeriesArray | TimeSeriesObject
+export type Point2D = [number, number | null]
+export type TimeSeriesArray = [string, number | null]
+export type TimeSeriesObject = {date: string, value: number | null, [key: string]: any}
 export type Quotes = {
-    date: DateString,
-    open: number,
-    high: number,
-    low: number,
-    close: number,
-    volume: number
+    date: string,
+    open: number | null,
+    high: number | null,
+    low: number | null,
+    close: number | null,
+    volume: number | null
 }
-export type PlotData = Point2D | TimeSeries | Quotes
+export type TimeSeries = TimeSeriesArray | TimeSeriesObject | Quotes
+export type PlotData = Point2D | TimeSeries

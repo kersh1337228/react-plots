@@ -7,14 +7,17 @@ import xAxis from "./axis/xAxis/xAxis"
 import xAxisDateTime from "./axis/xAxis/xAxisDateTime"
 import yAxis from "./axis/yAxis/yAxis"
 import Figure, {axisSize} from "../Figure/Figure"
-import {plotDataType} from "../utils/functions/dataTypes"
+import {fillData, plotDataType, plotDataTypeVectorised} from "../utils/functions/dataTypes"
 import xAxisBase from "./axis/xAxis/xAxisBase"
-import {PlotData} from "../utils/types/plotData";
+import {PlotData, Point2D, TimeSeries} from "../utils/types/plotData";
 import {DataRange, GridPosition, Padding2D, Size2D} from "../utils/types/display"
 import {CanvasObject, TooltipCanvasObject} from "../utils/types/react"
-import NumberRange from "../utils/classes/iterable/NumberRange"
-import DateTimeRange from "../utils/classes/iterable/DateTimeRange"
+import NumberRange, {plotNumberRange} from "../utils/classes/iterable/NumberRange"
+import DateTimeRange, {plotDateTimeRange} from "../utils/classes/iterable/DateTimeRange"
 import {Callback} from "../utils/types/callable"
+import xAxisGroupBase from "../axesGroup/axis/xAxisGroupBase";
+import xAxisGroup from "../axesGroup/axis/xAxisGroup";
+import xAxisDateTimeGroup from "../axesGroup/axis/xAxisDateTimeGroup";
 
 interface AxesPlaceholderProps {
     drawings: Drawing<PlotData>[]
@@ -53,19 +56,25 @@ export class AxesReal extends React.Component<AxesProps, AxesState> {
         super(props)
         // Drawings dType check
         let xAxisInit: xAxisBase<NumberRange | DateTimeRange>
+        let labels: number[] | string[]
         if (props.drawings.length) {
-            if (props.drawings.every(
-                drawing => plotDataType(drawing.data.full) === 'Point2D'
-            )) xAxisInit = new xAxis(this)  // Numeric data
-            else if (props.drawings.every(
-                drawing => plotDataType(drawing.data.full) !== 'Point2D'
-            )) xAxisInit = new xAxisDateTime(this)  // Time series data
-            else throw Error("<Axes> drawings data must have either time series or numeric type")
-        } else throw Error("<Axes> must contain at least a single drawing.")
+            const dType = plotDataTypeVectorised(props.drawings)
+            if (dType)
+                if (dType === 'Point2D') {
+                    xAxisInit = new xAxis(this)
+                    labels = [...plotNumberRange(props.drawings as Drawing<Point2D>[])]
+                } else {
+                    xAxisInit = new xAxisDateTime(this)
+                    labels = [...plotDateTimeRange(props.drawings as Drawing<TimeSeries>[]).format('%Y-%m-%d')]
+                }
+            else throw Error("<Axes> drawings must have uniform data type")
+        } else throw Error("<Axes> must contain at least one drawing.")
         // State initialization
         this.state = {
             drawings: props.drawings.map(drawing => {
+                if (!drawing.data.full.length) throw Error('Drawing data can not be empty.')
                 drawing.axes = this
+                drawing.data.full = fillData(drawing.data.full, labels)
                 return drawing
             }),
             data_range: { start: 0, end: 1 },
@@ -120,9 +129,12 @@ export class AxesReal extends React.Component<AxesProps, AxesState> {
     }
     // Image padding
     public get padding(): Padding2D {
-        return this.props.padding ? this.props.padding : {
-            top: 0, left: 0, bottom: 0, right: 0
-        }
+        return this.props.padding ? {
+            top: this.props.padding.top ?  this.props.padding.top : 0,
+            left: this.props.padding.left ?  this.props.padding.left : 0,
+            bottom: this.props.padding.bottom ?  this.props.padding.bottom : 0,
+            right: this.props.padding.right ?  this.props.padding.right : 0
+        } : { top: 0, left: 0, bottom: 0, right: 0 }
     }
     // Canvas inner width with padding
     public get padded_width(): number {
@@ -181,13 +193,10 @@ export class AxesReal extends React.Component<AxesProps, AxesState> {
         this.state.canvases.plot.ref.current?.getContext('2d')?.clearRect(
             0, 0, this.width, this.height
         )
-        console.log(this.state.axes.y.coordinates.scale)
         if (this.drawings.length) {
-            this.state.axes.x.show_grid()
-            this.state.axes.y.show_grid()
-            this.drawings.forEach(async drawing => await drawing.plot())
             await this.state.axes.x.show_scale()
             await this.state.axes.y.show_scale()
+            this.drawings.forEach(async drawing => await drawing.plot())
         }
     }
     // Draw crosshair and tooltips
@@ -205,11 +214,10 @@ export class AxesReal extends React.Component<AxesProps, AxesState> {
                 state.axes.y.show_tooltip(y)
                 context.restore()
             }
-            const i = Math.floor(x / this.props.size.width * this.state.data_amount)
             this.setState({
                 ...state, tooltips: this.state.drawings.filter(
                     drawing => drawing.visible
-                ).map(drawing => drawing.show_tooltip(i))
+                ).map(drawing => drawing.show_tooltip(x))
             }, callback)
         }
     }

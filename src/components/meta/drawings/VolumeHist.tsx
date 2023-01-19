@@ -13,8 +13,8 @@ export class VolumeHist extends HistBase<Quotes> {
         this.data.observed.full = this.data.full.slice(start, end)
         const volumes = Array.from(this.data.observed.full, obj => obj.volume)
         this.value.y = {
-            min: Math.min.apply(null, volumes),
-            max: Math.max.apply(null, volumes)
+            min: Math.min.apply(null, volumes as number[]),
+            max: Math.max.apply(null, volumes as number[])
         }
     }
     public async plot(): Promise<void> {
@@ -34,19 +34,22 @@ export class VolumeHist extends HistBase<Quotes> {
                 // Drawing
                 for (let i = 0; i < this.data_amount; ++i) {
                     const {open, close, volume} = this.data.observed.full[i]
-                    context.fillStyle = close - open > 0 ?
-                        this.style.color.pos : this.style.color.neg
-                    context.fillRect(i + 0.1, 0, 0.9, volume)
+                    if (open && close && volume) {
+                        context.fillStyle = close - open > 0 ?
+                            this.style.color.pos : this.style.color.neg
+                        context.fillRect(i + 0.1, 0, 0.9, volume)
+                    }
                 }
                 context.restore()
             }
         }
     }
-    public show_tooltip(i: number): React.ReactElement {
-        return (
+    public show_tooltip(i: number): React.ReactNode {
+        const volume = this.data.observed.full[i].volume
+        return volume ? (
             <span key={this.name}>volume: {
-                numberPower(this.data.observed.full[i].volume, 2)
+                numberPower(volume, 2)
             }</span>
-        )
+        ) : undefined
     }
 }

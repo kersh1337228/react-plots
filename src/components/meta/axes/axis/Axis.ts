@@ -44,7 +44,6 @@ export default abstract class Axis<T extends AxesReal | AxesGroupReal> {
     public abstract transform_coordinates(drawings: Drawing<any>[]): void
     // Display
     public abstract set_window(): void
-    public abstract show_grid(): Promise<void>
     public abstract show_scale(): Promise<void>
     public abstract show_tooltip(coordinate: number): Promise<void>
     public hide_tooltip(): void {

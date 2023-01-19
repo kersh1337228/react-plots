@@ -18,10 +18,10 @@ export default class Candle extends Drawing<Quotes> {
         this.value.y = {
             min: Math.min.apply(null, Array.from(
                 this.data.observed.full, obj => obj.low
-            )),
+            ) as number[]),
             max: Math.max.apply(null, Array.from(
                 this.data.observed.full, obj => obj.high
-            ))
+            ) as number[])
         }
     }
     public async plot(): Promise<void> {
@@ -41,38 +41,40 @@ export default class Candle extends Drawing<Quotes> {
                 // Drawing
                 for (let i = 0; i < this.data_amount; ++i) {
                     const {open, high, low, close} = this.data.observed.full[i]
-                    const style = close - open > 0 ?
-                        this.style.color.pos : this.style.color.neg
-                    // Candle wick
-                    context.beginPath()
-                    context.moveTo(i + 0.55, low)
-                    context.moveTo(i + 0.55, high)
-                    context.strokeStyle = style
-                    context.stroke()
-                    context.closePath()
-                    // Candle body
-                    if (close - open) {  // Rectangle (non-empty body)
-                        context.fillStyle = style
-                        context.fillRect(i + 0.1, open, 0.9, close - open)
-                    } else {  // Line (empty body)
-                        context.moveTo(i + 0.1, open)
-                        context.lineTo(i + 1, close)
+                    if (open !== null && high !== null  && low !== null && close !== null) {
+                        const style = close - open > 0 ?
+                            this.style.color.pos : this.style.color.neg
+                        // Candle wick
+                        context.beginPath()
+                        context.moveTo(i + 0.55, low)
+                        context.moveTo(i + 0.55, high)
+                        context.strokeStyle = style
+                        context.stroke()
+                        context.closePath()
+                        // Candle body
+                        if (close - open) {  // Rectangle (non-empty body)
+                            context.fillStyle = style
+                            context.fillRect(i + 0.1, open, 0.9, close - open)
+                        } else {  // Line (empty body)
+                            context.moveTo(i + 0.1, open)
+                            context.lineTo(i + 1, close)
+                        }
                     }
                 }
                 context.restore()
             }
         }
     }
-    public show_tooltip(i: number): React.ReactElement {
+    public show_tooltip(i: number): React.ReactNode {
         const {open, high, low, close} = this.data.observed.full[i]
-        return (
+        return open !== null && high !== null  && low !== null && close !== null ? (
             <div key={this.name}>
                 <span>open: {round(open, 2)}</span>
                 <span>high: {round(high, 2)}</span>
                 <span>low: {round(low, 2)}</span>
                 <span>close: {round(close, 2)}</span>
             </div>
-        )
+        ) : undefined
     }
     public show_style(): React.ReactElement {
         return (

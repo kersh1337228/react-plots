@@ -13,13 +13,13 @@ export default class xAxisGroup extends xAxisGroupBase<NumberRange> {
         this.data.full = plotNumberRange(drawings)
         super.transform_coordinates(drawings)
         this.coordinates.scale = this.axes.width / this.spread
+        this.coordinates.translate = -this.min * this.coordinates.scale
     }
     public async show_scale(): Promise<void> {
         // TODO: Show label
         if (this.canvases.scale.ref.current) {
             const context = this.canvases.scale.ref.current.getContext('2d')
             if (context) {  // Drawing value scale
-                this.grid.amount = this.axes.state.children.components[0].state.axes.x.grid.amount
                 const step = this.axes.width / (this.grid.amount + 1) / this.coordinates.scale
                 context.save()
                 context.clearRect(0, 0, this.axes.width, this.axes.height)
@@ -32,11 +32,12 @@ export default class xAxisGroup extends xAxisGroupBase<NumberRange> {
                     context.stroke()
                     context.closePath()
                     // Drawing value
+                    context.textAlign = 'center'
                     context.fillText(numberPower(
                         i * step + this.coordinates.translate * (
                             this.spread / this.axes.width - 1 / this.coordinates.scale
                         ) + this.min, 2
-                    ), x - 10, this.canvases.scale.ref.current.height * 0.3)
+                    ), x, this.canvases.scale.ref.current.height * 0.3)
                 }
                 context.restore()
             }
@@ -46,18 +47,15 @@ export default class xAxisGroup extends xAxisGroupBase<NumberRange> {
         if (this.canvases.tooltip.ref.current) {
             const context = this.canvases.tooltip.ref.current.getContext('2d')
             if (context) {
-                const scale = this.axes.width / this.axes.state.data_amount
-                const [segment_width, i] = [
-                    this.axes.props.size.width / this.axes.state.data_amount,
-                    Math.floor(
-                        x * this.axes.state.children.components[0].state.canvases.plot.density / scale
-                    )
-                ]
+                const i = (this.data.observed as NumberRange).indexOf(
+                    (x - this.coordinates.translate) / this.coordinates.scale
+                ) as number
+                const xi = this.data.observed?.at(i) as number
                 // Drawing vertical line
                 const axesContext = this.axes.state.tooltip.ref.current?.getContext('2d')
                 axesContext?.beginPath()
-                axesContext?.moveTo((i + 0.55) * scale, 0)
-                axesContext?.lineTo((i + 0.55) * scale, this.axes.height)
+                axesContext?.moveTo(xi * this.coordinates.scale + this.coordinates.translate, 0)
+                axesContext?.lineTo(xi * this.coordinates.scale + this.coordinates.translate, this.axes.height)
                 axesContext?.stroke()
                 axesContext?.beginPath()
                 // Drawing tooltip
@@ -68,7 +66,7 @@ export default class xAxisGroup extends xAxisGroupBase<NumberRange> {
                 )
                 context.save()
                 context.fillStyle = '#323232'
-                context.fillRect((i + 0.55) * segment_width - 15, 0, 30, 25)
+                context.fillRect(xi * this.coordinates.scale + this.coordinates.translate - 15, 0, 30, 25)
                 context.font = `${this.font.size}px ${this.font.name}`
                 context.fillStyle = '#ffffff'
                 const text = this.data.observed?.format('%.2f').at(i)
@@ -76,7 +74,7 @@ export default class xAxisGroup extends xAxisGroupBase<NumberRange> {
                 // Value tooltip
                 context.fillText(
                     text ? text : '',
-                    (i + 0.55) * segment_width,
+                    xi * this.coordinates.scale + this.coordinates.translate,
                     this.canvases.tooltip.ref.current.height * 0.3
                 )
                 context.restore()

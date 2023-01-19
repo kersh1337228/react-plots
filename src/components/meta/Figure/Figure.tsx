@@ -1,8 +1,8 @@
 import React from 'react'
 import {AxesReal} from "../axes/Axes"
 import {AxesGroupReal} from "../axesGroup/AxesGroup"
-import './Figure.css'
 import {ComponentChildren} from "../utils/types/react"
+import './Figure.css'
 
 export const axisSize = { x: 50, y: 50 }
 

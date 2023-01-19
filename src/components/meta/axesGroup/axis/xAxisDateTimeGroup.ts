@@ -14,7 +14,7 @@ export default class xAxisDateTimeGroup extends xAxisGroupBase<DateTimeRange> {
         if (this.canvases.scale.ref.current) {
             const context = this.canvases.scale.ref.current.getContext('2d')
             if (context) {
-                const step = Math.ceil(this.axes.state.data_amount * 0.1)
+                const step = Math.ceil(this.axes.state.data_amount * 0.15)
                 context.save()
                 context.clearRect(
                     0, 0,
@@ -22,7 +22,7 @@ export default class xAxisDateTimeGroup extends xAxisGroupBase<DateTimeRange> {
                     this.canvases.scale.ref.current.height
                 )
                 context.font = `${this.font.size}px ${this.font.name}`
-                for (let i = step; i <= this.axes.state.data_amount - step * 0.5; i += step) {
+                for (let i = step; i < this.axes.state.data_amount - step * 0.7; i += step) {
                     context.beginPath()
                     context.moveTo((i + 0.55) * this.coordinates.scale, 0)
                     context.lineTo(
@@ -32,9 +32,10 @@ export default class xAxisDateTimeGroup extends xAxisGroupBase<DateTimeRange> {
                     context.stroke()
                     context.closePath()
                     const text = this.data.observed?.at(i)?.format('%Y-%m-%d')
+                    context.textAlign = 'center'
                     context.fillText(
                         text ? text : '',
-                        (i + 0.55) * this.coordinates.scale - 25,
+                        (i + 0.55) * this.coordinates.scale,
                         this.canvases.scale.ref.current.height * 0.3
                     )
                 }
@@ -68,9 +69,10 @@ export default class xAxisDateTimeGroup extends xAxisGroupBase<DateTimeRange> {
             context.font = `${this.font.size}px ${this.font.name}`
             context.fillStyle = '#ffffff'
             const text = this.data.observed?.at(i)?.format('%Y-%m-%d')
+            context.textAlign = 'center'
             context.fillText(
                 text ? text : '',
-                (i + 0.55) * this.coordinates.scale - 26,
+                (i + 0.55) * this.coordinates.scale,
                 this.canvases.tooltip.ref.current.height * 0.3
             )
             context.restore()

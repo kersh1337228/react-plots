@@ -16,7 +16,8 @@ class LineBase<T extends Point2D | TimeSeries> extends Drawing<T> {
     public async plot(): Promise<void> {
         if (this.axes) {
             const context = this.axes.state.canvases.plot.ref.current?.getContext('2d')
-            if (this.visible && context) {
+            const i0 = [...Array(this.data.observed.full.length).keys()].findIndex(i => this.point(i)[1] !== null)
+            if (this.visible && context && i0 > -1) {
                 context.save()
                 // Coordinates transform
                 context.translate(
@@ -29,9 +30,11 @@ class LineBase<T extends Point2D | TimeSeries> extends Drawing<T> {
                 )
                 // Drawing
                 context.beginPath()
-                context.moveTo(...this.point(0))
-                for (let i = 1; i < this.data_amount; ++i)
-                    context.lineTo(...this.point(i))
+                context.moveTo(...this.point(i0) as [number, number])
+                for (let i = i0 + 1; i < this.data_amount; ++i) {
+                    const [x, y] = this.point(i)
+                    if (y !== null) context.lineTo(x, y)
+                }
                 // Stroking
                 context.restore()
                 context.save()
@@ -45,16 +48,16 @@ class LineBase<T extends Point2D | TimeSeries> extends Drawing<T> {
     }
     // Events
     public draw_tooltip(i: number): React.ReactNode {
-        if (this.axes) {
+        const [x, y] = this.point(i)
+        if (this.axes && y) {
             const context = this.axes.state.canvases.tooltip.ref.current?.getContext('2d')
             if (context) {  // Drawing circle
                 context.save()
                 context.beginPath()
                 context.arc(
-                    this.point(i)[0] * this.axes.state.axes.x.coordinates.scale + this.axes.state.axes.x.coordinates.translate,
+                    x * this.axes.state.axes.x.coordinates.scale + this.axes.state.axes.x.coordinates.translate,
                     this.axes.state.axes.y.coordinates.translate -
-                    this.data.observed.numeric[i] *
-                    this.axes.state.axes.y.coordinates.scale,
+                    y * this.axes.state.axes.y.coordinates.scale,
                     3 * this.axes.state.canvases.plot.density, 0, 2 * Math.PI
                 )
                 context.fillStyle = this.style.color

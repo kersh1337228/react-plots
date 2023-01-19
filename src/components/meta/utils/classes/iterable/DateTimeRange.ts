@@ -26,7 +26,7 @@ export default class DateTimeRange extends TypedRange<DateTime> {
     }
 }
 
-export function plotDateTimeRange(drawings: Drawing<TimeSeries | Quotes>[]): DateTimeRange {
+export function plotDateTimeRange(drawings: Drawing<TimeSeries>[]): DateTimeRange {
     const dates = [...new Set(([] as Array<number>).concat(...drawings.map((drawing) =>
         plotDataType(drawing.data.full) === 'TimeSeriesArray' ?
             Array.from(drawing.data.full as TimeSeriesArray[], arr => new Date(arr[0]).getTime()) :

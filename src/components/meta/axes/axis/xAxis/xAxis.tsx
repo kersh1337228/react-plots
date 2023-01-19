@@ -3,7 +3,6 @@ import xAxisBase from "./xAxisBase"
 import Drawing from "../../../drawings/Drawing/Drawing"
 import {AxesReal} from "../../Axes"
 import NumberRange, {plotNumberRange} from "../../../utils/classes/iterable/NumberRange"
-import {Point2D} from "../../../utils/types/plotData"
 import {numberPower} from "../../../utils/functions/numeric"
 
 export default class xAxis extends xAxisBase<NumberRange> {
@@ -13,11 +12,7 @@ export default class xAxis extends xAxisBase<NumberRange> {
     }
     // Coordinates transform
     public transform_coordinates(drawings: Drawing<any>[]): void {
-        this.data.full = plotNumberRange(
-            this.axes.state.drawings.filter(
-                drawing => drawing.visible
-            ) as Drawing<Point2D>[]
-        )
+        this.data.full = plotNumberRange(drawings)
         super.transform_coordinates(drawings)
         this.coordinates.scale = this.axes.padded_width / this.spread
         this.coordinates.translate =
@@ -27,50 +22,58 @@ export default class xAxis extends xAxisBase<NumberRange> {
     // Display
     public async show_scale(): Promise<void> {
         // TODO: Show label
-        if (this.canvases.scale.ref.current) {
-            const context = this.canvases.scale.ref.current.getContext('2d')
-            if (context) {  // Drawing value scale
-                const step = this.axes.width / (this.grid.amount + 1) / this.coordinates.scale
-                context.save()
-                context.clearRect(0, 0, this.axes.width, this.axes.height)
-                context.font = `${this.font.size}px ${this.font.name}`
-                for (let i = 1; i <= this.grid.amount; ++i) {
-                    context.beginPath()
-                    const x = i / (this.grid.amount + 1) * this.axes.props.size.width
-                    context.moveTo(x, 0)
-                    context.lineTo(x, this.canvases.scale.ref.current.height * 0.1)
-                    context.stroke()
-                    context.closePath()
-                    // Drawing value
-                    context.fillText(numberPower(
-                        i * step + this.coordinates.translate * (
-                            this.spread / this.axes.padded_width - 1 / this.coordinates.scale
-                        ) + this.min - this.axes.padding.right *
-                        this.axes.props.size.width / this.coordinates.scale, 2
-                    ), x - 10, this.canvases.scale.ref.current.height * 0.3)
-                }
-                context.restore()
+        const [context, gridContext] = [
+            this.canvases.scale.ref.current?.getContext('2d'),
+            this.axes.state.canvases.plot.ref.current?.getContext('2d')
+        ]
+        if (context && this.canvases.scale.ref.current || gridContext) {  // Drawing value scale
+            const step = this.axes.width / (this.grid.amount + 1) / this.coordinates.scale
+            context?.save()
+            context?.clearRect(0, 0, this.axes.width, this.axes.height)
+            if (context) context.font = `${this.font.size}px ${this.font.name}`
+            gridContext?.save()
+            if (gridContext) {
+                gridContext.lineWidth = this.grid.width
+                gridContext.strokeStyle = this.grid.color
             }
+            for (let i = 1; i <= this.grid.amount; ++i) {
+                const x = i / (this.grid.amount + 1) * this.axes.props.size.width
+                context?.beginPath()
+                context?.moveTo(x, 0)
+                context?.lineTo(x, (this.canvases.scale.ref.current?.height as number) * 0.1)
+                context?.stroke()
+                context?.closePath()
+                gridContext?.beginPath()
+                gridContext?.moveTo(x, 0)
+                gridContext?.lineTo(x, this.axes.height)
+                gridContext?.stroke()
+                gridContext?.closePath()
+                // Drawing value
+                if (context) context.textAlign = 'center'
+                context?.fillText(numberPower(
+                    i * step + this.coordinates.translate * (
+                        this.spread / this.axes.padded_width - 1 / this.coordinates.scale
+                    ) + this.min - this.axes.padding.right *
+                    this.axes.props.size.width / this.coordinates.scale, 2
+                ), x, (this.canvases.scale.ref.current?.height as number) * 0.3)
+            }
+            context?.restore()
+            gridContext?.restore()
         }
     }
     public async show_tooltip(x: number): Promise<void> {
         if (this.canvases.tooltip.ref.current) {
             const context = this.canvases.tooltip.ref.current.getContext('2d')
             if (context) {
-                const scale = this.axes.padded_width / this.axes.state.data_amount
-                const [segment_width, i] = [
-                    this.axes.props.size.width * (
-                        1 - this.axes.padding.left - this.axes.padding.right
-                    ) / this.axes.state.data_amount,
-                    Math.floor(
-                        x * this.axes.state.canvases.plot.density / scale
-                    )
-                ]
+                const i = (this.data.observed as NumberRange).indexOf(
+                    (x - this.coordinates.translate) / this.coordinates.scale
+                ) as number
+                const xi = this.data.observed?.at(i) as number
                 // Drawing vertical line
                 const axesContext = this.axes.state.canvases.tooltip.ref.current?.getContext('2d')
                 axesContext?.beginPath()
-                axesContext?.moveTo((i + 0.55) * scale, 0)
-                axesContext?.lineTo((i + 0.55) * scale, this.axes.height)
+                axesContext?.moveTo(xi * this.coordinates.scale + this.coordinates.translate, 0)
+                axesContext?.lineTo(xi * this.coordinates.scale + this.coordinates.translate, this.axes.height)
                 axesContext?.stroke()
                 axesContext?.closePath()
                 // Drawing tooltip
@@ -81,14 +84,14 @@ export default class xAxis extends xAxisBase<NumberRange> {
                 )
                 context.save()
                 context.fillStyle = '#323232'
-                context.fillRect((i + 0.55) * segment_width - 15, 0, 30, 25)
+                context.fillRect(xi * this.coordinates.scale + this.coordinates.translate - 15, 0, 30, 25)
                 context.font = `${this.font.size}px ${this.font.name}`
                 context.fillStyle = '#ffffff'
                 const text = this.data.observed?.format('%.2f').at(i)
                 context.textAlign = 'center'
                 context.fillText(
                     text ? text : '',
-                    (i + 0.55) * segment_width,
+                    xi * this.coordinates.scale + this.coordinates.translate,
                     this.canvases.tooltip.ref.current.height * 0.3
                 )
                 context.restore()

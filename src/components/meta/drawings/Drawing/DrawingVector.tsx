@@ -1,9 +1,11 @@
 import React from 'react'
 import Drawing from "./Drawing"
-import {TimeSeriesObject} from "../../utils/types/plotData"
+import {Point2D, TimeSeriesObject} from "../../utils/types/plotData"
 import {Constructor} from "../../utils/types/callable"
 import {DataRange} from "../../utils/types/display"
 import {numberPower} from "../../utils/functions/numeric"
+import {plotDataType} from "../../utils/functions/dataTypes";
+import NumberRange from "../../utils/classes/iterable/NumberRange";
 
 export default function DrawingVector<T extends Constructor<Drawing<TimeSeriesObject>>>(Base: T) {
     // @ts-ignore
@@ -17,17 +19,20 @@ export default function DrawingVector<T extends Constructor<Drawing<TimeSeriesOb
                 this.data.observed.full, el => el.value
             )
             this.value.y = {
-                min: Math.min.apply(null, this.data.observed.numeric),
-                max: Math.max.apply(null, this.data.observed.numeric)
+                min: Math.min.apply(null, this.data.observed.numeric as number[]),
+                max: Math.max.apply(null, this.data.observed.numeric as number[])
             }
         }
-        public point(i: number): [number, number] {
+        public point(i: number): Point2D {
             return [i + 0.55, this.data.observed.numeric[i]]
         }
-        public show_tooltip(i: number): React.ReactNode {
-            super.draw_tooltip(i)
-            return (
-                <span key={this.name} className={'drawingTooltips'}>
+        public show_tooltip(x: number): React.ReactNode {
+            if (this.axes) {
+                const i = Math.floor(x / this.axes.props.size.width * this.axes.state.data_amount)
+                super.draw_tooltip(i)
+                const point = this.data.observed.full[i]
+                return point.value ? (
+                    <span key={this.name} className={'drawingTooltips'}>
                     <ul>
                         {Object.entries(this.data.observed.full[i]).map(([name, value]) =>
                             typeof value === 'number' ?
@@ -36,7 +41,8 @@ export default function DrawingVector<T extends Constructor<Drawing<TimeSeriesOb
                         )}
                     </ul>
                 </span>
-            )
+                ) : undefined
+            }
         }
     }
 }
