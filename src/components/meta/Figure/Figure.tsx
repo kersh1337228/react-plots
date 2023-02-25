@@ -5,6 +5,7 @@ import {ComponentChildren} from "../utils/types/react"
 import './Figure.css'
 
 export const axisSize = { x: 50, y: 50 }
+export const [minDataAmount, maxDataAmount, initDataAmount] = [5, 100000, 100000]
 
 interface FigureProps {
     width: number
@@ -25,21 +26,15 @@ export default class Figure extends React.Component<
         // Children nodes size correction
         if (props.children) {
             // Making sure children variable has array type
-            let children: JSX.Element[]
-            if ((props.children as any[]).length)
-                children = props.children as JSX.Element[]
-            else
-                children = [props.children as JSX.Element]
+            const children = ((props.children as any[]).length ?
+                props.children : [props.children]) as JSX.Element[]
             // Finding max row and column listed in children props
             const [maxRow, maxCol] = [
                 Math.max.apply(
-                    null, Array.from(
-                        children, child => child.props.position.row.end
-                    )
-                ), Math.max.apply(
-                    null, Array.from(
-                        children, child => child.props.position.column.end
-                    )
+                    null, Array.from(children, child => child.props.position.row.end)
+                ),
+                Math.max.apply(
+                    null, Array.from(children, child => child.props.position.column.end)
                 )
             ]
             this.state = {

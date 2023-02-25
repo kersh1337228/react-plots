@@ -1,21 +1,17 @@
-import {PlotData, Point2D, Quotes, TimeSeries, TimeSeriesArray, TimeSeriesObject} from "../types/plotData"
+import {PlotData, PlotDataName, Point2D, Quotes, TimeSeries, TimeSeriesArray, TimeSeriesObject} from "../types/plotData"
 import Drawing from "../../drawings/Drawing/Drawing"
 
-export function plotDataType(data: PlotData[]): 'Point2D' | 'TimeSeriesArray' | 'TimeSeriesObject' | 'Quotes' | undefined | never {
-    try {
-        if(typeof (data[0] as Point2D)[0] === 'number') return 'Point2D'
-        else if (typeof (data[0] as TimeSeriesArray)[0] === 'string') return 'TimeSeriesArray'
-        else return undefined
-    } catch {
-        if (!data.length) throw Error('Data is empty.')
-        if ('date' in data[0] && 'value' in data[0]) return 'TimeSeriesObject'
-        else if (
-            'date' in data[0] && 'open' in data[0] &&
-            'high' in data[0] && 'low' in data[0] &&
-            'close' in data[0] && 'volume' in data[0]
-        ) return 'Quotes'
-        else return undefined
-    }
+export function plotDataType(data: PlotData[]): PlotDataName | undefined | never {
+    if (!data.length) throw Error('Data is empty.')
+    if(typeof (data[0] as Point2D)[0] === 'number') return 'Point2D'
+    else if (typeof (data[0] as TimeSeriesArray)[0] === 'string') return 'TimeSeriesArray'
+    if ('timestamp' in data[0] && 'value' in data[0]) return 'TimeSeriesObject'
+    else if (
+        'timestamp' in data[0] && 'open' in data[0] &&
+        'high' in data[0] && 'low' in data[0] &&
+        'close' in data[0] && 'volume' in data[0]
+    ) return 'Quotes'
+    else return undefined
 }
 
 export function plotDataTypeVectorised(drawings: Drawing<PlotData>[]): 'Point2D' | 'TimeSeries' | undefined {
@@ -47,12 +43,12 @@ export function fillData(data: PlotData[], labels: number[] | string[]): PlotDat
             })
             break
         } case 'TimeSeriesObject': {
-            const labelsPresent = Array.from(data as TimeSeriesObject[], obj => obj.date)
+            const labelsPresent = Array.from(data as TimeSeriesObject[], obj => obj.timestamp)
             const fields = Object.keys(copy[0]).filter(field => !['date', 'value'].includes(field))
             let i = -1
             labels.forEach(label => {
                 if (!labelsPresent.includes(label as string)) {
-                    const obj: TimeSeriesObject = { date: label as string, value: null }
+                    const obj: TimeSeriesObject = { timestamp: label as string, value: null }
                     fields.forEach(field => obj[field] = null)
                     copy.push(obj)
                 } else copy.push(data[++i])
@@ -60,12 +56,12 @@ export function fillData(data: PlotData[], labels: number[] | string[]): PlotDat
             break
         }
         case 'Quotes': {
-            const labelsPresent = Array.from(data as Quotes[], obj => obj.date)
+            const labelsPresent = Array.from(data as Quotes[], obj => obj.timestamp)
             let i = -1
             labels.forEach(label => {
                 if (!labelsPresent.includes(label as string)) {
                     const obj: Quotes = {
-                        date: label as string, open: null,
+                        timestamp: label as string, open: null,
                         high: null, low: null, close: null, volume: null
                     }
                     copy.push(obj)

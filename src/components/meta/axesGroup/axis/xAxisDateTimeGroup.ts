@@ -10,11 +10,10 @@ export default class xAxisDateTimeGroup extends xAxisGroupBase<DateTimeRange> {
         this.coordinates.scale = this.axes.width / this.axes.state.data_amount
     }
     public async show_scale(): Promise<void> {
-        // TODO: Show label
         if (this.canvases.scale.ref.current) {
             const context = this.canvases.scale.ref.current.getContext('2d')
             if (context) {
-                const step = Math.ceil(this.axes.state.data_amount * 0.15)
+                const step = Math.ceil(this.axes.state.data_amount / this.grid.amount)
                 context.save()
                 context.clearRect(
                     0, 0,
@@ -22,7 +21,7 @@ export default class xAxisDateTimeGroup extends xAxisGroupBase<DateTimeRange> {
                     this.canvases.scale.ref.current.height
                 )
                 context.font = `${this.font.size}px ${this.font.name}`
-                for (let i = step; i < this.axes.state.data_amount - step * 0.7; i += step) {
+                for (let i = step; i < this.axes.state.data_amount - step * 0.5; i += step) {
                     context.beginPath()
                     context.moveTo((i + 0.55) * this.coordinates.scale, 0)
                     context.lineTo(
@@ -65,14 +64,20 @@ export default class xAxisDateTimeGroup extends xAxisGroupBase<DateTimeRange> {
                 this.canvases.tooltip.ref.current.height
             )
             context.fillStyle = '#323232'
-            context.fillRect((i + 0.55) * this.coordinates.scale - 30, 0, 60, 25)
+            context.fillRect(Math.min(
+                this.axes.width - 60,
+                Math.max(0, (i + 0.55) * this.coordinates.scale - 30)
+            ), 0, 60, 25)
             context.font = `${this.font.size}px ${this.font.name}`
             context.fillStyle = '#ffffff'
             const text = this.data.observed?.at(i)?.format('%Y-%m-%d')
             context.textAlign = 'center'
             context.fillText(
                 text ? text : '',
-                (i + 0.55) * this.coordinates.scale,
+                Math.min(
+                    this.axes.width - 30,
+                    Math.max(30, (i + 0.55) * this.coordinates.scale)
+                ),
                 this.canvases.tooltip.ref.current.height * 0.3
             )
             context.restore()

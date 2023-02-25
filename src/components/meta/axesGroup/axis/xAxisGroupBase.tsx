@@ -2,7 +2,7 @@ import React from "react"
 import {AxesGroupReal} from "../AxesGroup"
 import Drawing from "../../drawings/Drawing/Drawing"
 import Axis from "../../axes/axis/Axis"
-import {axisSize} from "../../Figure/Figure"
+import {axisSize, maxDataAmount, minDataAmount} from "../../Figure/Figure"
 import NumberRange from "../../utils/classes/iterable/NumberRange"
 import DateTimeRange from "../../utils/classes/iterable/DateTimeRange"
 
@@ -40,16 +40,20 @@ export default abstract class xAxisGroupBase<T extends NumberRange | DateTimeRan
             const x_offset = (
                 this.canvases.tooltip.mouse_events.position.x - (
                     event.clientX - window.left
-                )) * 0.001 / this.coordinates.scale * this.scroll_speed
+                )
+            ) * this.scroll_speed / this.coordinates.scale / this.axes.max_data_amount * 2
             if (x_offset) {
                 let data_range = {start: 0, end: 1}
                 Object.assign(data_range, this.axes.state.data_range)
                 if (x_offset < 0) {
-                    data_range.start = data_range.start + x_offset <= 0 ?
-                        0 : (data_range.end - (data_range.start + x_offset)) * this.axes.max_data_amount > 1000 ?
+                    data_range.start = data_range.start + x_offset <= 0 ? 0 : (
+                        data_range.end - (data_range.start + x_offset)
+                    ) * this.axes.max_data_amount > maxDataAmount ?
                             data_range.start : data_range.start + x_offset
                 } else if (x_offset > 0) {
-                    data_range.start = (data_range.end - (data_range.start + x_offset)) * this.axes.max_data_amount < 5 ?
+                    data_range.start = (
+                        data_range.end - (data_range.start + x_offset)
+                    ) * this.axes.max_data_amount < minDataAmount ?
                         data_range.start : data_range.start + x_offset
                 }
                 if (data_range.start !== this.axes.state.data_range?.start) {

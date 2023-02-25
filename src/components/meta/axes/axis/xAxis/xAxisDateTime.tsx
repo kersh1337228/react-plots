@@ -8,8 +8,8 @@ export default class xAxisDateTime extends xAxisBase<DateTimeRange> {
     public transform_coordinates(drawings: Drawing<any>[]): void {
         this.data.full = plotDateTimeRange(drawings)
         super.transform_coordinates(drawings)
-        this.coordinates.scale = this.axes.padded_width / this.axes.state.data_amount
-        this.coordinates.translate = this.axes.padding.left * this.axes.width
+        this.coordinates.scale = this.axes.padded_width / this.axes.state.data_amount  // (b - a) / (n - 0)
+        this.coordinates.translate = this.axes.left  // a - (b - a) / (n - 0) * 0
     }
     // Display
     public async show_scale(): Promise<void> {
@@ -19,7 +19,7 @@ export default class xAxisDateTime extends xAxisBase<DateTimeRange> {
         ]
         if (context && this.canvases.scale.ref.current || gridContext) {
             const [step, scale] = [
-                Math.ceil(this.axes.state.data_amount * 0.15),
+                Math.ceil(this.axes.state.data_amount / this.grid.amount),
                 this.coordinates.scale / this.axes.state.canvases.plot.density
             ]
             context?.save()
@@ -34,7 +34,7 @@ export default class xAxisDateTime extends xAxisBase<DateTimeRange> {
                 gridContext.lineWidth = this.grid.width
                 gridContext.strokeStyle = this.grid.color
             }
-            for (let i = step; i < this.axes.state.data_amount - step * 0.7; i += step) {
+            for (let i = step; i < this.axes.state.data_amount - step * 0.5; i += step) {
                 context?.beginPath()
                 context?.moveTo((i + 0.55) * scale, 0)
                 context?.lineTo(
@@ -64,15 +64,10 @@ export default class xAxisDateTime extends xAxisBase<DateTimeRange> {
         if (this.canvases.tooltip.ref.current) {
             const context = this.canvases.tooltip.ref.current.getContext('2d')
             if (context) {
-                const [segment_width, i] = [
-                    this.axes.props.size.width * (
-                        1 - this.axes.padding.left - this.axes.padding.right
-                    ) / this.axes.state.data_amount,
-                    Math.floor(
-                        x * this.axes.state.canvases.plot.density /
-                        this.coordinates.scale
-                    )
-                ]
+                const i = Math.floor(
+                    x * this.axes.state.canvases.plot.density /
+                    this.coordinates.scale
+                )
                 // Drawing vertical line
                 const axesContext = this.axes.state.canvases.tooltip.ref.current?.getContext('2d')
                 axesContext?.beginPath()
@@ -88,14 +83,20 @@ export default class xAxisDateTime extends xAxisBase<DateTimeRange> {
                 )
                 context.save()
                 context.fillStyle = '#323232'
-                context.fillRect((i + 0.55) * segment_width - 30, 0, 60, 25)
+                context.fillRect(Math.min(
+                    this.axes.width - 60,
+                    Math.max(0, (i + 0.55) * this.coordinates.scale - 30)
+                ), 0, 60, 25)
                 context.font = `${this.font.size}px ${this.font.name}`
                 context.fillStyle = '#ffffff'
                 const text = this.data.observed?.at(i)?.format('%Y-%m-%d')
                 context.textAlign = 'center'
                 context.fillText(
                     text ? text : '',
-                    (i + 0.55) * segment_width,
+                    Math.min(
+                        this.axes.width - 30,
+                        Math.max(30, (i + 0.55) * this.coordinates.scale)
+                    ),
                     this.canvases.tooltip.ref.current.height * 0.3
                 )
                 context.restore()

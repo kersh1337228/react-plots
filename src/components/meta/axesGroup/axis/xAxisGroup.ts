@@ -16,7 +16,6 @@ export default class xAxisGroup extends xAxisGroupBase<NumberRange> {
         this.coordinates.translate = -this.min * this.coordinates.scale
     }
     public async show_scale(): Promise<void> {
-        // TODO: Show label
         if (this.canvases.scale.ref.current) {
             const context = this.canvases.scale.ref.current.getContext('2d')
             if (context) {  // Drawing value scale
@@ -66,7 +65,10 @@ export default class xAxisGroup extends xAxisGroupBase<NumberRange> {
                 )
                 context.save()
                 context.fillStyle = '#323232'
-                context.fillRect(xi * this.coordinates.scale + this.coordinates.translate - 15, 0, 30, 25)
+                context.fillRect(Math.min(
+                    this.axes.width - 30,
+                    Math.max(0, xi * this.coordinates.scale + this.coordinates.translate - 15)
+                ), 0, 30, 25)
                 context.font = `${this.font.size}px ${this.font.name}`
                 context.fillStyle = '#ffffff'
                 const text = this.data.observed?.format('%.2f').at(i)
@@ -74,7 +76,10 @@ export default class xAxisGroup extends xAxisGroupBase<NumberRange> {
                 // Value tooltip
                 context.fillText(
                     text ? text : '',
-                    xi * this.coordinates.scale + this.coordinates.translate,
+                    Math.min(
+                        this.axes.width - 15,
+                        Math.max(15, xi * this.coordinates.scale + this.coordinates.translate)
+                    ),
                     this.canvases.tooltip.ref.current.height * 0.3
                 )
                 context.restore()

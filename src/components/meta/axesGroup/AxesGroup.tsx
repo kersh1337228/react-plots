@@ -4,11 +4,11 @@ import xAxisDateTimeGroup from "./axis/xAxisDateTimeGroup"
 import {AxesReal} from "../axes/Axes"
 import './AxesGroup.css'
 import AxesGroupSettings from "./settings/AxesGroupSettings"
-import {axisSize} from "../Figure/Figure"
+import {axisSize, initDataAmount} from "../Figure/Figure"
 import Drawing from "../drawings/Drawing/Drawing"
 import {fillData, plotDataTypeVectorised} from "../utils/functions/dataTypes"
 import xAxisGroupBase from "./axis/xAxisGroupBase"
-import {DataRange, GridPosition, Size2D} from "../utils/types/display"
+import {DataRange, GridPosition, Padding2D, Size2D} from "../utils/types/display"
 import {ComponentChildren, TooltipCanvasObject} from '../utils/types/react'
 import {PlotData, Point2D, TimeSeries} from "../utils/types/plotData"
 import {Callback} from "../utils/types/callable"
@@ -20,6 +20,7 @@ interface AxesGroupPlaceholderProps {
     position: GridPosition
     xAxis?: boolean
     yAxis?: boolean
+    padding?: Padding2D
     title?: string
 }
 
@@ -77,20 +78,20 @@ export class AxesGroupReal extends React.Component<AxesGroupProps, AxesGroupStat
             const size = {  // Children node actual size
                 width: (child.props.position.column.end -
                     child.props.position.column.start
-                ) * (this.props.size ?
-                        this.props.size.width : 0
+                ) * (props.size ?
+                        props.size.width : 0
                 ) / (maxCol - 1),
                 height: (child.props.position.row.end -
                     child.props.position.row.start
-                ) * (this.props.size ?
-                        this.props.size.height : 0
+                ) * (props.size ?
+                        props.size.height : 0
                 ) / (maxRow - 1),
             }
             if (child.type.name === 'Axes') {
                 const drawing = child.props.drawings[0]
                 drawing.data.full = fillData(drawing.data.full, labels)
                 return React.createElement(AxesReal, {
-                    ...child.props, size, xAxis: false, parent: this, key: index,
+                    ...child.props, size, xAxis: false, parent: this, padding: props.padding,
                     position: {...child.props.position, column: {start: 1, end: 3}},
                     drawings: [drawing, ...child.props.drawings.slice(1)]
                 })
@@ -162,9 +163,7 @@ export class AxesGroupReal extends React.Component<AxesGroupProps, AxesGroupStat
         const drawings = ([] as Array<Drawing<PlotData>>).concat(
             ...state.children.components.map(axes => {
                 const drawings = axes.state.drawings
-                drawings.forEach(async drawing =>
-                    await drawing.recalculate_metadata(data_range)
-                )
+                drawings.forEach(drawing => drawing.recalculate_metadata(data_range))
                 return drawings
             })
         )
@@ -177,7 +176,8 @@ export class AxesGroupReal extends React.Component<AxesGroupProps, AxesGroupStat
                 )
         }, () => {
                 const state = this.state
-                state.xAxis.transform_coordinates(drawings)
+                if (drawings.length)
+                    state.xAxis.transform_coordinates(drawings)
                 state.xAxis.show_scale()
                 this.setState(state, callback)
             }
@@ -212,7 +212,7 @@ export class AxesGroupReal extends React.Component<AxesGroupProps, AxesGroupStat
             if (this.state.tooltip.mouse_events.drag) {
                 const x_offset = (
                     x - this.state.tooltip.mouse_events.position.x
-                ) * 0.001 / this.state.xAxis.coordinates.scale * this.state.xAxis.scroll_speed
+                ) * this.state.xAxis.scroll_speed / this.state.xAxis.coordinates.scale / this.max_data_amount * 2
                 if (x_offset) {
                     if (x_offset < 0) {
                         data_range.end =
@@ -276,9 +276,8 @@ export class AxesGroupReal extends React.Component<AxesGroupProps, AxesGroupStat
     public componentDidMount(): void {
         this.set_window(async () => {
             await this.recalculate_metadata({
-                start: 1 - (
-                    this.max_data_amount <= 100 ?
-                        this.max_data_amount : 100
+                start: 1 - Math.min(
+                    initDataAmount, this.max_data_amount
                 ) / this.max_data_amount,
                 end: 1
             })

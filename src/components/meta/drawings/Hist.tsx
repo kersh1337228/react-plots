@@ -5,10 +5,7 @@ import {plotDataType} from "../utils/functions/dataTypes"
 import {Point2D, TimeSeries, TimeSeriesArray, TimeSeriesObject} from "../utils/types/plotData"
 
 export interface HistStyle {
-    color: {
-        pos: string,
-        neg: string
-    }
+    color: { pos: string, neg: string }
 }
 
 // @ts-ignore
@@ -30,7 +27,7 @@ export class HistBase<T extends Point2D | TimeSeries | Quotes> extends Drawing<T
                 )
                 context.scale(
                     this.axes.state.axes.x.coordinates.scale,
-                    -this.axes.state.axes.y.coordinates.scale
+                    this.axes.state.axes.y.coordinates.scale
                 )
                 // Drawing
                 for (let i = 0; i < this.data_amount; ++i) {
@@ -89,7 +86,7 @@ export default function Hist(
     name: string,
     data: Point2D[] | TimeSeries[],
     style?: HistStyle
-) {
+): HistScalar | HistVector {
     return plotDataType(data) === 'TimeSeriesObject' ?
         new HistVector(name, data as TimeSeriesObject[], style) :
         new HistScalar(name, data as Point2D[] | TimeSeriesArray[], style)

@@ -7,7 +7,7 @@ export function round(x: number, digits: number = 0): number {
 // Number abbreviation
 export function numberPower(x: number, digits: number = 0): string {
     const symbols = {1000000000: 'B',  1000000: 'M', 1000: 'K'}
-    for (const [value, symbol] of Object.entries(symbols))
+    for (const [value, symbol] of Object.entries(symbols).reverse())
         if (x >= parseInt(value))
             return `${round(x / parseInt(value), digits)}${symbol}`
     return String(round(x, digits))

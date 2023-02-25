@@ -5,7 +5,6 @@ import {AxesGroupReal} from "../../axesGroup/AxesGroup"
 import {GridObject} from "../../utils/types/display"
 import {CanvasObject, TooltipCanvasObject} from "../../utils/types/react"
 
-
 export default abstract class Axis<T extends AxesReal | AxesGroupReal> {
     // Fields
     public coordinates: { translate: number, scale: number }

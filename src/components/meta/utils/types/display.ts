@@ -3,10 +3,10 @@ export interface DataRange { start: number, end: number }
 export interface Size2D { width: number, height: number }
 
 export interface Padding2D {
-    left: number
-    top: number
-    right: number
-    bottom: number
+    left?: number
+    top?: number
+    right?: number
+    bottom?: number
 }
 
 export interface GridPosition {  // CSS grid position

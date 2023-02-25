@@ -16,7 +16,7 @@ class LineBase<T extends Point2D | TimeSeries> extends Drawing<T> {
     public async plot(): Promise<void> {
         if (this.axes) {
             const context = this.axes.state.canvases.plot.ref.current?.getContext('2d')
-            const i0 = [...Array(this.data.observed.full.length).keys()].findIndex(i => this.point(i)[1] !== null)
+            const i0 = [...Array(this.data.observed.length).keys()].findIndex(i => this.point(i)[1] !== null)
             if (this.visible && context && i0 > -1) {
                 context.save()
                 // Coordinates transform
@@ -26,7 +26,7 @@ class LineBase<T extends Point2D | TimeSeries> extends Drawing<T> {
                 )
                 context.scale(
                     this.axes.state.axes.x.coordinates.scale,
-                    -this.axes.state.axes.y.coordinates.scale
+                    this.axes.state.axes.y.coordinates.scale
                 )
                 // Drawing
                 context.beginPath()
@@ -36,8 +36,7 @@ class LineBase<T extends Point2D | TimeSeries> extends Drawing<T> {
                     if (y !== null) context.lineTo(x, y)
                 }
                 // Stroking
-                context.restore()
-                context.save()
+                context.resetTransform()
                 context.lineWidth = this.style.width * this.axes.state.canvases.plot.density
                 context.strokeStyle = this.style.color
                 context.stroke()
@@ -47,7 +46,7 @@ class LineBase<T extends Point2D | TimeSeries> extends Drawing<T> {
         }
     }
     // Events
-    public draw_tooltip(i: number): React.ReactNode {
+    public async draw_tooltip(i: number): Promise<void> {
         const [x, y] = this.point(i)
         if (this.axes && y) {
             const context = this.axes.state.canvases.tooltip.ref.current?.getContext('2d')
@@ -56,16 +55,16 @@ class LineBase<T extends Point2D | TimeSeries> extends Drawing<T> {
                 context.beginPath()
                 context.arc(
                     x * this.axes.state.axes.x.coordinates.scale + this.axes.state.axes.x.coordinates.translate,
-                    this.axes.state.axes.y.coordinates.translate -
-                    y * this.axes.state.axes.y.coordinates.scale,
-                    3 * this.axes.state.canvases.plot.density, 0, 2 * Math.PI
+                    y * this.axes.state.axes.y.coordinates.scale + this.axes.state.axes.y.coordinates.translate,
+                    3 * this.axes.state.canvases.plot.density,
+                    0, 2 * Math.PI
                 )
                 context.fillStyle = this.style.color
                 context.fill()
                 context.closePath()
                 context.restore()
             }
-        } return
+        }
     }
     public show_style(): React.ReactElement {
         return (
@@ -115,7 +114,7 @@ export default function Line(
     name: string,
     data: Point2D[] | TimeSeries[],
     style?: LineStyle
-) {
+): LineScalar | LineVector {
     return plotDataType(data) === 'TimeSeriesObject' ?
         new LineVector(name, data as TimeSeriesObject[], style) :
         new LineScalar(name, data as Point2D[] | TimeSeriesArray[], style)

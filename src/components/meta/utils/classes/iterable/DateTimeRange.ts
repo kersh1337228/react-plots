@@ -30,11 +30,14 @@ export function plotDateTimeRange(drawings: Drawing<TimeSeries>[]): DateTimeRang
     const dates = [...new Set(([] as Array<number>).concat(...drawings.map((drawing) =>
         plotDataType(drawing.data.full) === 'TimeSeriesArray' ?
             Array.from(drawing.data.full as TimeSeriesArray[], arr => new Date(arr[0]).getTime()) :
-            Array.from(drawing.data.full as (TimeSeriesObject | Quotes)[], arr => new Date(arr.date).getTime())
+            Array.from(drawing.data.full as (TimeSeriesObject | Quotes)[], arr => new Date(arr.timestamp).getTime())
     )).sort((a, b) => a > b ? 1 : a < b ? -1 : 0))]
+    let freq = Infinity
+    for (let i = 1; i < dates.length; ++i)
+        freq = dates[i] - dates[i - 1] < freq ? dates[i] - dates[i - 1] : freq
     return new DateTimeRange(
         new Date(dates[0]),
         new Date(dates.at(-1) as number),
-        Duration.milliseconds(dates[1] - dates[0])
+        Duration.milliseconds(freq)
     )
 }
