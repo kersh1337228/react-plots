@@ -14,7 +14,7 @@ export default class xAxis extends xAxisBase<NumberRange, AxesReal> {
         this.metadata.delta.max = Math.min(100, delta)
     }
     // Display
-    public async showScale(): Promise<void> {
+    public override async showScale(): Promise<void> {
         // Parent axes context
         const axesCtx = (
             this.axes.state.canvases.plot.ref.current as HTMLCanvasElement
@@ -61,7 +61,7 @@ export default class xAxis extends xAxisBase<NumberRange, AxesReal> {
         ctx?.restore()
         axesCtx.restore()
     }
-    public async showTooltip(x: number): Promise<void> {
+    public override async showTooltip(x: number): Promise<void> {
         if (this.axes.props.xAxis) {
             const i = (this.data.global as NumberRange).indexOf(
                 (x - this.translate) / this.scale

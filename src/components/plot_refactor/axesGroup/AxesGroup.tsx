@@ -12,7 +12,7 @@ import {PlotData, Geometrical, TimeSeries} from "../../../utils/types/plotData"
 import {Callback} from "../../../utils/types/callable"
 import NumberRange, {plotNumberRange} from "../../../utils/classes/iterable/NumberRange"
 import DateTimeRange, {plotDateTimeRange} from "../../../utils/classes/iterable/DateTimeRange"
-import Figure from "../figures/Figure"
+import Figure from "../figure/Figure"
 import {defaultValue} from "../../../utils/functions/miscellaneous"
 import './AxesGroup.css'
 

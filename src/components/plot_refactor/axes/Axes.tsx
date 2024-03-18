@@ -5,7 +5,7 @@ import AxesSettings from "./settings/AxesSettings"
 import xAxis from "./axis/xAxis/xAxis"
 import xAxisDateTime from "./axis/xAxis/xAxisDateTime"
 import yAxis from "./axis/yAxis/yAxis"
-import Figure from "../figures/Figure"
+import Figure from "../figure/Figure"
 import {PlotData} from "../../../utils/types/plotData"
 import {DataRange, GridPosition, Padding2D, Size2D} from "../../../utils/types/display"
 import {CanvasObject, TooltipCanvasObject} from "../../../utils/types/reactObjects"
@@ -81,7 +81,9 @@ export class AxesReal extends React.Component<AxesProps, AxesState> {
                     new xAxis(this, this.props.xAxisData as NumberRange) :
                     new xAxisDateTime(this, this.props.xAxisData as DateTimeRange),
                 y: new yAxis(this)
-            }, position: props.position, size: props.size
+            },
+            position: props.position,
+            size: props.size
         }
         // Methods binding
         this.coordinatesTransform = this.coordinatesTransform.bind(this)

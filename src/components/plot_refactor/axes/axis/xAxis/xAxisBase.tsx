@@ -12,12 +12,12 @@ export default abstract class xAxisBase<
 	T extends NumberRange | DateTimeRange,
 	U extends AxesReal | AxesGroupReal
 > extends Axis<U> {
-    public data: { global: T, local: T}
+    public data: { global: T, local: T }
     protected constructor(axes: U, data: T, name: string = '') {
         super(axes, 'x', name)
         this.data = { global: data, local: data }
     }
-	public init(): void {
+	public override init(): void {
 		// Global
 		this.metadata.global.min = Math.min.apply(
 			null, this.axes.drawings.map(drawing => drawing.global.x.min)
@@ -45,7 +45,7 @@ export default abstract class xAxisBase<
 		}
 	}
     // Coordinates transform
-	public async reScale(ds: number, callback?: Callback): Promise<void> {
+	public override async reScale(ds: number, callback?: Callback): Promise<void> {
 		this.metadata.delta.scale = truncate(
 			this.metadata.delta.scale + ds,
 			(this.axes.right - this.axes.left) * (
@@ -89,7 +89,7 @@ export default abstract class xAxisBase<
 			end: this.metadata.local.max / this.metadata.global.max,
 		}, callback)
 	}
-	public async reTranslate(dt: number, callback?: Callback): Promise<void> {
+	public override async reTranslate(dt: number, callback?: Callback): Promise<void> {
 		// Translate
 		this.metadata.delta.translate += dt
 		const multiplier = (this.axes.right - this.axes.left) / (
@@ -122,14 +122,14 @@ export default abstract class xAxisBase<
 			end: this.metadata.local.max / this.metadata.global.max,
 		}, callback)
 	}
-	public coordinatesTransform(): void {
+	public override coordinatesTransform(): void {
         this.data.local = this.data.global.slice(
             Math.floor(this.data.global.length * this.axes.state.dataRange.start),
             Math.ceil(this.data.global.length * this.axes.state.dataRange.end)
         ) as T
     }
     // Display
-    public setWindow(): void {
+    public override setWindow(): void {
 	    super.setWindow()
         if (this.canvases.scale.ref.current && this.canvases.tooltip.ref.current) {
             this.canvases.scale.ref.current.width = this.axes.width
@@ -138,7 +138,7 @@ export default abstract class xAxisBase<
             this.canvases.tooltip.ref.current.height = axisSize.height
         }
     }
-    public render(): React.ReactNode {
+    public override render(): React.ReactNode {
         return this.axes.props.xAxis ? <>
             <canvas
                 ref={this.canvases.scale.ref}
