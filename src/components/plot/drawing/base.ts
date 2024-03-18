@@ -11,6 +11,8 @@ import PointGeometricalDataWrapper from './data/point/geometrical';
 import PointTimeSeriesDataWrapper from './data/point/timeSeries';
 import ObjectGeometricalDataWrapper from './data/object/geometrical';
 import ObjectTimeSeriesDataWrapper from './data/object/timeSeries';
+import { plotDataType } from '../../../utils/functions/plotDataProcessing';
+import { HistStyleT } from './Hist';
 
 export declare type Bounds = {
     min: number;
@@ -25,24 +27,33 @@ export declare type DrawingData<
     y: Bounds;
 };
 
+export declare type DrawingProps<
+    StyleT extends Record<string, any>
+> = {
+    data: PlotData[];
+    name: string;
+    style?: StyleT;
+};
+
 export default abstract class Drawing<
     DataT extends PlotData,
-    GeometryT extends Path2D,
+    GeometryT extends any,
     StyleT extends Record<string, any>
 > {
     protected readonly data: DataWrapper<DataT>;
+    public readonly dtype: PlotDataName;
     protected visible: boolean;
     protected settings: boolean;
 
     protected constructor(
         data: DataT[],
-        dtype: PlotDataName,
         protected geometry: GeometryT,
         protected readonly name: string,
         protected style: StyleT,
         vfield?: string
     ) {
-        switch (dtype) {
+        this.dtype = plotDataType(data) as PlotDataName;
+        switch (this.dtype) {
             case 'PointGeometrical':
                 this.data = new PointGeometricalDataWrapper(
                     data as PointGeometrical[]) as DataWrapper<DataT>;

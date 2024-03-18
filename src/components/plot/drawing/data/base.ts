@@ -16,7 +16,7 @@ export abstract class DataWrapper<
     protected local: DrawingData<DataT>
     protected readonly type: PlotDataName
     protected constructor(
-        protected readonly global: DrawingData<DataT>
+        public readonly global: DrawingData<DataT>
     ) {
         this.local = {
             ...this.global,
@@ -56,13 +56,6 @@ export abstract class DataWrapper<
 
     public get points(): PointGeometrical[] {
         return this.local.data.map((_, i) => this.pointAt(i));
-    };
-
-    public slice(
-        start?: number,
-        end?: number
-    ): DataT[] {
-        return this.global.data.slice(start, end);
     };
 
     public get size() {

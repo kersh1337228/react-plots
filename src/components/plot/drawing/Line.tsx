@@ -1,5 +1,5 @@
-import { PlotData, PlotDataName } from '../../../../utils/types/plotData';
-import Drawing from '../base';
+import { PlotData } from '../../../utils/types/plotData';
+import Drawing, { DrawingProps } from './base';
 
 export declare type LineGeometryT = Path2D;
 
@@ -8,19 +8,17 @@ export declare type LineStyleT = {
     width: number
 };
 
-export class LineBase<
+class LineState<
     DataT extends PlotData
 > extends Drawing<DataT, LineGeometryT, LineStyleT> {
-    protected constructor(
+    public constructor(
         data: DataT[],
-        dtype: PlotDataName,
         name: string,
         style: LineStyleT = { color: '#000000', width: 1 },
-        vfield: string = ''
+        vfield?: string
     ) {
         super(
             data,
-            dtype,
             new Path2D(),
             name,
             style,
@@ -82,6 +80,7 @@ export class LineBase<
                 type={'checkbox'} name={'visible'}
                 onChange={event => {
                     this.visible = event.target.checked;
+                    // this.axes.plot()
                 }} defaultChecked={this.visible}
             />
             <ul>
@@ -90,6 +89,7 @@ export class LineBase<
                     defaultValue={this.style.color}
                     onChange={event => {
                         this.style.color = event.target.value;
+                        // this.axes.plot()
                     }} type={'color'}/>
                 </li>
                 <li>
@@ -104,4 +104,14 @@ export class LineBase<
             </ul>
         </div>;
     }
+}
+
+export default function Line(
+    {
+        data,
+        name = '',
+        style
+    }: DrawingProps<LineStyleT>
+) {
+    const descriptor = new LineState(data, name, style);
 }
