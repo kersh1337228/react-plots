@@ -5,8 +5,8 @@ import {plotDataType} from "../../../../utils/functions/plotDataProcessing"
 import {DataRange} from "../../../../utils/types/display"
 import './Drawing.css'
 
-export interface DrawingData<T extends PlotData> {
-    data: T[],
+export interface DrawingData<DataT extends PlotData> {
+    data: DataT[],
     x: { min: number, max: number }
     y: { min: number, max: number }
 }

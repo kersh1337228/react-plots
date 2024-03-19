@@ -28,8 +28,12 @@ declare type AxesContext = {
     dataAmount: number;
     transformMatrix: DOMMatrix;
     tooltips: React.ReactNode;
-    plotCtx: CanvasRenderingContext2D | null;
-    density: number
+    ctx: {
+        plot: CanvasRenderingContext2D | null;
+        tooltip: CanvasRenderingContext2D | null;
+    };
+    density: number;
+    xAxisData: NumberRange | DateTimeRange;
     // mouseEvents: {
     //     drag: boolean;
     //     position: {
@@ -37,37 +41,16 @@ declare type AxesContext = {
     //         y: number;
     //     };
     // };
-    axes: {
-        x: {
-            data: NumberRange | DateTimeRange;
-            scale: number;
-            translate: number;
-        }
-        y: {
-            scale: number;
-            translate: number;
-        }
-    }
 };
 
 const contextInit = {
     dataRange: { start: 0, end: 1 },
     dataAmount: 0,
-    transformMatrix: new DOMMatrix([ 1, 0, 0, 1, 0, 0 ]),
+    transformMatrix: new DOMMatrix([1, 0, 0, 1, 0, 0]),
     tooltips: null,
-    plotCtx: null,
+    ctx: null,
     density: 1,
-    axes: {
-        x: {
-            scale: 1,
-            translate: 0
-        },
-        y: {
-            scale: 1,
-            translate: 0
-        }
-    }
-} as AxesContext;
+} as unknown as AxesContext;
 
 export const AxesContext = createContext<{
     axesContext: AxesContext,
@@ -76,34 +59,34 @@ export const AxesContext = createContext<{
 
 export function Axes_(props: AxesProps) {
     const [context, dispatch] = useReducer(
-        (prevState: AxesContext, newState: AxesContext) => {
+        (_: AxesContext, newState: AxesContext) => {
             return newState;
         },
         {
             ...contextInit,
-            axes: {
-                ...contextInit.axes,
-                x: {
-                    ...contextInit.axes.x,
-                    data: props.xAxisData
-                }
-            }
+            xAxisData: props.xAxisData
         }
     );
 
     useEffect(() => {
         dispatch({
             ...context,
-            plotCtx: plotRef.current?.getContext('2d') as
-                CanvasRenderingContext2D
+            ctx: {
+                plot: plotRef.current?.getContext('2d') as
+                    CanvasRenderingContext2D,
+                tooltip: tooltipRef.current?.getContext('2d') as
+                    CanvasRenderingContext2D
+            }
         });
     }, []);
 
     const plotRef = useRef<HTMLCanvasElement>(null),
         tooltipRef = useRef<HTMLCanvasElement>(null);
 
-    const [size, setSize] = useState(props.size);
-    const [position, setPosition] = useState(props.position);
+    const [state, setState] = useState({
+        position: props.position,
+        size: props.size
+    });
     const axisSize = {
         x: props.xAxis ? axisSize_.height : 0,
         y: props.yAxis ? axisSize_.width : 0
@@ -112,12 +95,12 @@ export function Axes_(props: AxesProps) {
     return <div
         className={'axesGrid'}
         style={{
-            width: size.width + axisSize.y,
-            height: size.height + axisSize.x,
-            gridRowStart: position.row.start,
-            gridRowEnd: position.row.end,
-            gridColumnStart: position.column.start,
-            gridColumnEnd: position.column.end
+            width: state.size.width + axisSize.y,
+            height: state.size.height + axisSize.x,
+            gridRowStart: state.position.row.start,
+            gridRowEnd: state.position.row.end,
+            gridColumnStart: state.position.column.start,
+            gridColumnEnd: state.position.column.end
         }}
     >
         <div className={'axes tooltips'}>
@@ -127,16 +110,16 @@ export function Axes_(props: AxesProps) {
             ref={plotRef}
             className={'axes plot scale'}
             style={{
-                width: size.width,
-                height: size.height
+                width: state.size.width,
+                height: state.size.height
             }}
         ></canvas>
         <canvas
             ref={tooltipRef}
             className={'axes plot tooltip'}
             style={{
-                width: size.width,
-                height: size.height
+                width: state.size.width,
+                height: state.size.height
             }}
             onMouseMove={this.mouseMoveHandler}
             onMouseOut={this.mouseOutHandler}
