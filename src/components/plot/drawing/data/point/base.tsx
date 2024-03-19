@@ -2,7 +2,7 @@ import {
     PointGeometrical,
     PointTimeSeries
 } from '../../../../../utils/types/plotData';
-import { DataWrapper } from '../base';
+import { DataWrapper, useData } from '../base';
 import { DrawingData } from '../../base';
 import { round } from '../../../../../utils/functions/numberProcessing';
 
@@ -21,4 +21,28 @@ export default abstract class PointDataWrapper<
             {name}: {round(yi as number, 2)}
         </li>;
     }
+}
+
+export function usePointData<
+    DataT extends PointGeometrical | PointTimeSeries
+>(
+    global: DrawingData<DataT>,
+    type: 'PointGeometrical' | 'PointTimeSeries'
+) {
+    const data = useData(global, type);
+
+    function showTooltip(
+        globalX: number,
+        name: string
+    )  {
+        const [_, yi] = global.data[globalX];
+        return <li key={name} className={'drawingTooltips'}>
+            {name}: {round(yi as number, 2)}
+        </li>;
+    }
+
+    return {
+        ...data,
+        showTooltip
+    };
 }

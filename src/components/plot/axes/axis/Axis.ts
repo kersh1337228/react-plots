@@ -2,7 +2,6 @@ import {
     AxisData,
     GridObject
 } from '../../../../utils/types/display';
-import { Dispatch } from 'react';
 import { Callback } from '../../../../utils/types/callable';
 
 export declare interface AxisProps {
@@ -18,8 +17,6 @@ export default abstract class Axis {
         x: number;
         y: number;
     };
-    // @ts-ignore
-    public setState: React.Dispatch<React.SetStateAction<Axis>>;
 
     protected constructor(
         public readonly label: 'x' | 'y',
@@ -119,4 +116,8 @@ export default abstract class Axis {
     public get translate() {
         return this.local.translate + this.delta.translate;
     };
+}
+
+export function useMouseEvents() {
+
 }

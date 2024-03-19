@@ -26,20 +26,7 @@ class yAxisState extends Axis {
     }
 }
 
-function useDescriptor<
-    StateT extends Object & {
-        setState: React.Dispatch<
-            React.SetStateAction<StateT>
-        >
-    }
->(initialState: StateT) {
-    const [state, setState] = useState(initialState);
-    state.setState = setState;
-    return state;
-}
-
 export default function yAxis(props: AxisProps) {
-    const state = useDescriptor(new yAxisState());
 
     const scaleRef = useRef<HTMLCanvasElement>(null);
     const tooltipRef = useRef<HTMLCanvasElement>(null);
