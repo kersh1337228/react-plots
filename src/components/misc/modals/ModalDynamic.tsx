@@ -1,6 +1,5 @@
-import React from "react"
-import {axisSize} from "../../../utils/constants/plot"
-import './ModalDynamic.css'
+import React from 'react';
+import './ModalDynamic.css';
 
 interface ModalDynamicProps {
     children: React.ReactElement

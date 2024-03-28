@@ -1,29 +1,68 @@
-import { DataRange, GridPosition, Padding2D, Size2D } from '../../../utils/types/display';
-import NumberRange from '../../../utils/classes/iterable/NumberRange';
-import DateTimeRange from '../../../utils/classes/iterable/DateTimeRange';
-import { createContext, useEffect, useReducer, useRef, useState, Dispatch } from 'react';
-import { DrawingProps } from '../drawing/base';
-import { axisSize_ } from '../../../utils/constants/plot';
+import {
+    DrawingComponent
+} from '../drawing/Drawing';
+import {
+    DataRange,
+    GridPosition,
+    Padding,
+    Size
+} from '../../../utils_refactor/types/display';
+import NumberRange from '../../../utils_refactor/classes/iterable/NumberRange';
+import DateTimeRange from '../../../utils_refactor/classes/iterable/DateTimeRange';
+import {
+    DrawingContext
+} from '../drawing/Drawing';
+import {
+    createContext, useEffect,
+    useReducer,
+    useRef, useState
+} from 'react';
+import {
+    XAxisContext
+} from './axis/x/base';
+import {
+    AxisContext
+} from './axis/base';
+import {
+    axisSize_
+} from '../../../utils_refactor/constants/plot';
+import YAxis from './axis/y/base';
+import XAxisGeometrical from './axis/x/geometrical';
 
-declare type AxesPlaceholderProps = {
-    children: (React.FunctionComponentElement<
-        DrawingProps<Record<string, any>>
-    > & React.JSX.Element)[];
+export declare type AxesPlaceholderProps = {
+    children: DrawingComponent | DrawingComponent[];
     position: GridPosition;
+    name: string;
     xAxis?: boolean;
     yAxis?: boolean;
-    padding?: Padding2D;
-    title: string;
+    padding?: Padding;
+}
+
+export default function Axes(_: AxesPlaceholderProps) {
+    return null;
 };
 
-export default function Axes(_: AxesPlaceholderProps) {};
+export declare type AxesComponent = React.FunctionComponentElement<
+    AxesPlaceholderProps
+> & React.JSX.Element;
 
-declare interface AxesProps extends AxesPlaceholderProps {
-    size: Size2D;
+export declare interface AxesProps extends AxesPlaceholderProps {
+    size: Size;
     xAxisData: NumberRange | DateTimeRange;
 }
 
-declare type AxesContext = {
+export declare type AxesState = {
+
+}
+
+export declare type AxesContext = {
+    drawings: {
+        [name: string]: DrawingContext;
+    };
+    axis: {
+        x: XAxisContext;
+        y: AxisContext;
+    };
     dataRange: DataRange;
     dataAmount: number;
     transformMatrix: DOMMatrix;
@@ -33,42 +72,132 @@ declare type AxesContext = {
         tooltip: CanvasRenderingContext2D | null;
     };
     density: number;
-    xAxisData: NumberRange | DateTimeRange;
-    // mouseEvents: {
-    //     drag: boolean;
-    //     position: {
-    //         x: number;
-    //         y: number;
-    //     };
-    // };
-};
+    padding: {
+        left: number
+        top: number
+        right: number
+        bottom: number
+    };
+    size: Size;
+}
 
 const contextInit = {
+    drawings: {},
+    axis: {
+        x: {},
+        y: {}
+    },
     dataRange: { start: 0, end: 1 },
     dataAmount: 0,
     transformMatrix: new DOMMatrix([1, 0, 0, 1, 0, 0]),
     tooltips: null,
-    ctx: null,
+    ctx: {
+        plot: null,
+        tooltip: null
+    },
     density: 1,
+    padding: {
+        left: 0,
+        top: 0,
+        right: 0,
+        bottom: 0
+    }
 } as unknown as AxesContext;
 
-export const AxesContext = createContext<{
-    axesContext: AxesContext,
-    dispatch: Dispatch<AxesContext> // @ts-ignore (init with null)
+export const axesContext = createContext<AxesContext & {
+    dispatch: React.Dispatch<AxesContext>
+    // @ts-ignore (init with null)
 }>(null);
 
-export function Axes_(props: AxesProps) {
+export function AxesReal(
+    props: AxesProps
+) {
     const [context, dispatch] = useReducer(
         (_: AxesContext, newState: AxesContext) => {
             return newState;
         },
         {
             ...contextInit,
-            xAxisData: props.xAxisData
+            axis: {
+                x: {
+                    data: props.xAxisData
+                },
+                y: {}
+            },
+            padding: {
+                ...contextInit.padding,
+                ...props.padding
+            },
+            size: props.size
         }
     );
 
+    const plotRef = useRef<HTMLCanvasElement>(null),
+        tooltipRef = useRef<HTMLCanvasElement>(null);
+
+    const [state, setState] = useState({
+        position: props.position,
+        drag: false,
+        mousePos: {
+            x: 0,
+            y: 0
+        }
+    });
+
+    const axisSize = {
+        x: props.xAxis ? axisSize_.height : 0,
+        y: props.yAxis ? axisSize_.width : 0
+    };
+
+    function setWindow() {
+
+    }
+
+    function mouseMoveHandler(event: React.MouseEvent) {
+        const window = (event.target as HTMLCanvasElement).getBoundingClientRect();
+        const x = event.clientX - window.left,
+            y = event.clientY - window.top;
+        // if (state.drag)
+        //     this.state.axes.x.reTranslate(
+        //         x - state.mousePos.x,
+        //         () => { this.showTooltips(x, y, this.plot) }
+        //     );
+        // else
+        //     this.showTooltips(x, y);
+    }
+
+    function mouseOutHandler(_: React.MouseEvent) {
+        // hideTooltips();
+    }
+
+    function mouseDownHandler(event: React.MouseEvent) {
+        setState({
+            ...state,
+            drag: true,
+            mousePos: {
+                x: event.clientX - (
+                    event.target as HTMLCanvasElement
+                ).getBoundingClientRect().left,
+                y: event.clientY - (
+                    event.target as HTMLCanvasElement
+                ).getBoundingClientRect().top,
+            }
+        });
+    }
+
+    function mouseUpHandler(_: React.MouseEvent) {
+        setState({
+            ...state,
+            drag: false
+        });
+    }
+
     useEffect(() => {
+        // plotRef.current?.addEventListener( // No page scrolling
+        //     // @ts-ignore
+        //     'wheel', wheelHandler, { passive: false }
+        // );
+
         dispatch({
             ...context,
             ctx: {
@@ -80,60 +209,48 @@ export function Axes_(props: AxesProps) {
         });
     }, []);
 
-    const plotRef = useRef<HTMLCanvasElement>(null),
-        tooltipRef = useRef<HTMLCanvasElement>(null);
-
-    const [state, setState] = useState({
-        position: props.position,
-        size: props.size
-    });
-    const axisSize = {
-        x: props.xAxis ? axisSize_.height : 0,
-        y: props.yAxis ? axisSize_.width : 0
-    };
-
     return <div
-        className={'axesGrid'}
-        style={{
-            width: state.size.width + axisSize.y,
-            height: state.size.height + axisSize.x,
-            gridRowStart: state.position.row.start,
-            gridRowEnd: state.position.row.end,
-            gridColumnStart: state.position.column.start,
-            gridColumnEnd: state.position.column.end
-        }}
-    >
-        <div className={'axes tooltips'}>
-            {context.tooltips}
-        </div>
-        <canvas
-            ref={plotRef}
-            className={'axes plot scale'}
+            className={'axesGrid'}
             style={{
-                width: state.size.width,
-                height: state.size.height
+                width: context.size.width + axisSize.y,
+                height: context.size.height + axisSize.x,
+                gridRowStart: state.position.row.start,
+                gridRowEnd: state.position.row.end,
+                gridColumnStart: state.position.column.start,
+                gridColumnEnd: state.position.column.end
             }}
-        ></canvas>
-        <canvas
-            ref={tooltipRef}
-            className={'axes plot tooltip'}
-            style={{
-                width: state.size.width,
-                height: state.size.height
-            }}
-            onMouseMove={this.mouseMoveHandler}
-            onMouseOut={this.mouseOutHandler}
-            onMouseDown={this.mouseDownHandler}
-            onMouseUp={this.mouseUpHandler}
-        ></canvas>
-        <AxesContext.Provider value={{
-            axesContext: context,
-            dispatch
-        }}>
-            {props.children}
-            {this.state.axes.x.render()}
-            {this.state.axes.y.render()}
-            {this.settings}
-        </AxesContext.Provider>
-    </div>;
+        >
+            <div className={'axes tooltips'}>
+                {context.tooltips}
+            </div>
+            <canvas
+                ref={plotRef}
+                className={'axes plot scale'}
+                style={{
+                    width: context.size.width,
+                    height: context.size.height
+                }}
+            ></canvas>
+            <canvas
+                ref={tooltipRef}
+                className={'axes plot tooltip'}
+                style={{
+                    width: context.size.width,
+                    height: context.size.height
+                }}
+                onMouseMove={mouseMoveHandler}
+                onMouseOut={mouseOutHandler}
+                onMouseDown={mouseDownHandler}
+                onMouseUp={mouseUpHandler}
+            ></canvas>
+            <axesContext.Provider value={{
+                ...context,
+                dispatch
+            }}>
+                {props.children}
+                <XAxisGeometrical visible={props.xAxis} />
+                <YAxis visible={props.yAxis} />
+                {/*{this.settings}*/}
+            </axesContext.Provider>;
+        </div>;
 }

@@ -22,7 +22,7 @@
         "experimentalDecorators": true,
         "downlevelIteration": true
     },
-    "include": [
-        "src"
+    "exclude": [
+        "src/components/plot_refactor/**/*"
     ]
 }

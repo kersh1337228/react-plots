@@ -1,29 +1,16 @@
 import {
     PointGeometrical,
     PointTimeSeries
-} from '../../../../../utils/types/plotData';
-import { DataWrapper, useData } from '../base';
-import { DrawingData } from '../../base';
-import { round } from '../../../../../utils/functions/numberProcessing';
+} from '../../../../../utils_refactor/types/plotData';
+import useData from '../base';
+import {
+    DrawingData
+} from '../base';
+import {
+    round
+} from '../../../../../utils_refactor/functions/numberProcessing';
 
-export default abstract class PointDataWrapper<
-    DataT extends PointGeometrical | PointTimeSeries
-> extends DataWrapper<DataT> {
-    public constructor(
-        global: DrawingData<DataT>
-    ) {
-        super(global);
-    }
-
-    public override showTooltip(globalX: number, name: string) {
-        const [_, yi] = this.pointAt(globalX);
-        return <li key={name} className={'drawingTooltips'}>
-            {name}: {round(yi as number, 2)}
-        </li>;
-    }
-}
-
-export function usePointData<
+export default function usePointData<
     DataT extends PointGeometrical | PointTimeSeries
 >(
     global: DrawingData<DataT>,

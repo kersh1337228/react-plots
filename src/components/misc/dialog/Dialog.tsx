@@ -1,7 +1,9 @@
 import React from 'react'
 import ModalDynamic from "../modals/ModalDynamic"
 import './Dialog.css'
-import {Size2D} from "../../../utils/types/display"
+import {
+    Size
+} from "../../../utils_refactor/types/display"
 import CrossIcon from "../icons/CrossIcon"
 
 interface DialogProps {
@@ -12,7 +14,7 @@ interface DialogProps {
     active: boolean
     close: () => void
     zIndex: number
-    size?: Partial<Size2D>
+    size?: Partial<Size>
     offset?: { x?: number | string, y?: number | string }
 }
 

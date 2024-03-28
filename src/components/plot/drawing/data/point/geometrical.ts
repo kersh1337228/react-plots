@@ -1,46 +1,16 @@
-import { ObjectGeometrical, PointGeometrical } from '../../../../../utils/types/plotData';
-import NumberRange from '../../../../../utils/classes/iterable/NumberRange';
-import PointDataWrapper, { usePointData } from './base';
-import { useObjectData } from '../object/base';
-import { useContext } from 'react';
-import { AxesContext } from '../../../axes/Axes';
+import {
+    PointGeometrical
+} from '../../../../../utils_refactor/types/plotData';
+import NumberRange from '../../../../../utils_refactor/classes/iterable/NumberRange';
+import usePointData from './base';
+import {
+    useContext
+} from 'react';
+import {
+    axesContext
+} from '../../../axes/Axes';
 
-// export default class PointGeometricalDataWrapper extends PointDataWrapper<PointGeometrical> {
-//     public constructor(
-//         data: PointGeometrical[]
-//     ) {
-//         const xs =  Array.from(data, point => point[0]),
-//             ys = Array.from(data, point => point[1])
-//                 .filter(y => y !== null) as number[];
-//         super({
-//             data,
-//             x: {
-//                 min: Math.min.apply(null, xs),
-//                 max: Math.max.apply(null, xs)
-//             },
-//             y: {
-//                 min: Math.min.apply(null, ys),
-//                 max: Math.max.apply(null, ys)
-//             }
-//         });
-//     };
-//
-//     public override pointAt(i: number) {
-//         return this.global.data[i];
-//     };
-//
-//     public override globalize(
-//         x: number,
-//         data: NumberRange,
-//         xt: number,
-//         xs: number,
-//         density: null
-//     ): number {
-//         return data.indexOf((x - xt) / xs) as number;
-//     };
-// }
-
-export function usePointGeometricalData(
+export default function usePointGeometricalData(
     data: PointGeometrical[]
 ) {
     const xs =  Array.from(data, point => point[0]),
@@ -68,12 +38,16 @@ export function usePointGeometricalData(
     function globalize(
         x: number
     ): number {
-        const { axesContext: {
+        const {
             transformMatrix,
-            xAxisData,
+            axis: {
+                x: {
+                    data
+                }
+            },
             // density,
-        } } = useContext(AxesContext);
-        return (xAxisData as NumberRange).indexOf(
+        } = useContext(axesContext);
+        return (data as NumberRange).indexOf(
             (x - transformMatrix.e) / transformMatrix.a) as number;
     }
 
