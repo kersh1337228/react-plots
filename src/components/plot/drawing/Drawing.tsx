@@ -6,6 +6,7 @@ import {
     PointGeometrical
 } from '../../../utils_refactor/types/plotData';
 import {
+    JSX,
     useContext
 } from 'react';
 import {
@@ -34,7 +35,7 @@ export declare type DrawingProps<
 
 export declare type DrawingComponent = React.FunctionComponentElement<
     DrawingProps<Record<string, any>>
-> & React.JSX.Element;
+> & JSX.Element;
 
 export declare type DrawingState = {}; // TODO: drawing state
 
@@ -44,9 +45,19 @@ export declare type DrawingContext = {
     local: DrawingData;
     global: DrawingData;
     vfield?: string;
+    // Methods
+    localize(range: DataRange): DrawingData;
+    globalize(x: number): number;
+    pointAt(i: number): PointGeometrical;
+    showTooltip(globalX: number, name: string): JSX.Element;
+    plot(): void;
+    drawTooltip(globalX: number): void;
+    showStyle(): JSX.Element;
 };
 
-export function initDrawingContext(props: DrawingProps<any>): DrawingContext {
+export function initDrawingContext(
+    props: DrawingProps<any>
+): DrawingContext {
     let xs: number[], ys: number[], x: Bounds;
     const dtype = plotDataType(props.data) as PlotDataName;
 
@@ -83,6 +94,7 @@ export function initDrawingContext(props: DrawingProps<any>): DrawingContext {
         }
     };
 
+    // @ts-ignore
     return {
         style: props.style,
         vfield: props.vfield,
@@ -92,25 +104,17 @@ export function initDrawingContext(props: DrawingProps<any>): DrawingContext {
     }
 }
 
-export function useDrawing<
-    DataT extends PlotData,
-    // StyleT extends Record<string, any>
->(
-    data: DataT[],
-    name: string
+export function useDrawing(
+    props: DrawingProps<any>
 ) {
-    const dtype = plotDataType(data) as PlotDataName;
+    const dtype = plotDataType(props.data) as PlotDataName;
     const context = useContext(axesContext);
-    const self = context.drawings[name];
+    const self = context.drawings[props.name];
 
-    function localize(range: DataRange): Bounds {
-        const local = {
-            x: {
-                min: range.start * self.global.x.max,
-                max: range.end * self.global.x.max
-            }
-        };
-        const localData = data.slice(
+    function localize(
+        range: DataRange
+    ): DrawingData {
+        const localData = props.data.slice(
             Math.floor(global.length * range.start),
             Math.ceil(global.length * range.end)
         )
@@ -126,8 +130,14 @@ export function useDrawing<
                 .filter(y => y !== null);
 
         return {
-            min: Math.min.apply(null, ys),
-            max: Math.max.apply(null, ys)
+            x: {
+                min: range.start * self.global.x.max,
+                max: range.end * self.global.x.max
+            },
+            y: {
+                min: Math.min.apply(null, ys),
+                max: Math.max.apply(null, ys)
+            }
         };
     }
 
@@ -149,33 +159,30 @@ export function useDrawing<
     function pointAt(i: number): PointGeometrical {
         switch (dtype) {
             case "PointGeometrical":
-                return data[i] as PointGeometrical;
+                return props.data[i] as PointGeometrical;
             case "PointTimeSeries":
-                return [i + 0.55, data[i][1]];
+                return [i + 0.55, props.data[i][1]];
             case "ObjectGeometrical":
-                const point = data[i] as ObjectGeometrical;
+                const point = props.data[i] as ObjectGeometrical;
                 return [point.timestamp, point[self.vfield as string]];
             case "ObjectTimeSeries":
                 return [i + 0.55, (
-                    data[i] as ObjectTimeSeries
+                    props.data[i] as ObjectTimeSeries
                 )[self.vfield as string]];
         }
     }
 
-    function showTooltip(
-        globalX: number,
-        name: string
-    )  {
-        const point = data[globalX];
+    function showTooltip(globalX: number) {
+        const point = props.data[globalX];
         if (dtype.includes('Point'))
-            return <li key={name} className={'drawingTooltips'}>
-                {name}: {round(point[1] as number, 2)}
+            return <li key={props.name} className={'drawingTooltips'}>
+                {props.name}: {round(point[1] as number, 2)}
             </li>;
         else
-            return <li key={name} className={'drawingTooltips'}>
+            return <li key={props.name} className={'drawingTooltips'}>
                 <ul>
                     {Object.entries(point).map(([key, value]) =>
-                        <li key={key}>{name}: {round(value as number, 2)}</li>
+                        <li key={key}>{props.name}: {round(value as number, 2)}</li>
                     )}
                 </ul>
 
@@ -185,6 +192,7 @@ export function useDrawing<
     return {
         ...self,
         dispatch: context.dispatch,
+        style: props.style,
         localize,
         globalize,
         pointAt,

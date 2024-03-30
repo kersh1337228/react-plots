@@ -11,7 +11,7 @@ import {
     createContext,
     createElement,
     useReducer,
-    Children
+    Children, useEffect
 } from 'react';
 import {
     axisSize_
@@ -143,7 +143,7 @@ export default function Figure(
             childContextInit.padding = { ...childProps.padding };
             childContextInit.position = childProps.position;
             childContextInit.size = childProps.size;
-            childContextInit.axis.x = initXAxisContext(
+            childContextInit.axis.x = initXAxisContext(xAxisData,
                 childProps.size, childProps.padding, childContextInit.drawings);
             childContextInit.axis.y = initYAxisContext(
                 childProps.size, childProps.padding, childContextInit.drawings);
@@ -168,6 +168,10 @@ export default function Figure(
             children: childrenContextInit
         }
     );
+
+    // useEffect(() => {
+    //     console.log(figureContext);
+    // }, []);
 
     return <FigureContext.Provider value={{
         ...figureContext,

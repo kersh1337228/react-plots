@@ -1,9 +1,17 @@
-import { PlotData } from '../../../utils_refactor/types/plotData';
-import { DrawingProps, useDrawing } from './Drawing';
-import React, { useContext, useMemo } from 'react';
-import { axesContext } from '../axes/Axes';
+import {
+    DrawingProps,
+    useDrawing
+} from './Drawing';
+import React, {
+    useContext,
+    useEffect,
+    useMemo
+} from 'react';
+import {
+    axesContext
+} from '../axes/Axes';
 
-export declare type HistStyleT = {
+export declare type HistStyle = {
     color: {
         pos: string;
         neg: string;
@@ -12,16 +20,27 @@ export declare type HistStyleT = {
 };
 
 export default function Hist(
-    props: DrawingProps<HistStyleT>
+    {
+        data,
+        name,
+        style = {
+            color: {
+                pos: '#53e9b5',
+                neg: '#da2c4d'
+            },
+            width: 0.9
+        },
+        vfield
+    }: DrawingProps<HistStyle>
 ) {
-    const drawing = useDrawing(props.data, props.name);
+    const drawing = useDrawing({ data, name, style, vfield });
 
     const geometry = useMemo(() => {
         const hist = {
             pos: new Path2D(),
             neg: new Path2D()
         };
-        props.data.forEach((_, i) => {
+        data.forEach((_, i) => {
             const [x, y] = drawing.pointAt(i);
             if (y) {
                 const column = new Path2D();
@@ -43,7 +62,7 @@ export default function Hist(
         transformMatrix
     } = useContext(axesContext);
 
-    async function plot() {
+    function plot() {
         if (drawing.visible && ctx) {
             ctx.save();
 
@@ -61,7 +80,7 @@ export default function Hist(
         }
     }
 
-    async function drawTooltip(
+    function drawTooltip(
         globalX: number
     ) {
         // TODO: empty
@@ -69,14 +88,14 @@ export default function Hist(
 
     function showStyle() {
         return (
-            <div key={props.name}>
-                <label htmlFor={'visible'}>{props.name}</label>
+            <div key={name}>
+                <label htmlFor={'visible'}>{name}</label>
                 <input
                     type={'checkbox'}
                     name={'visible'}
                     onChange={async (event) => {
                         drawing.dispatch((context) => {
-                            context.drawings[props.name].visible = event.target.checked;
+                            context.drawings[name].visible = event.target.checked;
                             return context;
                         });
                         // this.axes.plot() // TODO: full replot
@@ -89,7 +108,7 @@ export default function Hist(
                         defaultValue={drawing.style.color.pos}
                         onChange={async (event) => {
                             drawing.dispatch((context) => {
-                                context.drawings[props.name].style.pos = event.target.value;
+                                context.drawings[name].style.pos = event.target.value;
                                 return context;
                             });
                             // this.axes.plot()
@@ -100,7 +119,7 @@ export default function Hist(
                         defaultValue={drawing.style.color.neg}
                         onChange={async (event) => {
                             drawing.dispatch((context) => {
-                                context.drawings[props.name].style.neg = event.target.value;
+                                context.drawings[name].style.neg = event.target.value;
                                 return context;
                             });
                             // this.axes.plot()
@@ -110,6 +129,19 @@ export default function Hist(
             </div>
         )
     }
+
+    useEffect(() => {
+        drawing.dispatch((context) => {
+            context.drawings[name] = {
+                ...drawing,
+                style,
+                plot,
+                drawTooltip,
+                showStyle
+            }
+            return context;
+        });
+    }, []);
 
     return null;
 }

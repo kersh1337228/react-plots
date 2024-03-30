@@ -5,7 +5,7 @@ import {
     useContext,
     useEffect
 } from 'react';
-import useAxis from '../base';
+import useAxis, { AxisContext } from '../base';
 import {
     numberPower
 } from '../../../../../utils_refactor/functions/numberProcessing';
@@ -26,7 +26,7 @@ export function initYAxisContext(
     size: Size,
     padding: Padding,
     drawings: { [name: string]: DrawingContext }
-) {
+): AxisContext {
     const global = {
         min: 0,
         max: 0,
@@ -54,6 +54,7 @@ export function initYAxisContext(
     global.translate = top - (bottom - top) /
         (global.max - global.min) * global.min;
 
+    // @ts-ignore
     return {
         global,
         local: { ...global },
@@ -77,9 +78,19 @@ export default function YAxis(
     const scale = self.local.scale + self.delta.scale;
     const dyt = (-context.size.height / spread - scale) * spread;
 
-    function reScale(ds: number) {}
+    function reScale(ds: number) {
+        return {
+            local: self.local,
+            delta: self.delta
+        };
+    }
 
-    function reTranslate(dt: number) {}
+    function reTranslate(dt: number) {
+        return {
+            local: self.local,
+            delta: self.delta
+        };
+    }
 
     function transform(drawingLocal: DrawingData[]): AxisData {
         const local = { ...self.local };
@@ -196,6 +207,16 @@ export default function YAxis(
     useEffect(() => {
         axis.tooltipRef.current?.addEventListener(
             'wheel', axis.wheelHandler(reScale), { passive: false });
+        context.dispatch((context) => {
+            context.axis.y = {
+                ...context.axis.y,
+                ...axis,
+                reScale,
+                reTranslate,
+                transform,
+            }
+            return context;
+        });
     }, []);
 
     return visible ? <>

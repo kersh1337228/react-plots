@@ -4,6 +4,7 @@ import {
 } from './Drawing';
 import {
     useContext,
+    useEffect,
     useMemo
 } from 'react';
 import {
@@ -16,16 +17,24 @@ declare type LineStyle = {
 };
 
 export default function Line(
-    props: DrawingProps<LineStyle>
+    {
+        data,
+        name,
+        style = {
+            color: '#000000',
+            width: 1
+        },
+        vfield
+    }: DrawingProps<LineStyle>
 ) {
-    const drawing = useDrawing(props.data, props.name);
+    const drawing = useDrawing({ data, name, style, vfield });
 
     const geometry = useMemo(() => {
         const line = new Path2D();
-        const i0 = [...Array(props.data.length).keys()].findIndex(
+        const i0 = [...Array(data.length).keys()].findIndex(
             i => drawing.pointAt(i)[1] !== null);
         line.moveTo(...drawing.pointAt(i0) as [number, number]);
-        props.data.slice(i0).forEach((_, i) => {
+        data.slice(i0).forEach((_, i) => {
             const [x, y] = drawing.pointAt(i0 + i);
             if (y)
                 line.lineTo(x, y);
@@ -41,7 +50,7 @@ export default function Line(
         density
     } = useContext(axesContext);
 
-    async function plot() {
+    function plot() {
         if (drawing.visible && ctx) {
             ctx.save();
 
@@ -55,7 +64,7 @@ export default function Line(
         }
     }
 
-    async function drawTooltip(
+    function drawTooltip(
         globalX: number
     ) {
         const [xi, yi] = drawing.pointAt(globalX);
@@ -75,14 +84,14 @@ export default function Line(
     }
 
     function showStyle() {
-        return <div key={props.name}>
-            <label htmlFor={'visible'}>{props.name}</label>
+        return <div key={name}>
+            <label htmlFor={'visible'}>{name}</label>
             <input
                 type={'checkbox'}
                 name={'visible'}
                 onChange={async (event) => {
                     drawing.dispatch((context) => {
-                        context.drawings[props.name].visible = event.target.checked;
+                        context.drawings[name].visible = event.target.checked;
                         return context;
                     });
                     // this.axes.plot() // TODO: full replot
@@ -95,7 +104,7 @@ export default function Line(
                     defaultValue={drawing.style.color}
                     onChange={async (event) => {
                         drawing.dispatch((context) => {
-                            (context.drawings[props.name].style as LineStyle)
+                            (context.drawings[name].style as LineStyle)
                                 .color = event.target.value;
                             return context;
                         });
@@ -109,7 +118,7 @@ export default function Line(
                     defaultValue={drawing.style.width}
                     onChange={event => {
                         drawing.dispatch((context) => {
-                            (context.drawings[props.name].style as LineStyle)
+                            (context.drawings[name].style as LineStyle)
                                 .width = event.target.valueAsNumber;
                             return context;
                         });
@@ -119,6 +128,19 @@ export default function Line(
             </ul>
         </div>;
     }
+
+    useEffect(() => {
+        drawing.dispatch((context) => {
+            context.drawings[name] = {
+                ...drawing,
+                style,
+                plot,
+                drawTooltip,
+                showStyle
+            }
+            return context;
+        });
+    }, []);
 
     return null;
 }

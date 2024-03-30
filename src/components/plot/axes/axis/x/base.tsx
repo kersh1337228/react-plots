@@ -21,12 +21,20 @@ import {
 import {
     DrawingContext
 } from '../../../drawing/Drawing';
+import NumberRange from '../../../../../utils_refactor/classes/iterable/NumberRange';
+import DateTimeRange from '../../../../../utils_refactor/classes/iterable/DateTimeRange';
+
+
+export declare interface XAxisContext extends AxisContext {
+    data: NumberRange | DateTimeRange
+}
 
 export function initXAxisContext(
+    data: NumberRange | DateTimeRange,
     size: Size,
     padding: Padding,
     drawings: { [name: string]: DrawingContext }
-): AxisContext {
+): XAxisContext {
     const global = {
         min: 0,
         max: 0,
@@ -61,7 +69,9 @@ export function initXAxisContext(
             (global.max - global.min) - local.min / delta.max);
     }
 
+    // @ts-ignore
     return {
+        data,
         global,
         local,
         delta
@@ -118,18 +128,18 @@ export function useXAxis(
             global.min,
             global.max - delta.min
         );
-        context.dispatch({
-            ...context,
-            axis: {
-                ...context.axis,
-                x: {
-                    ...self,
-                    global,
-                    local,
-                    delta
-                }
-            }
-        });
+        // context.dispatch({
+        //     ...context,
+        //     axis: {
+        //         ...context.axis,
+        //         x: {
+        //             ...self,
+        //             global,
+        //             local,
+        //             delta
+        //         }
+        //     }
+        // });
         // TODO: Applying changes
         // await this.axes.coordinatesTransform({
         //     start: this.metadata.local.min / this.metadata.global.max,
@@ -166,18 +176,18 @@ export function useXAxis(
             global.min,
             global.max - delta.min
         );
-        context.dispatch({
-            ...context,
-            axis: {
-                ...context.axis,
-                x: {
-                    ...self,
-                    global,
-                    local,
-                    delta
-                }
-            }
-        });
+        // context.dispatch({
+        //     ...context,
+        //     axis: {
+        //         ...context.axis,
+        //         x: {
+        //             ...self,
+        //             global,
+        //             local,
+        //             delta
+        //         }
+        //     }
+        // });
         // TODO: apply transform
         // await this.axes.coordinatesTransform({
         //     start: this.metadata.local.min / this.metadata.global.max,
@@ -186,19 +196,19 @@ export function useXAxis(
     }
 
     function transform(){
-        context.dispatch({
-            ...context,
-            axis: {
-                ...context.axis,
-                x: {
-                    ...self,
-                    // data: data.slice( // TODO: x data localization ?
-                    //     Math.floor(data.length * dataRange.start),
-                    //     Math.ceil(data.length * dataRange.end)
-                    // )
-                }
-            }
-        });
+        // context.dispatch({
+        //     ...context,
+        //     axis: {
+        //         ...context.axis,
+        //         x: {
+        //             ...self,
+        //             // data: data.slice( // TODO: x data localization ?
+        //             //     Math.floor(data.length * dataRange.start),
+        //             //     Math.ceil(data.length * dataRange.end)
+        //             // )
+        //         }
+        //     }
+        // });
     }
 
     useEffect(() => {

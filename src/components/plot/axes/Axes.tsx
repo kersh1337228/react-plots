@@ -26,7 +26,12 @@ import {
 } from '../../../utils_refactor/constants/plot';
 import YAxis from './axis/y/base';
 import XAxisGeometrical from './axis/x/geometrical';
-import { FigureContext } from '../figure/Figure';
+import {
+    FigureContext
+} from '../figure/Figure';
+import {
+    XAxisContext
+} from './axis/x/base';
 
 export declare type AxesPlaceholderProps = {
     children: DrawingComponent | DrawingComponent[];
@@ -63,7 +68,7 @@ export declare type AxesContext = {
         [name: string]: DrawingContext;
     };
     axis: {
-        x: AxisContext;
+        x: XAxisContext;
         y: AxisContext;
     };
     dataRange: DataRange;
@@ -178,10 +183,10 @@ export function AxesReal(
     }
 
     function localize(range: DataRange) {
-        // const drawingLocal = Object.values(context.drawings).map(
-        //     drawing => drawing.localize(range)
-        // );
-        //
+        const drawingsLocal = Object.values(context.drawings).map(
+            drawing => drawing.localize(range)
+        );
+
         // const yLocal = context.axis.y.transform(drawingLocal);
     }
 
@@ -191,8 +196,11 @@ export function AxesReal(
         //     'wheel', wheelHandler, { passive: false }
         // );
 
-        // console.log(x, y);
-        // TODO: put handlers to context
+        // localize({
+        //     start: context.axis.x.local.min / context.axis.x.global.max,
+        //     end: context.axis.x.local.max / context.axis.x.global.max,
+        // });
+        // TODO: put handlers into context
 
         dispatch((context) => {
             (context.children[props.name] as AxesContext).ctx = {
