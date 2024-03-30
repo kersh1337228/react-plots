@@ -14,11 +14,58 @@ import {
 import {
     AxisContext
 } from '../base';
-import NumberRange from '../../../../../utils_refactor/classes/iterable/NumberRange';
-import DateTimeRange from '../../../../../utils_refactor/classes/iterable/DateTimeRange';
+import {
+    Padding,
+    Size
+} from '../../../../../utils_refactor/types/display';
+import {
+    DrawingContext
+} from '../../../drawing/Drawing';
 
-export declare interface XAxisContext extends AxisContext {
-    data: NumberRange | DateTimeRange
+export function initXAxisContext(
+    size: Size,
+    padding: Padding,
+    drawings: { [name: string]: DrawingContext }
+): AxisContext {
+    const global = {
+        min: 0,
+        max: 0,
+        scale: 1,
+        translate: 0
+    };
+    const delta = {
+        min: 5,
+        max: 500,
+        scale: 0,
+        translate: 0
+    };
+
+    const left = size.width * padding.left,
+        right = size.width * (1 - padding.right);
+
+    global.min = Math.min.apply(null, Object.values(drawings)
+        .map(drawing => drawing.local.x.min));
+    global.max = Math.max.apply(null, Object.values(drawings)
+        .map(drawing => drawing.local.x.max));
+
+    global.scale = (right - left) / (global.max - global.min);
+    global.translate = left - (right - left) /
+        (global.max - global.min) * global.min;
+
+    const local = { ...global };
+    if (global.max > delta.max) {
+        local.min = global.max - delta.max;
+        delta.scale = (right - left) * (
+            1 / delta.max - 1 / (global.max - global.min));
+        delta.translate = (right - left) * (global.min /
+            (global.max - global.min) - local.min / delta.max);
+    }
+
+    return {
+        global,
+        local,
+        delta
+    };
 }
 
 export function useXAxis(
@@ -31,40 +78,6 @@ export function useXAxis(
 
     const context = useContext(axesContext);
     const self = context.axis.x;
-
-    function init() {
-        const global = { ...self.global },
-            local = { ...self.local },
-            delta = { ...self.delta };
-
-        const left = context.size.width * context.padding.left,
-            right = context.size.width * (1 - context.padding.right);
-
-        global.min = Math.min.apply(null, Array.from(
-            Object.values(context.drawings),
-            drawing => drawing.global.x.min));
-        global.max = Math.max.apply(null, Array.from(
-            Object.values(context.drawings),
-            drawing => drawing.global.x.max));
-
-        global.scale = (right - left) / (global.max - global.min);
-        global.translate = left - (right - left) /
-            (global.max - global.min) * global.min;
-
-        if (global.max > delta.max) {
-            local.min = global.max - delta.max;
-            delta.scale = (right - left) * (
-                1 / delta.max - 1 / (global.max - global.min));
-            delta.translate = (right - left) * (global.min /
-                (global.max - global.min) - local.min / delta.max);
-        }
-
-        return {
-            global,
-            local,
-            delta
-        };
-    }
 
     function reScale(ds: number) {
         const global = { ...self.global },
@@ -191,9 +204,6 @@ export function useXAxis(
     useEffect(() => {
         axis.tooltipRef.current?.addEventListener(
             'wheel', axis.wheelHandler(reScale), { passive: false });
-        const copy = { ...context };
-        copy.axis.x.init = init;
-        context.dispatch(copy);
     }, []);
 
     function render() {
@@ -227,7 +237,6 @@ export function useXAxis(
 
     return {
         ...axis,
-        init,
         reScale,
         reTranslate,
         transform,

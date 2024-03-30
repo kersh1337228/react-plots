@@ -6,9 +6,7 @@ import {
     PointGeometrical
 } from '../../../utils_refactor/types/plotData';
 import {
-    useContext,
-    useEffect,
-    useState
+    useContext
 } from 'react';
 import {
     plotDataType
@@ -18,16 +16,12 @@ import {
 } from '../axes/Axes';
 import { Bounds, DataRange } from '../../../utils_refactor/types/display';
 import { round } from '../../../utils_refactor/functions/numberProcessing';
-import NumberRange from '../../../utils_refactor/classes/iterable/NumberRange';
 
-export declare type DrawingData<
-    DataT extends PlotData
-> = {
-    data: DataT[];
+export declare type DrawingData = {
+    // data: DataT[];
     x: Bounds;
     y: Bounds;
 };
-
 
 export declare type DrawingProps<
     StyleT extends Record<string, any>
@@ -42,68 +36,98 @@ export declare type DrawingComponent = React.FunctionComponentElement<
     DrawingProps<Record<string, any>>
 > & React.JSX.Element;
 
-export declare type DrawingState = {
-
-}
+export declare type DrawingState = {}; // TODO: drawing state
 
 export declare type DrawingContext = {
     style: Record<string, any>;
     visible: boolean;
-    global: DrawingData<PlotData>;
-    local: DrawingData<PlotData>;
+    local: DrawingData;
+    global: DrawingData;
     vfield?: string;
+};
 
-    localize: (range: DataRange) => DrawingData<PlotData>;
+export function initDrawingContext(props: DrawingProps<any>): DrawingContext {
+    let xs: number[], ys: number[], x: Bounds;
+    const dtype = plotDataType(props.data) as PlotDataName;
+
+    if (dtype.includes('Geometrical')) {
+        if (dtype.includes('Point'))
+            xs = (props.data as PointGeometrical[])
+                .map(point => point[0]);
+        else
+            xs = (props.data as ObjectGeometrical[])
+                .map(point => point.timestamp);
+        x = {
+            min: Math.min.apply(null, xs),
+            max: Math.max.apply(null, xs)
+        };
+    } else
+        x = {
+            min: 0,
+            max: props.data.length
+        };
+
+    if (dtype.includes('Point')) {
+        ys = (props.data as PointGeometrical[])
+            .map(point => point[1])
+            .filter(y => y !== null) as number[];
+    } else {
+        ys = (props.data as ObjectGeometrical[])
+            .map(point => point[props.vfield as string])
+            .filter(y => y !== null) as number[];
+    }
+    const global = {
+        x, y: {
+            min: Math.min.apply(null, ys),
+            max: Math.max.apply(null, ys)
+        }
+    };
+
+    return {
+        style: props.style,
+        vfield: props.vfield,
+        visible: true,
+        global,
+        local: { ...global }
+    }
 }
 
 export function useDrawing<
     DataT extends PlotData,
-    StyleT extends Record<string, any>
+    // StyleT extends Record<string, any>
 >(
-    global: DataT[],
-    style: StyleT,
-    name: string,
-    vfield?: string
+    data: DataT[],
+    name: string
 ) {
-    const [state, setState] = useState({
-        style,
-        name,
-        visible: true,
-        settings: false
-    });
-
-    const dtype = plotDataType(global) as PlotDataName;
+    const dtype = plotDataType(data) as PlotDataName;
     const context = useContext(axesContext);
     const self = context.drawings[name];
 
-    function localize(range: DataRange): DrawingData<PlotData> {
+    function localize(range: DataRange): Bounds {
         const local = {
             x: {
                 min: range.start * self.global.x.max,
                 max: range.end * self.global.x.max
-            },
-            data: global.slice(
-                Math.floor(global.length * range.start),
-                Math.ceil(global.length * range.end)
-            )
+            }
         };
+        const localData = data.slice(
+            Math.floor(global.length * range.start),
+            Math.ceil(global.length * range.end)
+        )
 
         let ys: number[];
         if (dtype.includes('Point'))
-            ys = (local.data as PointGeometrical[])
+            ys = (localData as PointGeometrical[])
                 .map(point => point[1] as number)
                 .filter(y => y !== null);
         else
-            ys = (local.data as ObjectGeometrical[])
-                .map(point => point[vfield as string] as number)
+            ys = (localData as ObjectGeometrical[])
+                .map(point => point[self.vfield as string] as number)
                 .filter(y => y !== null);
 
         return {
-            ...local,
-            y: {
-                min: Math.min.apply(null, ys),
-                max: Math.max.apply(null, ys)
-            }
+            min: Math.min.apply(null, ys),
+            max: Math.max.apply(null, ys)
         };
     }
 
@@ -111,9 +135,11 @@ export function useDrawing<
         x: number
     ): number {
         if (dtype.includes('Geometrical'))
-            return (context.axis.x.data as NumberRange).indexOf((
-                x - context.transformMatrix.e
-            ) / context.transformMatrix.a) as number;
+            // TODO: x axis data access
+            // return (context.axis.x.data as NumberRange).indexOf((
+            //     x - context.transformMatrix.e
+            // ) / context.transformMatrix.a) as number;
+            return 0;
         else
             return Math.floor((
                 x * context.density - context.transformMatrix.e
@@ -123,15 +149,15 @@ export function useDrawing<
     function pointAt(i: number): PointGeometrical {
         switch (dtype) {
             case "PointGeometrical":
-                return global[i] as PointGeometrical;
+                return data[i] as PointGeometrical;
             case "PointTimeSeries":
-                return [i + 0.55, global[i][1]];
+                return [i + 0.55, data[i][1]];
             case "ObjectGeometrical":
-                const data = global[i] as ObjectGeometrical;
-                return [data.timestamp, data[vfield as string]];
+                const point = data[i] as ObjectGeometrical;
+                return [point.timestamp, point[self.vfield as string]];
             case "ObjectTimeSeries":
                 return [i + 0.55, (
-                    global[i] as ObjectTimeSeries
+                    data[i] as ObjectTimeSeries
                 )[self.vfield as string]];
         }
     }
@@ -140,7 +166,7 @@ export function useDrawing<
         globalX: number,
         name: string
     )  {
-        const point = global[globalX];
+        const point = data[globalX];
         if (dtype.includes('Point'))
             return <li key={name} className={'drawingTooltips'}>
                 {name}: {round(point[1] as number, 2)}
@@ -156,68 +182,9 @@ export function useDrawing<
             </li>;
     }
 
-    useEffect(() => {
-        let xs: number[], ys: number[], x: Bounds;
-
-        if (dtype.includes('Geometrical')) {
-            if (dtype.includes('Point')) {
-                xs = (global as PointGeometrical[])
-                    .map(point => point[0]);
-            } else {
-                xs = (global as ObjectGeometrical[])
-                    .map(point => point.timestamp);
-            }
-            x = {
-                min: Math.min.apply(null, xs),
-                max: Math.max.apply(null, xs)
-            };
-        } else {
-            x = {
-                min: 0,
-                max: global.length
-            };
-        }
-
-        if (dtype.includes('Point')) {
-            ys = (global as PointGeometrical[])
-                .map(point => point[1])
-                .filter(y => y !== null) as number[];
-        } else {
-            ys = (global as ObjectGeometrical[])
-                .map(point => point[vfield as string])
-                .filter(y => y !== null) as number[];
-        }
-        const data = {
-            data: global, x,
-            y: {
-                min: Math.min.apply(null, ys),
-                max: Math.max.apply(null, ys)
-            }
-        };
-
-        const copy = { ...context };
-        copy.drawings[name] = {
-            style,
-            visible: true,
-            global: data,
-            local: {
-                data: [...data.data],
-                x: { ...data.x },
-                y: { ...data.y }
-            },
-            vfield
-        };
-        context.dispatch(copy);
-    }, [
-        // data.local.x.min,
-        // data.local.x.max,
-        // data.local.y.min,
-        // data.local.y.max
-    ]);
-
     return {
-        state,
-        setState,
+        ...self,
+        dispatch: context.dispatch,
         localize,
         globalize,
         pointAt,

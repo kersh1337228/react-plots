@@ -42,7 +42,7 @@ export function fillData(data: PlotData[], labels: number[] | string[]): PlotDat
 		})
 	} else if (dType === 'ObjectGeometrical' || dType === 'ObjectTimeSeries') {
 		const fields = Object.keys(data[0]).filter(field => field !== 'timestamp')
-		const labelsPresent = Array.from(data as DataObject<any>[], obj => obj.timestamp)
+		const labelsPresent = (data as DataObject<any>[]).map(obj => obj.timestamp);
 		let i = -1
 		labels.forEach(label => {
 			if (!labelsPresent.includes(label)) {  // @ts-ignore

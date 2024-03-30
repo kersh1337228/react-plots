@@ -2,7 +2,8 @@ import {
     axisSize_
 } from '../../../../../utils_refactor/constants/plot';
 import {
-    useContext, useEffect
+    useContext,
+    useEffect
 } from 'react';
 import useAxis from '../base';
 import {
@@ -12,14 +13,53 @@ import {
     axesContext
 } from '../../Axes';
 import {
-    AxisData
+    AxisData,
+    Padding,
+    Size
 } from '../../../../../utils_refactor/types/display';
 import {
+    DrawingContext,
     DrawingData
 } from '../../../drawing/Drawing';
-import {
-    PlotData
-} from '../../../../../utils_refactor/types/plotData';
+
+export function initYAxisContext(
+    size: Size,
+    padding: Padding,
+    drawings: { [name: string]: DrawingContext }
+) {
+    const global = {
+        min: 0,
+        max: 0,
+        scale: 1,
+        translate: 0
+    };
+    const delta = {
+        min: 5,
+        max: 500,
+        scale: 0,
+        translate: 0
+    };
+
+    const top = size.height * (1 - padding.top),
+        bottom = size.height * padding.bottom;
+
+    global.min = Math.min.apply(
+        null, Object.values(drawings).map(
+            drawing => drawing.local.y.min));
+    global.max = Math.min.apply(
+        null, Object.values(drawings).map(
+            drawing => drawing.local.y.max));
+
+    global.scale = (bottom - top) / (global.max - global.min);
+    global.translate = top - (bottom - top) /
+        (global.max - global.min) * global.min;
+
+    return {
+        global,
+        local: { ...global },
+        delta
+    };
+}
 
 export default function YAxis(
     {
@@ -33,41 +73,15 @@ export default function YAxis(
     const self = context.axis.y;
     const axesCtx = context.ctx.plot;
 
-
     const spread = self.local.max - self.local.min;
     const scale = self.local.scale + self.delta.scale;
     const dyt = (-context.size.height / spread - scale) * spread;
-
-    function init() {
-        const global = { ...self.global },
-            delta = { ...self.delta };
-
-        const top = context.size.height * (1 - context.padding.top),
-            bottom = context.size.height * context.padding.bottom;
-
-        global.min = Math.min.apply(
-            null, Object.values(context.drawings).map(
-                drawing => drawing.global.y.min));
-        global.max = Math.min.apply(
-            null, Object.values(context.drawings).map(
-                drawing => drawing.global.y.max));
-
-        global.scale = (bottom - top) / (global.max - global.min);
-        global.translate = top - (bottom - top) /
-            (global.max - global.min) * global.min;
-
-        return {
-            global,
-            local: self.local,
-            delta
-        };
-    }
 
     function reScale(ds: number) {}
 
     function reTranslate(dt: number) {}
 
-    function transform(drawingLocal: DrawingData<PlotData>[]): AxisData {
+    function transform(drawingLocal: DrawingData[]): AxisData {
         const local = { ...self.local };
 
         local.min = Math.min.apply(null, drawingLocal.map(l => l.y.min));
@@ -182,10 +196,6 @@ export default function YAxis(
     useEffect(() => {
         axis.tooltipRef.current?.addEventListener(
             'wheel', axis.wheelHandler(reScale), { passive: false });
-        const copy = { ...context };
-        copy.axis.y.init = init;
-        copy.axis.y.transform = transform;
-        context.dispatch(copy);
     }, []);
 
     return visible ? <>

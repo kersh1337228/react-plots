@@ -1,6 +1,6 @@
 import {
     AxesComponent,
-    AxesContext,
+    AxesContext, axesContextInit,
     AxesReal
 } from '../axes/Axes';
 import {
@@ -33,7 +33,16 @@ import {
 import {
     AxesGroupComponent
 } from '../axesGroup/AxesGroup';
-import { DrawingComponent } from '../drawing/Drawing';
+import {
+    DrawingComponent,
+    initDrawingContext
+} from '../drawing/Drawing';
+import {
+    initXAxisContext
+} from '../axes/axis/x/base';
+import {
+    initYAxisContext
+} from '../axes/axis/y/base';
 
 declare type FigureProps = {
     width: number;
@@ -43,9 +52,7 @@ declare type FigureProps = {
         | (AxesComponent | AxesGroupComponent)[];
 };
 
-declare type FigureState = {
-
-};
+declare type FigureState = {}; // TODO: Figure state
 
 declare type FigureContext = {
     children: {
@@ -53,16 +60,14 @@ declare type FigureContext = {
     };
 };
 
-const figureContextInit = {
-    children: {},
-    dispatch: () => {}
-};
-
 export const FigureContext = createContext<
     FigureContext & {
-        dispatch: React.Dispatch<FigureContext>
+        dispatch: React.Dispatch<(context: FigureContext) => FigureContext>
     }
->(figureContextInit);
+>({
+    children: {},
+    dispatch: () => {}
+});
 
 export default function Figure(
     props: FigureProps
@@ -76,7 +81,13 @@ export default function Figure(
     const cellWidth = props.width / grid.columns,
         cellHeight = props.height / grid.rows;
 
+    const childrenContextInit = {} as {
+        [name: string]: AxesContext | AxesGroupContext
+    };
+
     const childrenModified = Children.map(props.children, (child, index) => {
+        const childContextInit: AxesContext = { ...axesContextInit };
+
         const childProps = {
             ...child.props,
             xAxis: child.props.xAxis ?? true,
@@ -99,7 +110,8 @@ export default function Figure(
                 )
             },
             key: index
-        }
+        };
+
         if (child.type.name === 'Axes') {
             let xAxisData: NumberRange | DateTimeRange;
             let xAxisLabels: number[] | string[];
@@ -120,12 +132,23 @@ export default function Figure(
             const drawings = (child.props.children as DrawingComponent[]).map(drawing => {
                 if (!drawing.props.data.length)
                     throw Error('Drawing data can not be empty.');
+                childContextInit.drawings[drawing.props.name] = initDrawingContext(drawing.props);
                 return cloneElement(drawing, {
                     ...drawing.props,
                     data: fillData(drawing.props.data, xAxisLabels),
                     key: drawing.props.name
                 });
             })
+
+            childContextInit.padding = { ...childProps.padding };
+            childContextInit.position = childProps.position;
+            childContextInit.size = childProps.size;
+            childContextInit.axis.x = initXAxisContext(
+                childProps.size, childProps.padding, childContextInit.drawings);
+            childContextInit.axis.y = initYAxisContext(
+                childProps.size, childProps.padding, childContextInit.drawings);
+            childrenContextInit[childProps.name] = childContextInit;
+
             return createElement(AxesReal, { key: childProps.name, ...childProps, xAxisData }, drawings)
             // } else if (child.type.name === 'AxesGroup')
             //     return React.createElement(AxesGroupReal, childProps)
@@ -135,10 +158,15 @@ export default function Figure(
     });
 
     const [figureContext, dispatch] = useReducer(
-        (_: FigureContext, newState: FigureContext) => {
-            return newState;
+        (
+            context: FigureContext,
+            action: (context: FigureContext) => FigureContext
+        ) => {
+            return action(context);
         },
-        figureContextInit
+        {
+            children: childrenContextInit
+        }
     );
 
     return <FigureContext.Provider value={{

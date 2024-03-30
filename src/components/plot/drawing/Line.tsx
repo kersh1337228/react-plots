@@ -1,7 +1,4 @@
 import {
-    PlotData
-} from '../../../utils_refactor/types/plotData';
-import {
     DrawingProps,
     useDrawing
 } from './Drawing';
@@ -13,41 +10,28 @@ import {
     axesContext
 } from '../axes/Axes';
 
-export declare type LineStyleT = {
+declare type LineStyle = {
     color: string
     width: number
 };
 
-function useLine<
-    DataT extends PlotData
-> (
-    data: DataT[],
-    style: LineStyleT = {
-        color: '#000000',
-        width: 1
-    },
-    name: string,
-    vfield?: string
+export default function Line(
+    props: DrawingProps<LineStyle>
 ) {
-    const drawing = useDrawing(
-        data,
-        style,
-        name,
-        vfield
-    );
+    const drawing = useDrawing(props.data, props.name);
 
     const geometry = useMemo(() => {
         const line = new Path2D();
-        const i0 = [...Array(data.length).keys()].findIndex(
+        const i0 = [...Array(props.data.length).keys()].findIndex(
             i => drawing.pointAt(i)[1] !== null);
         line.moveTo(...drawing.pointAt(i0) as [number, number]);
-        data.slice(i0).forEach((_, i) => {
+        props.data.slice(i0).forEach((_, i) => {
             const [x, y] = drawing.pointAt(i0 + i);
             if (y)
                 line.lineTo(x, y);
         })
         return line;
-    }, [drawing.state.style.width]);
+    }, [drawing.style.width]);
 
     const {
         ctx: {
@@ -58,11 +42,11 @@ function useLine<
     } = useContext(axesContext);
 
     async function plot() {
-        if (drawing.state.visible && ctx) {
+        if (drawing.visible && ctx) {
             ctx.save();
 
-            ctx.lineWidth = drawing.state.style.width;
-            ctx.strokeStyle = drawing.state.style.color;
+            ctx.lineWidth = drawing.style.width;
+            ctx.strokeStyle = drawing.style.color;
             let temp = new Path2D();
             temp.addPath(geometry, transformMatrix);
             ctx.stroke(temp);
@@ -83,7 +67,7 @@ function useLine<
                 3 * density,
                 0,
                 2 * Math.PI);
-            ctx.fillStyle = drawing.state.style.color;
+            ctx.fillStyle = drawing.style.color;
             ctx.fill();
             ctx.closePath();
             ctx.restore();
@@ -91,31 +75,29 @@ function useLine<
     }
 
     function showStyle() {
-        return <div key={name}>
-            <label htmlFor={'visible'}>{name}</label>
+        return <div key={props.name}>
+            <label htmlFor={'visible'}>{props.name}</label>
             <input
                 type={'checkbox'}
                 name={'visible'}
                 onChange={async (event) => {
-                    drawing.setState({
-                        ...drawing.state,
-                        visible: event.target.checked
+                    drawing.dispatch((context) => {
+                        context.drawings[props.name].visible = event.target.checked;
+                        return context;
                     });
                     // this.axes.plot() // TODO: full replot
-                }} defaultChecked={drawing.state.visible}
+                }} defaultChecked={drawing.visible}
             />
             <ul>
                 <li>
                     Line color: <input
                     type={'color'}
-                    defaultValue={drawing.state.style.color}
+                    defaultValue={drawing.style.color}
                     onChange={async (event) => {
-                        drawing.setState({
-                            ...drawing.state,
-                            style: {
-                                ...drawing.state.style,
-                                color: event.target.value
-                            }
+                        drawing.dispatch((context) => {
+                            (context.drawings[props.name].style as LineStyle)
+                                .color = event.target.value;
+                            return context;
                         });
                         // this.axes.plot()
                     }}
@@ -124,14 +106,12 @@ function useLine<
                     Line width: <input
                     type={'number'}
                     min={1} max={3} step={1}
-                    defaultValue={drawing.state.style.width}
+                    defaultValue={drawing.style.width}
                     onChange={event => {
-                        drawing.setState({
-                            ...drawing.state,
-                            style: {
-                                ...drawing.state.style,
-                                width: event.target.valueAsNumber
-                            }
+                        drawing.dispatch((context) => {
+                            (context.drawings[props.name].style as LineStyle)
+                                .width = event.target.valueAsNumber;
+                            return context;
                         });
                         // this.axes.plot()
                     }}/>
@@ -139,21 +119,6 @@ function useLine<
             </ul>
         </div>;
     }
-
-    return {
-        ...drawing,
-        geometry,
-        plot,
-        drawTooltip,
-        showStyle
-    };
-}
-
-export default function Line(
-    props: DrawingProps<LineStyleT>
-) {
-    const line = useLine(props.data, props.style, props.name, props.vfield);
-    // TODO: add effects
 
     return null;
 }

@@ -13,13 +13,11 @@ import {
     DrawingContext
 } from '../drawing/Drawing';
 import {
-    createContext, useEffect,
+    createContext, useContext, useEffect,
     useReducer,
-    useRef, useState
+    useRef,
+    useState
 } from 'react';
-import {
-    XAxisContext
-} from './axis/x/base';
 import {
     AxisContext
 } from './axis/base';
@@ -28,6 +26,7 @@ import {
 } from '../../../utils_refactor/constants/plot';
 import YAxis from './axis/y/base';
 import XAxisGeometrical from './axis/x/geometrical';
+import { FigureContext } from '../figure/Figure';
 
 export declare type AxesPlaceholderProps = {
     children: DrawingComponent | DrawingComponent[];
@@ -52,7 +51,11 @@ export declare interface AxesProps extends AxesPlaceholderProps {
 }
 
 export declare type AxesState = {
-
+    drag: boolean;
+    mousePos: {
+        x: number;
+        y: number;
+    }
 }
 
 export declare type AxesContext = {
@@ -60,7 +63,7 @@ export declare type AxesContext = {
         [name: string]: DrawingContext;
     };
     axis: {
-        x: XAxisContext;
+        x: AxisContext;
         y: AxisContext;
     };
     dataRange: DataRange;
@@ -78,52 +81,15 @@ export declare type AxesContext = {
         right: number
         bottom: number
     };
+    position: GridPosition;
     size: Size;
 }
 
-const contextInit = {
+export const axesContextInit = {
     drawings: {},
     axis: {
-        x: {
-            global: {
-                min: 0,
-                max: 0,
-                scale: 1,
-                translate: 0
-            },
-            local: {
-                min: 0,
-                max: 0,
-                scale: 1,
-                translate: 0
-            },
-            delta: {
-                min: 0,
-                max: 0,
-                scale: 0,
-                translate: 0
-            }
-        },
-        y: {
-            global: {
-                min: 0,
-                max: 0,
-                scale: 1,
-                translate: 0
-            },
-            local: {
-                min: 0,
-                max: 0,
-                scale: 1,
-                translate: 0
-            },
-            delta: {
-                min: 0,
-                max: 0,
-                scale: 0,
-                translate: 0
-            }
-        }
+        x: {},
+        y: {}
     },
     dataRange: { start: 0, end: 1 },
     dataAmount: 0,
@@ -143,47 +109,29 @@ const contextInit = {
 } as unknown as AxesContext;
 
 export const axesContext = createContext<AxesContext & {
-    dispatch: React.Dispatch<AxesContext>
+    dispatch: (
+        action: (context: AxesContext) => AxesContext
+    ) => void
     // @ts-ignore (init with null)
 }>(null);
 
 export function AxesReal(
     props: AxesProps
 ) {
-    const [context, dispatch] = useReducer<
-        React.Reducer<AxesContext, AxesContext>,
-        AxesContext
-    >(
-        (_: AxesContext, newState: AxesContext) => {
-            return newState;
-        }, {
-            ...contextInit,
-            axis: {
-                ...contextInit.axis,
-                x: {
-                    ...contextInit.axis.x,
-                    data: props.xAxisData
-                },
-            },
-            padding: {
-                ...contextInit.padding,
-                ...props.padding
-            },
-            size: props.size
-        }, (_: AxesContext) => { return _; }
-    );
+    const figureContext = useContext(FigureContext),
+        context = figureContext.children[props.name] as AxesContext,
+        dispatch = figureContext.dispatch;
 
-    const plotRef = useRef<HTMLCanvasElement>(null),
-        tooltipRef = useRef<HTMLCanvasElement>(null);
-
-    const [state, setState] = useState({
-        position: props.position,
+    const [state, setState] = useState<AxesState>({
         drag: false,
         mousePos: {
             x: 0,
             y: 0
         }
     });
+
+    const plotRef = useRef<HTMLCanvasElement>(null),
+        tooltipRef = useRef<HTMLCanvasElement>(null);
 
     const axisSize = {
         x: props.xAxis ? axisSize_.height : 0,
@@ -230,11 +178,11 @@ export function AxesReal(
     }
 
     function localize(range: DataRange) {
-        const drawingLocal = Object.values(context.drawings).map(
-            drawing => drawing.localize(range)
-        );
-
-        const yLocal = context.axis.y.transform(drawingLocal);
+        // const drawingLocal = Object.values(context.drawings).map(
+        //     drawing => drawing.localize(range)
+        // );
+        //
+        // const yLocal = context.axis.y.transform(drawingLocal);
     }
 
     useEffect(() => {
@@ -243,33 +191,29 @@ export function AxesReal(
         //     'wheel', wheelHandler, { passive: false }
         // );
 
-        const x = context.axis.x.init();
-        const y = context.axis.y.init();
         // console.log(x, y);
         // TODO: put handlers to context
 
-        dispatch({
-            ...context,
-            ctx: {
+        dispatch((context) => {
+            (context.children[props.name] as AxesContext).ctx = {
                 plot: plotRef.current?.getContext('2d') as
                     CanvasRenderingContext2D,
                 tooltip: tooltipRef.current?.getContext('2d') as
                     CanvasRenderingContext2D
-            }
+            };
+            return context;
         });
     }, []);
-
-    // console.log(context);
 
     return <div
             className={'axesGrid'}
             style={{
                 width: context.size.width + axisSize.y,
                 height: context.size.height + axisSize.x,
-                gridRowStart: state.position.row.start,
-                gridRowEnd: state.position.row.end,
-                gridColumnStart: state.position.column.start,
-                gridColumnEnd: state.position.column.end
+                gridRowStart: context.position.row.start,
+                gridRowEnd: context.position.row.end,
+                gridColumnStart: context.position.column.start,
+                gridColumnEnd: context.position.column.end
             }}
         >
             <div className={'axes tooltips'}>
@@ -301,7 +245,14 @@ export function AxesReal(
             ></canvas>
             <axesContext.Provider value={{
                 ...context,
-                dispatch
+                dispatch: (
+                    action: (context: AxesContext) => AxesContext
+                ) => {
+                    dispatch((figureContext) => {
+                        figureContext.children[props.name] = action(context);
+                        return figureContext;
+                    });
+                }
             }}>
                 {props.children}
                 <XAxisGeometrical visible={props.xAxis} />

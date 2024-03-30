@@ -26,15 +26,10 @@ export declare type AxisState = {
     };
 }
 
-declare type AxisContextData = {
+export declare type AxisContext = {
     global: AxisData;
     local: AxisData;
     delta: AxisData;
-}
-
-export declare interface AxisContext extends AxisContextData {
-    init: () => AxisContextData;
-    transform: (drawingLocal: DrawingData<PlotData>[]) => AxisData;
 }
 
 export default function useAxis(
@@ -68,18 +63,6 @@ export default function useAxis(
             tooltip: null
         }
     });
-
-    const context = useContext(axesContext);
-    useEffect(() => {
-        const copy = { ...context };
-        copy.axis[label].delta = {
-            min: deltaMin,
-            max: deltaMax,
-            scale: 0,
-            translate: 0
-        };
-        context.dispatch(copy);
-    }, []);
 
     const scaleRef = useRef<HTMLCanvasElement>(null),
         tooltipRef = useRef<HTMLCanvasElement>(null);
