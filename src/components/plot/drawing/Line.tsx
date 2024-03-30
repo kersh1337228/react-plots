@@ -38,11 +38,11 @@ function useLine<
 
     const geometry = useMemo(() => {
         const line = new Path2D();
-        const i0 = [...Array(drawing.data.global.data.length).keys()].findIndex(
-            i => drawing.data.pointAt(i)[1] !== null);
-        line.moveTo(...drawing.data.pointAt(i0) as [number, number]);
+        const i0 = [...Array(data.length).keys()].findIndex(
+            i => drawing.pointAt(i)[1] !== null);
+        line.moveTo(...drawing.pointAt(i0) as [number, number]);
         data.slice(i0).forEach((_, i) => {
-            const [x, y] = drawing.data.pointAt(i0 + i);
+            const [x, y] = drawing.pointAt(i0 + i);
             if (y)
                 line.lineTo(x, y);
         })
@@ -74,7 +74,7 @@ function useLine<
     async function drawTooltip(
         globalX: number
     ) {
-        const [xi, yi] = drawing.data.pointAt(globalX);
+        const [xi, yi] = drawing.pointAt(globalX);
         if (yi && ctx) {
             ctx.save();
             ctx.beginPath();

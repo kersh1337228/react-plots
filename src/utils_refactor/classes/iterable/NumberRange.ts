@@ -45,9 +45,9 @@ export function plotNumberRange(drawings: DrawingComponent[]): NumberRange {
 		drawing => {
 			const data = drawing.props.data as PlotData[];
 			if ('timestamp' in data[0]) // @ts-ignore
-				return Array.from(data, point => point.timestamp);
+				return data.map(point => point.timestamp);
 			else
-				return Array.from(data, point => point[0]);
+				return data.map(point => point[0]);
 		}
 	))
 }

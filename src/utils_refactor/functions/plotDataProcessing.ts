@@ -33,7 +33,7 @@ export function fillData(data: PlotData[], labels: number[] | string[]): PlotDat
 	let copy: PlotData[] = []
 	const dType = plotDataType(data)
 	if (dType === 'PointGeometrical' || dType === 'PointTimeSeries') {
-		const labelsPresent = Array.from(data, pair => pair[0])
+		const labelsPresent = data.map(pair => pair[0]);
 		let i = -1
 		labels.forEach(label => {
 			if (!labelsPresent.includes(label)) {  // @ts-ignore

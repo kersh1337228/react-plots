@@ -1,7 +1,6 @@
 import useAxis from '../base';
 import {
-    useContext,
-    useState
+    useContext, useEffect
 } from 'react';
 import {
     axesContext
@@ -30,61 +29,50 @@ export function useXAxis(
 ) {
     const axis = useAxis('x', 1, deltaMin, deltaMax, name);
 
-    const {
-        axis: {
-            x: {
-                data
-            }
-        },
-        dataRange,
-        size: {
-            width: axesWidth
-        },
-        padding
-    } = useContext(axesContext);
-
-    const [local, setLocal] = useState(data);
+    const context = useContext(axesContext);
+    const self = context.axis.x;
 
     function init() {
-        const global = { ...axis.state.global },
-            delta = { ...axis.state.delta };
+        const global = { ...self.global },
+            local = { ...self.local },
+            delta = { ...self.delta };
 
-        const left = axesWidth * padding.left,
-            right = axesWidth * (1 - padding.right);
+        const left = context.size.width * context.padding.left,
+            right = context.size.width * (1 - context.padding.right);
 
-        // global.min = Math.min.apply(null,
-        //     this.axes.drawings.map(drawing => drawing.global.x.min));
-        // global.max = Math.max.apply(null,
-        //     this.axes.drawings.map(drawing => drawing.global.x.max));
+        global.min = Math.min.apply(null, Array.from(
+            Object.values(context.drawings),
+            drawing => drawing.global.x.min));
+        global.max = Math.max.apply(null, Array.from(
+            Object.values(context.drawings),
+            drawing => drawing.global.x.max));
 
         global.scale = (right - left) / (global.max - global.min);
         global.translate = left - (right - left) /
             (global.max - global.min) * global.min;
 
-        const local = { ...global };
         if (global.max > delta.max) {
-            local.min = global.max - delta.max
+            local.min = global.max - delta.max;
             delta.scale = (right - left) * (
                 1 / delta.max - 1 / (global.max - global.min));
             delta.translate = (right - left) * (global.min /
                 (global.max - global.min) - local.min / delta.max);
         }
 
-        axis.setState({
-            ...axis.state,
+        return {
             global,
             local,
             delta
-        });
+        };
     }
 
     function reScale(ds: number) {
-        const global = { ...axis.state.global },
-            local = { ...axis.state.local },
-            delta = { ...axis.state.delta };
+        const global = { ...self.global },
+            local = { ...self.local },
+            delta = { ...self.delta };
 
-        const left = axesWidth * padding.left,
-            right = axesWidth * (1 - padding.right);
+        const left = context.size.width * context.padding.left,
+            right = context.size.width * (1 - context.padding.right);
 
         delta.scale = truncate(
             delta.scale + ds,
@@ -117,11 +105,17 @@ export function useXAxis(
             global.min,
             global.max - delta.min
         );
-        axis.setState({
-            ...axis.state,
-            global,
-            local,
-            delta
+        context.dispatch({
+            ...context,
+            axis: {
+                ...context.axis,
+                x: {
+                    ...self,
+                    global,
+                    local,
+                    delta
+                }
+            }
         });
         // TODO: Applying changes
         // await this.axes.coordinatesTransform({
@@ -131,12 +125,12 @@ export function useXAxis(
     }
 
     function reTranslate(dt: number) {
-        const global = { ...axis.state.global },
-            local = { ...axis.state.local },
-            delta = { ...axis.state.delta };
+        const global = { ...self.global },
+            local = { ...self.local },
+            delta = { ...self.delta };
 
-        const left = axesWidth * padding.left,
-            right = axesWidth * (1 - padding.right);
+        const left = context.size.width * context.padding.left,
+            right = context.size.width * (1 - context.padding.right);
 
         delta.translate += dt
         const multiplier = (right - left) / (
@@ -159,11 +153,17 @@ export function useXAxis(
             global.min,
             global.max - delta.min
         );
-        axis.setState({
-            ...axis.state,
-            global,
-            local,
-            delta
+        context.dispatch({
+            ...context,
+            axis: {
+                ...context.axis,
+                x: {
+                    ...self,
+                    global,
+                    local,
+                    delta
+                }
+            }
         });
         // TODO: apply transform
         // await this.axes.coordinatesTransform({
@@ -172,25 +172,29 @@ export function useXAxis(
         // }, callback)
     }
 
-    function transformCoordinates(){
-        setLocal(data.slice(
-            Math.floor(data.length * dataRange.start),
-            Math.ceil(data.length * dataRange.end)
-        ));
+    function transform(){
+        context.dispatch({
+            ...context,
+            axis: {
+                ...context.axis,
+                x: {
+                    ...self,
+                    // data: data.slice( // TODO: x data localization ?
+                    //     Math.floor(data.length * dataRange.start),
+                    //     Math.ceil(data.length * dataRange.end)
+                    // )
+                }
+            }
+        });
     }
 
-    function setWindow() {
-        const scale = axis.scaleRef.current,
-            tooltip = axis.tooltipRef.current;
-        if (scale && tooltip) {
-            tooltip.addEventListener(
-                'wheel', axis.wheelHandler(reScale), { passive: false });
-            scale.width = axesWidth;
-            scale.height = axisSize_.height;
-            tooltip.width = axesWidth;
-            tooltip.height = axisSize_.height;
-        }
-    }
+    useEffect(() => {
+        axis.tooltipRef.current?.addEventListener(
+            'wheel', axis.wheelHandler(reScale), { passive: false });
+        const copy = { ...context };
+        copy.axis.x.init = init;
+        context.dispatch(copy);
+    }, []);
 
     function render() {
         return visible ? <>
@@ -198,17 +202,21 @@ export function useXAxis(
                 ref={axis.scaleRef}
                 className={'axes x scale'}
                 style={{
-                    width: axesWidth,
+                    width: context.size.width,
                     height: axisSize_.height
                 }}
+                width={context.size.width}
+                height={axisSize_.height}
             ></canvas>
             <canvas
                 ref={axis.tooltipRef}
                 className={'axes x tooltip'}
                 style={{
-                    width: axesWidth,
+                    width: context.size.width,
                     height: axisSize_.height
                 }}
+                width={context.size.width}
+                height={axisSize_.height}
                 onMouseMove={axis.mouseMoveHandler(reScale)}
                 onMouseOut={axis.mouseOutHandler}
                 onMouseDown={axis.mouseDownHandler}
@@ -219,12 +227,10 @@ export function useXAxis(
 
     return {
         ...axis,
-        local,
         init,
         reScale,
         reTranslate,
-        transformCoordinates,
-        setWindow,
+        transform,
         render
     }
 }

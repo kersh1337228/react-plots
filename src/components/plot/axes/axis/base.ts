@@ -3,7 +3,8 @@ import {
     AxisGrid,
     Font
 } from '../../../../utils_refactor/types/display';
-import { useRef, useState } from 'react';
+import { useContext, useEffect, useRef, useState } from 'react';
+import { axesContext } from '../Axes';
 
 export declare type AxisProps = {
     visible: boolean;
@@ -14,9 +15,6 @@ export declare type AxisState = {
     grid: AxisGrid;
     font: Font;
     visible: boolean;
-    global: AxisData;
-    local: AxisData;
-    delta: AxisData;
     drag: boolean;
     mousePos: {
         x: number;
@@ -28,8 +26,15 @@ export declare type AxisState = {
     };
 }
 
-export declare type AxisContext = {
+declare type AxisContextData = {
+    global: AxisData;
+    local: AxisData;
+    delta: AxisData;
+}
 
+export declare interface AxisContext extends AxisContextData {
+    init: () => AxisContextData;
+    transform: (drawingLocal: DrawingData<PlotData>[]) => AxisData;
 }
 
 export default function useAxis(
@@ -53,24 +58,6 @@ export default function useAxis(
         grid,
         font,
         visible,
-        global: {
-            min: 0,
-            max: 0,
-            scale: 1,
-            translate: 0
-        },
-        local: {
-            min: 0,
-            max: 0,
-            scale: 1,
-            translate: 0
-        },
-        delta: {
-            min: deltaMin,
-            max: deltaMax,
-            scale: 0,
-            translate: 0
-        },
         drag: false,
         mousePos: {
             x: 0,
@@ -81,6 +68,18 @@ export default function useAxis(
             tooltip: null
         }
     });
+
+    const context = useContext(axesContext);
+    useEffect(() => {
+        const copy = { ...context };
+        copy.axis[label].delta = {
+            min: deltaMin,
+            max: deltaMax,
+            scale: 0,
+            translate: 0
+        };
+        context.dispatch(copy);
+    }, []);
 
     const scaleRef = useRef<HTMLCanvasElement>(null),
         tooltipRef = useRef<HTMLCanvasElement>(null);
@@ -97,8 +96,8 @@ export default function useAxis(
         return (event: WheelEvent) => {
             event.preventDefault();
             event.stopPropagation();
-            reScale(-event.deltaY / 2000 * (
-                state.local.scale + state.delta.scale));
+            // reScale(-event.deltaY / 2000 * (
+            //     state.local.scale + state.delta.scale));
         };
     }
 

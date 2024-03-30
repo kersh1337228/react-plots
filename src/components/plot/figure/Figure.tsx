@@ -10,7 +10,8 @@ import {
     cloneElement,
     createContext,
     createElement,
-    useReducer
+    useReducer,
+    Children
 } from 'react';
 import {
     axisSize_
@@ -66,21 +67,16 @@ export const FigureContext = createContext<
 export default function Figure(
     props: FigureProps
 ) {
-    const childrenArray = Array.isArray(props.children) ?
-        props.children : [props.children];
-
     const grid = {
-        rows: Math.max.apply(null, Array.from(
-            childrenArray, child => child.props.position.row.end
-        )),
-        columns: Math.max.apply(null, Array.from(
-            childrenArray, child => child.props.position.column.end
-        ))
+        rows: Math.max.apply(null, Children.map(
+            props.children, child => child.props.position.row.end)),
+        columns: Math.max.apply(null, Children.map(
+            props.children, child => child.props.position.column.end)),
     };
     const cellWidth = props.width / grid.columns,
         cellHeight = props.height / grid.rows;
 
-    const childrenModified = childrenArray.map((child, index) => {
+    const childrenModified = Children.map(props.children, (child, index) => {
         const childProps = {
             ...child.props,
             xAxis: child.props.xAxis ?? true,

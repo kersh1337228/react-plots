@@ -27,11 +27,14 @@ export default class DateTimeRange extends TypedRange<DateTime> {
 }
 
 export function plotDateTimeRange(drawings: DrawingComponent[]): DateTimeRange {
-	const dates = [...new Set(([] as Array<number>).concat(...drawings.map((drawing) =>
-		plotDataType(drawing.props.data) === 'PointTimeSeries' ?
-			Array.from(drawing.props.data as PointTimeSeries[], arr => new Date(arr[0]).getTime()) :
-			Array.from(drawing.props.data as ObjectTimeSeries[], arr => new Date(arr.timestamp).getTime())
-	)).sort((a, b) => a > b ? 1 : a < b ? -1 : 0))]
+	const dates = [...new Set(([] as Array<number>)
+		.concat(...drawings.map((drawing) =>
+			plotDataType(drawing.props.data) === 'PointTimeSeries' ?
+				(drawing.props.data as PointTimeSeries[])
+					.map(arr => new Date(arr[0]).getTime()) :
+				(drawing.props.data as ObjectTimeSeries[])
+					.map(arr => new Date(arr.timestamp).getTime())
+		)).sort((a, b) => a > b ? 1 : a < b ? -1 : 0))]
 	let freq = Infinity
 	for (let i = 1; i < dates.length; ++i)
 		freq = dates[i] - dates[i - 1] < freq ? dates[i] - dates[i - 1] : freq

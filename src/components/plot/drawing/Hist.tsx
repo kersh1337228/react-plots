@@ -38,7 +38,7 @@ function useHist<
             neg: new Path2D()
         };
         data.forEach((_, i) => {
-            const [x, y] = drawing.data.pointAt(i);
+            const [x, y] = drawing.pointAt(i);
             if (y) {
                 const column = new Path2D();
                 column.rect(

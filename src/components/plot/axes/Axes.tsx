@@ -84,8 +84,46 @@ export declare type AxesContext = {
 const contextInit = {
     drawings: {},
     axis: {
-        x: {},
-        y: {}
+        x: {
+            global: {
+                min: 0,
+                max: 0,
+                scale: 1,
+                translate: 0
+            },
+            local: {
+                min: 0,
+                max: 0,
+                scale: 1,
+                translate: 0
+            },
+            delta: {
+                min: 0,
+                max: 0,
+                scale: 0,
+                translate: 0
+            }
+        },
+        y: {
+            global: {
+                min: 0,
+                max: 0,
+                scale: 1,
+                translate: 0
+            },
+            local: {
+                min: 0,
+                max: 0,
+                scale: 1,
+                translate: 0
+            },
+            delta: {
+                min: 0,
+                max: 0,
+                scale: 0,
+                translate: 0
+            }
+        }
     },
     dataRange: { start: 0, end: 1 },
     dataAmount: 0,
@@ -112,24 +150,27 @@ export const axesContext = createContext<AxesContext & {
 export function AxesReal(
     props: AxesProps
 ) {
-    const [context, dispatch] = useReducer(
+    const [context, dispatch] = useReducer<
+        React.Reducer<AxesContext, AxesContext>,
+        AxesContext
+    >(
         (_: AxesContext, newState: AxesContext) => {
             return newState;
-        },
-        {
+        }, {
             ...contextInit,
             axis: {
+                ...contextInit.axis,
                 x: {
+                    ...contextInit.axis.x,
                     data: props.xAxisData
                 },
-                y: {}
             },
             padding: {
                 ...contextInit.padding,
                 ...props.padding
             },
             size: props.size
-        }
+        }, (_: AxesContext) => { return _; }
     );
 
     const plotRef = useRef<HTMLCanvasElement>(null),
@@ -148,10 +189,6 @@ export function AxesReal(
         x: props.xAxis ? axisSize_.height : 0,
         y: props.yAxis ? axisSize_.width : 0
     };
-
-    function setWindow() {
-
-    }
 
     function mouseMoveHandler(event: React.MouseEvent) {
         const window = (event.target as HTMLCanvasElement).getBoundingClientRect();
@@ -192,11 +229,24 @@ export function AxesReal(
         });
     }
 
+    function localize(range: DataRange) {
+        const drawingLocal = Object.values(context.drawings).map(
+            drawing => drawing.localize(range)
+        );
+
+        const yLocal = context.axis.y.transform(drawingLocal);
+    }
+
     useEffect(() => {
         // plotRef.current?.addEventListener( // No page scrolling
         //     // @ts-ignore
         //     'wheel', wheelHandler, { passive: false }
         // );
+
+        const x = context.axis.x.init();
+        const y = context.axis.y.init();
+        // console.log(x, y);
+        // TODO: put handlers to context
 
         dispatch({
             ...context,
@@ -208,6 +258,8 @@ export function AxesReal(
             }
         });
     }, []);
+
+    // console.log(context);
 
     return <div
             className={'axesGrid'}
@@ -230,6 +282,8 @@ export function AxesReal(
                     width: context.size.width,
                     height: context.size.height
                 }}
+                width={context.size.width}
+                height={context.size.height}
             ></canvas>
             <canvas
                 ref={tooltipRef}
@@ -238,6 +292,8 @@ export function AxesReal(
                     width: context.size.width,
                     height: context.size.height
                 }}
+                width={context.size.width}
+                height={context.size.height}
                 onMouseMove={mouseMoveHandler}
                 onMouseOut={mouseOutHandler}
                 onMouseDown={mouseDownHandler}

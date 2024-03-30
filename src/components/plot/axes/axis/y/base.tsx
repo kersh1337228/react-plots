@@ -2,7 +2,7 @@ import {
     axisSize_
 } from '../../../../../utils_refactor/constants/plot';
 import {
-    useContext
+    useContext, useEffect
 } from 'react';
 import useAxis from '../base';
 import {
@@ -11,6 +11,15 @@ import {
 import {
     axesContext
 } from '../../Axes';
+import {
+    AxisData
+} from '../../../../../utils_refactor/types/display';
+import {
+    DrawingData
+} from '../../../drawing/Drawing';
+import {
+    PlotData
+} from '../../../../../utils_refactor/types/plotData';
 
 export default function YAxis(
     {
@@ -19,82 +28,59 @@ export default function YAxis(
     }
 ) {
     const axis = useAxis('y', 0.001, 1, 999, name);
-    const {
-        size: {
-            height: axesHeight,
-            width: axesWidth
-        },
-        ctx: {
-            plot: axesCtx
-        },
-        density,
-        padding
-    } = useContext(axesContext);
-    const spread = axis.state.local.max - axis.state.local.min;
-    const scale = axis.state.local.scale + axis.state.delta.scale;
-    const dyt = (-axesHeight / spread - scale) * spread;
+
+    const context = useContext(axesContext);
+    const self = context.axis.y;
+    const axesCtx = context.ctx.plot;
+
+
+    const spread = self.local.max - self.local.min;
+    const scale = self.local.scale + self.delta.scale;
+    const dyt = (-context.size.height / spread - scale) * spread;
 
     function init() {
-        const global = { ...axis.state.global },
-            delta = { ...axis.state.delta };
+        const global = { ...self.global },
+            delta = { ...self.delta };
 
-        const top = axesHeight * (1 - padding.top),
-            bottom = axesHeight * padding.bottom;
+        const top = context.size.height * (1 - context.padding.top),
+            bottom = context.size.height * context.padding.bottom;
 
-        // global.min = Math.min.apply(null,
-        //     this.axes.drawings.map(drawing => drawing.global.y.min));
-        // global.max = Math.max.apply(null,
-        //     this.axes.drawings.map(drawing => drawing.global.y.max));
+        global.min = Math.min.apply(
+            null, Object.values(context.drawings).map(
+                drawing => drawing.global.y.min));
+        global.max = Math.min.apply(
+            null, Object.values(context.drawings).map(
+                drawing => drawing.global.y.max));
 
         global.scale = (bottom - top) / (global.max - global.min);
         global.translate = top - (bottom - top) /
             (global.max - global.min) * global.min;
 
-        axis.setState({
-            ...axis.state,
+        return {
             global,
-            local: { ...global },
+            local: self.local,
             delta
-        });
+        };
     }
 
     function reScale(ds: number) {}
 
     function reTranslate(dt: number) {}
 
-    function transformCoordinates() {
-        const local = {
-            ...axis.state.local
-        };
+    function transform(drawingLocal: DrawingData<PlotData>[]): AxisData {
+        const local = { ...self.local };
 
-        // TODO: aggregate min and max
-        // local.min = Math.min.apply(null,
-        //     this.axes.drawings.map(drawing => drawing.local.y.min));
-        // local.max =  Math.max.apply(null,
-        //     this.axes.drawings.map(drawing => drawing.local.y.max));
+        local.min = Math.min.apply(null, drawingLocal.map(l => l.y.min));
+        local.max = Math.max.apply(null, drawingLocal.map(l => l.y.max));
 
-        const top = axesHeight * (1 - padding.top),
-            bottom = axesHeight * padding.bottom;
+        const top = context.size.height * (1 - context.padding.top),
+            bottom = context.size.height * context.padding.bottom;
+
         local.scale = (bottom - top) / (local.max - local.min);
         local.translate = top - (bottom - top) /
             (local.max - local.min) * local.min;
-        axis.setState({
-            ...axis.state,
-            local
-        });
-    }
 
-    function setWindow() {
-        const scale = axis.scaleRef.current,
-            tooltip = axis.tooltipRef.current;
-        if (scale && tooltip) {
-            tooltip.addEventListener(
-                'wheel', axis.wheelHandler(reScale), { passive: false });
-            scale.width = axisSize_.width;
-            scale.height = axesHeight;
-            tooltip.width = axisSize_.width;
-            tooltip.height = axesHeight;
-        }
+        return local;
     }
 
     async function drawScale() {
@@ -115,35 +101,35 @@ export default function YAxis(
             );
             ctx.font = `${axis.state.font.size}px ${axis.state.font.family}`;
             ctx.textAlign = 'right';
-            const step = axesHeight / (axis.state.grid.amount + 1) * density;
+            const step = context.size.height / (axis.state.grid.amount + 1) * context.density;
             for (let index = 0; index < axis.state.grid.amount; ++index) {
                 const y = (axis.state.grid.amount - index) * step;
                 // AxisBase tick
                 ctx.beginPath();
                 ctx.moveTo(
-                    scaleWidth * (1 - padding.right),
+                    scaleWidth * (1 - context.padding.right),
                     y
                 );
                 ctx.lineTo(
-                    scaleWidth * (0.9 - padding.right),
+                    scaleWidth * (0.9 - context.padding.right),
                     y
                 );
                 ctx.stroke();
                 ctx.closePath();
                 const value = numberPower(
-                    axis.state.local.min + 0.5 * dyt / scale -
-                    (axesHeight + dyt - y) / scale,
+                    self.local.min + 0.5 * dyt / scale -
+                    (context.size.height + dyt - y) / scale,
                     2
                 );
                 ctx.fillText(
                     value,
-                    axesWidth * 0.85,
+                    context.size.width * 0.85,
                     y + 4
                 );
                 // Grid horizontal line
                 axesCtx.beginPath();
                 axesCtx.moveTo(0, y);
-                axesCtx.lineTo(axesWidth, y);
+                axesCtx.lineTo(context.size.width, y);
                 axesCtx.stroke();
                 axesCtx.closePath();
             }
@@ -157,11 +143,11 @@ export default function YAxis(
             axesCtx.beginPath();
             axesCtx.moveTo(
                 0,
-                y * density
+                y * context.density
             );
             axesCtx.lineTo(
-                axesWidth,
-                y * density
+                context.size.width,
+                y * context.density
             );
             axesCtx.stroke();
             axesCtx.closePath();
@@ -185,13 +171,22 @@ export default function YAxis(
             ctx.fillStyle = '#ffffff';
             // Value tooltip
             const value = numberPower(
-                axis.state.local.min + 0.5 * dyt / scale -
-                (axesHeight + dyt - y) / scale, 2
+                self.local.min + 0.5 * dyt / scale -
+                (context.size.height + dyt - y) / scale, 2
             );
             ctx.fillText(value, axisSize_.width * 0.05, y + 3);
             ctx.restore();
         }
     }
+
+    useEffect(() => {
+        axis.tooltipRef.current?.addEventListener(
+            'wheel', axis.wheelHandler(reScale), { passive: false });
+        const copy = { ...context };
+        copy.axis.y.init = init;
+        copy.axis.y.transform = transform;
+        context.dispatch(copy);
+    }, []);
 
     return visible ? <>
         <canvas
@@ -199,16 +194,20 @@ export default function YAxis(
             className={'axes y scale'}
             style={{
                 width: axisSize_.width,
-                height: axesHeight
+                height: context.size.height
             }}
+            width={axisSize_.width}
+            height={context.size.height}
         ></canvas>
         <canvas
             ref={axis.tooltipRef}
             className={'axes y tooltip'}
             style={{
                 width: axisSize_.width,
-                height: axesHeight
+                height: context.size.height
             }}
+            width={axisSize_.width}
+            height={context.size.height}
             onMouseMove={axis.mouseMoveHandler(reScale)}
             onMouseOut={axis.mouseOutHandler}
             onMouseDown={axis.mouseDownHandler}
