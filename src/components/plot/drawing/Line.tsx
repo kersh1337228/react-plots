@@ -3,6 +3,7 @@ import {
     useDrawing
 } from './Drawing';
 import {
+    forwardRef,
     useContext,
     useEffect,
     useMemo
@@ -16,7 +17,7 @@ declare type LineStyle = {
     width: number
 };
 
-export default function Line(
+const Line = forwardRef((
     {
         data,
         name,
@@ -25,8 +26,9 @@ export default function Line(
             width: 1
         },
         vfield
-    }: DrawingProps<LineStyle>
-) {
+    }: DrawingProps<LineStyle>,
+    ref
+) => {
     const drawing = useDrawing({ data, name, style, vfield });
 
     const geometry = useMemo(() => {
@@ -129,18 +131,7 @@ export default function Line(
         </div>;
     }
 
-    useEffect(() => {
-        drawing.dispatch((context) => {
-            context.drawings[name] = {
-                ...drawing,
-                style,
-                plot,
-                drawTooltip,
-                showStyle
-            }
-            return context;
-        });
-    }, []);
-
     return null;
-}
+})
+
+export default Line;

@@ -11,7 +11,7 @@ import {
     createContext,
     createElement,
     useReducer,
-    Children, useEffect
+    Children, useEffect, useRef
 } from 'react';
 import {
     axisSize_
@@ -112,24 +112,25 @@ export default function Figure(
             key: index
         };
 
+        const drawingsArray = Children.map(child.props.children, d => d) as DrawingComponent[];
         if (child.type.name === 'Axes') {
             let xAxisData: NumberRange | DateTimeRange;
             let xAxisLabels: number[] | string[];
-            const dType = plotDataTypeVectorised(child.props.children);
-            if (child.props.children.length) {
+            const dType = plotDataTypeVectorised(drawingsArray);
+            if (drawingsArray.length) {
                 if (dType)
                     if (dType === 'Geometrical') {
-                        xAxisData = plotNumberRange(child.props.children);
+                        xAxisData = plotNumberRange(drawingsArray);
                         xAxisLabels = [...xAxisData];
                     } else {
-                        xAxisData = plotDateTimeRange(child.props.children);
+                        xAxisData = plotDateTimeRange(drawingsArray);
                         xAxisLabels = [...xAxisData.format('%Y-%m-%d')];
                     }
                 else
                     throw Error("<Axes> drawings must have uniform data type.")
             } else
                 throw Error("<Axes> must contain at least one drawing.")
-            const drawings = (child.props.children as DrawingComponent[]).map(drawing => {
+            const drawings = drawingsArray.map(drawing => {
                 if (!drawing.props.data.length)
                     throw Error('Drawing data can not be empty.');
                 childContextInit.drawings[drawing.props.name] = initDrawingContext(drawing.props);
@@ -168,10 +169,6 @@ export default function Figure(
             children: childrenContextInit
         }
     );
-
-    // useEffect(() => {
-    //     console.log(figureContext);
-    // }, []);
 
     return <FigureContext.Provider value={{
         ...figureContext,

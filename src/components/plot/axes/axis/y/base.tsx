@@ -210,10 +210,7 @@ export default function YAxis(
         context.dispatch((context) => {
             context.axis.y = {
                 ...context.axis.y,
-                ...axis,
-                reScale,
-                reTranslate,
-                transform,
+                ...axis
             }
             return context;
         });

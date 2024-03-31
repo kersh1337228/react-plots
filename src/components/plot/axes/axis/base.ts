@@ -31,18 +31,6 @@ export declare type AxisContext = {
     global: AxisData;
     local: AxisData;
     delta: AxisData;
-    // Methods
-    reScale(ds: number): {
-        local: AxisData;
-        delta: AxisData
-    };
-    reTranslate(dt: number): {
-        local: AxisData;
-        delta: AxisData
-    };
-    transform(drawingLocal: DrawingData[]): AxisData;
-    drawScale(): void;
-    drawTooltip(at: number): void;
 }
 
 export default function useAxis(

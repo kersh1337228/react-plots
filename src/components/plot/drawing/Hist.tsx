@@ -3,13 +3,8 @@ import {
     useDrawing
 } from './Drawing';
 import React, {
-    useContext,
-    useEffect,
     useMemo
 } from 'react';
-import {
-    axesContext
-} from '../axes/Axes';
 
 export declare type HistStyle = {
     color: {
@@ -55,25 +50,19 @@ export default function Hist(
         return hist;
     }, [drawing.style.width]);
 
-    const {
-        ctx: {
-            plot: ctx
-        },
-        transformMatrix
-    } = useContext(axesContext);
-
     function plot() {
+        const ctx = drawing.context.ctx.plot;
         if (drawing.visible && ctx) {
             ctx.save();
 
             ctx.fillStyle = drawing.style.color.neg;
             let temp = new Path2D();
-            temp.addPath(geometry.neg, transformMatrix);
+            temp.addPath(geometry.neg, drawing.context.transformMatrix);
             ctx.fill(temp);
 
             ctx.fillStyle = drawing.style.color.pos
             temp = new Path2D();
-            temp.addPath(geometry.pos, transformMatrix);
+            temp.addPath(geometry.pos, drawing.context.transformMatrix);
             ctx.fill(temp);
 
             ctx.restore()
@@ -130,18 +119,5 @@ export default function Hist(
         )
     }
 
-    useEffect(() => {
-        drawing.dispatch((context) => {
-            context.drawings[name] = {
-                ...drawing,
-                style,
-                plot,
-                drawTooltip,
-                showStyle
-            }
-            return context;
-        });
-    }, []);
-
     return null;
-}
+})

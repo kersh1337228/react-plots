@@ -6,8 +6,9 @@ import {
     PointGeometrical
 } from '../../../utils_refactor/types/plotData';
 import {
+    forwardRef,
     JSX,
-    useContext
+    useContext, useEffect
 } from 'react';
 import {
     plotDataType
@@ -15,8 +16,13 @@ import {
 import {
     axesContext
 } from '../axes/Axes';
-import { Bounds, DataRange } from '../../../utils_refactor/types/display';
-import { round } from '../../../utils_refactor/functions/numberProcessing';
+import {
+    Bounds,
+    DataRange
+} from '../../../utils_refactor/types/display';
+import {
+    round
+} from '../../../utils_refactor/functions/numberProcessing';
 
 export declare type DrawingData = {
     // data: DataT[];
@@ -45,14 +51,6 @@ export declare type DrawingContext = {
     local: DrawingData;
     global: DrawingData;
     vfield?: string;
-    // Methods
-    localize(range: DataRange): DrawingData;
-    globalize(x: number): number;
-    pointAt(i: number): PointGeometrical;
-    showTooltip(globalX: number, name: string): JSX.Element;
-    plot(): void;
-    drawTooltip(globalX: number): void;
-    showStyle(): JSX.Element;
 };
 
 export function initDrawingContext(
@@ -115,8 +113,8 @@ export function useDrawing(
         range: DataRange
     ): DrawingData {
         const localData = props.data.slice(
-            Math.floor(global.length * range.start),
-            Math.ceil(global.length * range.end)
+            Math.floor(props.data.length * range.start),
+            Math.ceil(props.data.length * range.end)
         )
 
         let ys: number[];
@@ -189,7 +187,18 @@ export function useDrawing(
             </li>;
     }
 
+    useEffect(() => {
+        context.dispatch((context) => {
+            context.drawings[props.name] = {
+                ...context.drawings[props.name],
+                style: props.style
+            }
+            return context;
+        });
+    }, []);
+
     return {
+        context,
         ...self,
         dispatch: context.dispatch,
         style: props.style,

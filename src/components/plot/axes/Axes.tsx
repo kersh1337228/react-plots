@@ -13,7 +13,10 @@ import {
     DrawingContext
 } from '../drawing/Drawing';
 import {
-    createContext, useContext, useEffect,
+    Children, cloneElement,
+    createContext, createRef,
+    useContext,
+    useEffect,
     useReducer,
     useRef,
     useState
@@ -135,6 +138,10 @@ export function AxesReal(
         }
     });
 
+    const drawingRefs = Object.fromEntries(Object.entries(context.drawings)
+        .map(([key, _]) => [key, createRef()]));
+    // const xRef = useRef(),
+    //     yRef = useRef();
     const plotRef = useRef<HTMLCanvasElement>(null),
         tooltipRef = useRef<HTMLCanvasElement>(null);
 
@@ -183,9 +190,9 @@ export function AxesReal(
     }
 
     function localize(range: DataRange) {
-        const drawingsLocal = Object.values(context.drawings).map(
-            drawing => drawing.localize(range)
-        );
+        // const drawingsLocal = Object.values(context.drawings).map(
+        //     drawing => drawing.localize(range)
+        // );
 
         // const yLocal = context.axis.y.transform(drawingLocal);
     }
@@ -212,6 +219,8 @@ export function AxesReal(
             return context;
         });
     }, []);
+
+    console.log('render');
 
     return <div
             className={'axesGrid'}
@@ -262,7 +271,9 @@ export function AxesReal(
                     });
                 }
             }}>
-                {props.children}
+                {Children.map(props.children, drawing => {
+                    return cloneElement(drawing, { ...drawing.props, ref: drawingRefs[drawing.props.name] })
+                })}
                 <XAxisGeometrical visible={props.xAxis} />
                 <YAxis visible={props.yAxis} />
                 {/*{this.settings}*/}
