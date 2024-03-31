@@ -2,6 +2,7 @@ import React from 'react'
 import ModalDynamic from "../modals/ModalDynamic"
 import './Dialog.css'
 import {
+    Point,
     Size
 } from "../../../utils_refactor/types/display"
 import CrossIcon from "../icons/CrossIcon"
@@ -22,8 +23,8 @@ interface DialogState {
     activeTab: string
     drag: {
         state: boolean
-        position: {x: number, y: number}
-        translate: {x: number, y: number}
+        position: Point
+        translate: Point
     }
 }
 

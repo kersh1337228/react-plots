@@ -6,26 +6,24 @@ import {
     PointGeometrical
 } from '../../../utils_refactor/types/plotData';
 import {
-    forwardRef,
-    JSX,
-    useContext, useEffect
+    JSX
 } from 'react';
 import {
     plotDataType
 } from '../../../utils_refactor/functions/plotDataProcessing';
 import {
-    axesContext
-} from '../axes/Axes';
-import {
     Bounds,
     DataRange
 } from '../../../utils_refactor/types/display';
+import {
+    AxesReal
+} from '../axes/Axes';
+import NumberRange from '../../../utils_refactor/classes/iterable/NumberRange';
 import {
     round
 } from '../../../utils_refactor/functions/numberProcessing';
 
 export declare type DrawingData = {
-    // data: DataT[];
     x: Bounds;
     y: Bounds;
 };
@@ -39,98 +37,85 @@ export declare type DrawingProps<
     vfield?: string;
 };
 
-export declare type DrawingComponent = React.FunctionComponentElement<
-    DrawingProps<Record<string, any>>
-> & JSX.Element;
-
-export declare type DrawingState = {}; // TODO: drawing state
-
-export declare type DrawingContext = {
-    style: Record<string, any>;
-    visible: boolean;
-    local: DrawingData;
-    global: DrawingData;
-    vfield?: string;
-};
-
-export function initDrawingContext(
-    props: DrawingProps<any>
-): DrawingContext {
-    let xs: number[], ys: number[], x: Bounds;
-    const dtype = plotDataType(props.data) as PlotDataName;
-
-    if (dtype.includes('Geometrical')) {
-        if (dtype.includes('Point'))
-            xs = (props.data as PointGeometrical[])
-                .map(point => point[0]);
-        else
-            xs = (props.data as ObjectGeometrical[])
-                .map(point => point.timestamp);
-        x = {
-            min: Math.min.apply(null, xs),
-            max: Math.max.apply(null, xs)
-        };
-    } else
-        x = {
-            min: 0,
-            max: props.data.length
-        };
-
-    if (dtype.includes('Point')) {
-        ys = (props.data as PointGeometrical[])
-            .map(point => point[1])
-            .filter(y => y !== null) as number[];
-    } else {
-        ys = (props.data as ObjectGeometrical[])
-            .map(point => point[props.vfield as string])
-            .filter(y => y !== null) as number[];
-    }
-    const global = {
-        x, y: {
-            min: Math.min.apply(null, ys),
-            max: Math.max.apply(null, ys)
-        }
-    };
-
+export default abstract class Drawing<
+    GeometryT extends Object,
+    StyleT extends Record<string, any>
+> {
     // @ts-ignore
-    return {
-        style: props.style,
-        vfield: props.vfield,
-        visible: true,
-        global,
-        local: { ...global }
+    public axes: AxesReal;
+    protected readonly global: DrawingData;
+    public local: DrawingData;
+    protected readonly dtype: PlotDataName;
+    public visible: boolean = true;
+
+    protected constructor(
+        protected data: PlotData[],
+        public readonly name: string,
+        protected geometry: GeometryT,
+        public style: StyleT,
+        public vfield?: string
+    ) {
+        let xs: number[], ys: number[], x: Bounds;
+        const dtype = plotDataType(data) as PlotDataName;
+
+        if (dtype.includes('Geometrical')) {
+            if (dtype.includes('Point'))
+                xs = (data as PointGeometrical[])
+                    .map(point => point[0]);
+            else
+                xs = (data as ObjectGeometrical[])
+                    .map(point => point.timestamp);
+            x = {
+                min: Math.min.apply(null, xs),
+                max: Math.max.apply(null, xs)
+            };
+        } else
+            x = {
+                min: 0,
+                max: data.length
+            };
+
+        if (dtype.includes('Point'))
+            ys = (data as PointGeometrical[])
+                .map(point => point[1])
+                .filter(y => y !== null) as number[];
+        else
+            ys = (data as ObjectGeometrical[])
+                .map(point => point[vfield as string])
+                .filter(y => y !== null) as number[];
+
+        this.dtype = dtype;
+        this.global = {
+            x, y: {
+                min: Math.min.apply(null, ys),
+                max: Math.max.apply(null, ys)
+            }
+        };
+        this.local = { ...this.global };
     }
-}
 
-export function useDrawing(
-    props: DrawingProps<any>
-) {
-    const dtype = plotDataType(props.data) as PlotDataName;
-    const context = useContext(axesContext);
-    const self = context.drawings[props.name];
-
-    function localize(
+    public localize(
         range: DataRange
-    ): DrawingData {
-        const localData = props.data.slice(
-            Math.floor(props.data.length * range.start),
-            Math.ceil(props.data.length * range.end)
+    ): void {
+        const localData = this.data.slice(
+            Math.floor(this.data.length * range.start),
+            Math.ceil(this.data.length * range.end)
         )
 
         let ys: number[];
-        if (dtype.includes('Point'))
+        if (this.dtype.includes('Point'))
             ys = (localData as PointGeometrical[])
                 .map(point => point[1] as number)
                 .filter(y => y !== null);
         else
             ys = (localData as ObjectGeometrical[])
-                .map(point => point[self.vfield as string] as number)
+                .map(point => point[this.vfield as string] as number)
                 .filter(y => y !== null);
 
-        return {
+        this.local = {
             x: {
-                min: range.start * self.global.x.max,
-                max: range.end * self.global.x.max
+                min: range.start * this.global.x.max,
+                max: range.end * this.global.x.max
             },
             y: {
                 min: Math.min.apply(null, ys),
@@ -139,72 +124,58 @@ export function useDrawing(
         };
     }
 
-    function globalize(
-        x: number
+    public globalize(
+        localX: number
     ): number {
-        if (dtype.includes('Geometrical'))
-            // TODO: x axis data access
-            // return (context.axis.x.data as NumberRange).indexOf((
-            //     x - context.transformMatrix.e
-            // ) / context.transformMatrix.a) as number;
-            return 0;
+        if (this.dtype.includes('Geometrical'))
+            return (this.axes.axis.x.data as NumberRange).indexOf((
+                localX - this.axes.transformMatrix.e
+            ) / this.axes.transformMatrix.a) as number;
         else
             return Math.floor((
-                x * context.density - context.transformMatrix.e
-            ) / context.transformMatrix.a);
+                localX * this.axes.density - this.axes.transformMatrix.e
+            ) / this.axes.transformMatrix.a);
     }
 
-    function pointAt(i: number): PointGeometrical {
-        switch (dtype) {
+    public point(at: number): PointGeometrical {
+        switch (this.dtype) {
             case "PointGeometrical":
-                return props.data[i] as PointGeometrical;
+                return this.data[at] as PointGeometrical;
             case "PointTimeSeries":
-                return [i + 0.55, props.data[i][1]];
+                return [at + 0.55, this.data[at][1]];
             case "ObjectGeometrical":
-                const point = props.data[i] as ObjectGeometrical;
-                return [point.timestamp, point[self.vfield as string]];
+                const point = this.data[at] as ObjectGeometrical;
+                return [point.timestamp, point[this.vfield as string]];
             case "ObjectTimeSeries":
-                return [i + 0.55, (
-                    props.data[i] as ObjectTimeSeries
-                )[self.vfield as string]];
+                return [at + 0.55, (
+                    this.data[at] as ObjectTimeSeries
+                )[this.vfield as string]];
         }
     }
 
-    function showTooltip(globalX: number) {
-        const point = props.data[globalX];
-        if (dtype.includes('Point'))
-            return <li key={props.name} className={'drawingTooltips'}>
-                {props.name}: {round(point[1] as number, 2)}
+    public tooltip(
+        localX: number
+    ): JSX.Element {
+        const point = this.data[this.globalize(localX)];
+        if (this.dtype.includes('Point'))
+            return <li key={this.name} className={'drawingTooltips'}>
+                {this.name}: {round(point[1] as number, 2)}
             </li>;
         else
-            return <li key={props.name} className={'drawingTooltips'}>
+            return <li key={this.name} className={'drawingTooltips'}>
                 <ul>
                     {Object.entries(point).map(([key, value]) =>
-                        <li key={key}>{props.name}: {round(value as number, 2)}</li>
+                        <li key={key}>{this.name}: {round(value as number, 2)}</li>
                     )}
                 </ul>
-
             </li>;
     }
 
-    useEffect(() => {
-        context.dispatch((context) => {
-            context.drawings[props.name] = {
-                ...context.drawings[props.name],
-                style: props.style
-            }
-            return context;
-        });
-    }, []);
+    public abstract draw(): void;
 
-    return {
-        context,
-        ...self,
-        dispatch: context.dispatch,
-        style: props.style,
-        localize,
-        globalize,
-        pointAt,
-        showTooltip
-    };
+    public abstract drawTooltip(
+        localX: number
+    ): void;
+
+    public abstract settings(): JSX.Element;
 }

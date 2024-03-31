@@ -6,8 +6,10 @@ import {
 	PlotDataName,
 	PointGeometrical,
 	PointTimeSeries
-} from '../types/plotData'
-import { DrawingComponent } from '../../components/plot/drawing/Drawing';
+} from '../types/plotData';
+import {
+	DrawingProps
+} from '../../components/plot/drawing/Drawing';
 
 export function plotDataType(data: PlotData[]): PlotDataName | undefined | never {
 	if (!data.length) throw Error('Data is empty.')
@@ -18,7 +20,9 @@ export function plotDataType(data: PlotData[]): PlotDataName | undefined | never
 	return undefined
 }
 
-export function plotDataTypeVectorised(drawings: DrawingComponent[]): 'Geometrical' | 'TimeSeries' | undefined {
+export function plotDataTypeVectorised(
+	drawings: React.ReactElement<DrawingProps<any>>[]
+): 'Geometrical' | 'TimeSeries' | undefined {
 	const dTypes = drawings.map(drawing => plotDataType(drawing.props.data));
 	return dTypes.every(
 		dType => dType === 'PointGeometrical' ||

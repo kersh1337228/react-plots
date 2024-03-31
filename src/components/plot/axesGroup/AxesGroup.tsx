@@ -1,12 +1,11 @@
-import { DrawingComponent } from '../drawing/Drawing';
+import {
+    AxesPlaceholderProps
+} from '../axes/Axes';
 
 export declare type AxesGroupPlaceholderProps = {
-    children: DrawingComponent | DrawingComponent[];
+    children: React.ReactElement<AxesPlaceholderProps>
+        | React.ReactElement<AxesPlaceholderProps>[];
 }
-
-export declare type AxesGroupComponent = React.FunctionComponentElement<
-    AxesGroupPlaceholderProps
-> & React.JSX.Element;
 
 export declare type AxesGroupProps = {
 

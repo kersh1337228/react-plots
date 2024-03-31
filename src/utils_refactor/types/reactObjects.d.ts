@@ -1,4 +1,7 @@
 import React from "react"
+import {
+	Point
+} from './display';
 
 export interface CanvasObject {  // Drawing canvas
 	ref: React.RefObject<HTMLCanvasElement>
@@ -9,7 +12,7 @@ export interface TooltipCanvasObject {  // Event handling canvas
 	ref: React.RefObject<HTMLCanvasElement>,
 	mouseEvents: {
 		drag: boolean,
-		position: { x: number, y: number }
+		position: Point
 	}
 }
 

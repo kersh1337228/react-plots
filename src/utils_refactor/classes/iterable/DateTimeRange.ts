@@ -1,8 +1,16 @@
-import {DateTime, Duration} from "../dataTypes/dateTime"
+import {
+	DateTime,
+	Duration
+} from "../dataTypes/dateTime"
 import TypedRange from "./TypedRange"
-import {plotDataType} from "../../functions/plotDataProcessing"
-import {ObjectTimeSeries, PointTimeSeries, TimeSeries} from "../../types/plotData"
-import { DrawingComponent } from '../../../components/plot/drawing/Drawing';
+import {
+	plotDataType
+} from "../../functions/plotDataProcessing"
+import {
+	ObjectTimeSeries,
+	PointTimeSeries
+} from "../../types/plotData"
+import { DrawingProps } from '../../../components/plot/drawing/Drawing';
 
 export default class DateTimeRange extends TypedRange<DateTime> {
 	constructor(
@@ -26,7 +34,9 @@ export default class DateTimeRange extends TypedRange<DateTime> {
 	}
 }
 
-export function plotDateTimeRange(drawings: DrawingComponent[]): DateTimeRange {
+export function plotDateTimeRange(
+	drawings: React.ReactElement<DrawingProps<any>>[]
+): DateTimeRange {
 	const dates = [...new Set(([] as Array<number>)
 		.concat(...drawings.map((drawing) =>
 			plotDataType(drawing.props.data) === 'PointTimeSeries' ?

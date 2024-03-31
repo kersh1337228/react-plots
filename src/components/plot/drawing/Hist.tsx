@@ -1,10 +1,9 @@
-import {
-    DrawingProps,
-    useDrawing
+import Drawing, {
+    DrawingProps
 } from './Drawing';
-import React, {
-    useMemo
-} from 'react';
+import {
+    PlotData
+} from '../../../utils_refactor/types/plotData';
 
 export declare type HistStyle = {
     color: {
@@ -14,110 +13,102 @@ export declare type HistStyle = {
     width: number
 };
 
-export default function Hist(
-    {
-        data,
-        name,
-        style = {
+export default function Hist(_: DrawingProps<HistStyle>) {
+    return null;
+}
+
+declare type HistGeometry = {
+    pos: Path2D;
+    neg: Path2D;
+};
+
+export class HistReal extends Drawing<
+    HistGeometry,
+    HistStyle
+> {
+    public constructor(
+        data: PlotData[],
+        name: string,
+        style: HistStyle = {
             color: {
                 pos: '#53e9b5',
                 neg: '#da2c4d'
             },
             width: 0.9
         },
-        vfield
-    }: DrawingProps<HistStyle>
-) {
-    const drawing = useDrawing({ data, name, style, vfield });
-
-    const geometry = useMemo(() => {
-        const hist = {
+        vfield?: string
+    ) {
+        super(data, name, {
             pos: new Path2D(),
             neg: new Path2D()
-        };
+        }, style, vfield);
         data.forEach((_, i) => {
-            const [x, y] = drawing.pointAt(i);
+            const [x, y] = this.point(i);
             if (y) {
                 const column = new Path2D();
                 column.rect(
-                    x - drawing.style.width / 2, 0,
-                    drawing.style.width, y
+                    x - this.style.width / 2, 0,
+                    this.style.width, y
                 );
                 const type = y > 0 ? 'pos' : 'neg';
-                hist[type].addPath(column);
+                this.geometry[type].addPath(column);
             }
         });
-        return hist;
-    }, [drawing.style.width]);
+    }
 
-    function plot() {
-        const ctx = drawing.context.ctx.plot;
-        if (drawing.visible && ctx) {
+    public override draw() {
+        const ctx = this.axes.ctx.main;
+        if (this.visible && ctx) {
             ctx.save();
 
-            ctx.fillStyle = drawing.style.color.neg;
+            ctx.fillStyle = this.style.color.neg;
             let temp = new Path2D();
-            temp.addPath(geometry.neg, drawing.context.transformMatrix);
+            temp.addPath(this.geometry.neg, this.axes.transformMatrix);
             ctx.fill(temp);
 
-            ctx.fillStyle = drawing.style.color.pos
+            ctx.fillStyle = this.style.color.pos;
             temp = new Path2D();
-            temp.addPath(geometry.pos, drawing.context.transformMatrix);
+            temp.addPath(this.geometry.pos, this.axes.transformMatrix);
             ctx.fill(temp);
 
-            ctx.restore()
+            ctx.restore();
         }
     }
 
-    function drawTooltip(
-        globalX: number
-    ) {
+    public override drawTooltip(_: number) {
         // TODO: empty
     }
 
-    function showStyle() {
-        return (
-            <div key={name}>
-                <label htmlFor={'visible'}>{name}</label>
-                <input
-                    type={'checkbox'}
-                    name={'visible'}
-                    onChange={async (event) => {
-                        drawing.dispatch((context) => {
-                            context.drawings[name].visible = event.target.checked;
-                            return context;
-                        });
-                        // this.axes.plot() // TODO: full replot
+    public override settings() {
+        return <div key={this.name}>
+            <label htmlFor={'visible'}>{this.name}</label>
+            <input
+                type={'checkbox'}
+                name={'visible'}
+                onChange={event => {
+                    this.visible = event.target.checked;
+                    // this.axes.plot() // TODO: full replot
+                }}
+                defaultChecked={this.visible}
+            />
+            <ul>
+                <li>Positive color: <input
+                    type={'color'}
+                    defaultValue={this.style.color.pos}
+                    onChange={event => {
+                        this.style.color.pos = event.target.value;
+                        // this.axes.plot()
                     }}
-                    defaultChecked={drawing.visible}
-                />
-                <ul>
-                    <li>Positive color: <input
-                        type={'color'}
-                        defaultValue={drawing.style.color.pos}
-                        onChange={async (event) => {
-                            drawing.dispatch((context) => {
-                                context.drawings[name].style.pos = event.target.value;
-                                return context;
-                            });
-                            // this.axes.plot()
-                        }}
-                    /></li>
-                    <li>Negative color: <input
-                        type={'color'}
-                        defaultValue={drawing.style.color.neg}
-                        onChange={async (event) => {
-                            drawing.dispatch((context) => {
-                                context.drawings[name].style.neg = event.target.value;
-                                return context;
-                            });
-                            // this.axes.plot()
-                        }}
-                    /></li>
-                </ul>
-            </div>
-        )
+                /></li>
+                <li>Negative color: <input
+                    type={'color'}
+                    defaultValue={this.style.color.neg}
+                    onChange={event => {
+                        this.style.color.neg = event.target.value;
+                        // this.axes.plot()
+                    }}
+                /></li>
+            </ul>
+        </div>;
     }
-
-    return null;
-})
+}

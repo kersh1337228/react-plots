@@ -1,9 +1,9 @@
-import useAxis from '../base';
-import {
-    useContext, useEffect
+import React, {
+    createRef,
+    useEffect
 } from 'react';
 import {
-    axesContext
+    AxesReal
 } from '../../Axes';
 import {
     truncate
@@ -15,241 +15,181 @@ import {
     AxisContext
 } from '../base';
 import {
-    Padding,
-    Size
+    AxisGrid,
+    Font
 } from '../../../../../utils_refactor/types/display';
-import {
-    DrawingContext
-} from '../../../drawing/Drawing';
 import NumberRange from '../../../../../utils_refactor/classes/iterable/NumberRange';
 import DateTimeRange from '../../../../../utils_refactor/classes/iterable/DateTimeRange';
+import Axis from '../base';
 
 
 export declare interface XAxisContext extends AxisContext {
     data: NumberRange | DateTimeRange
 }
 
-export function initXAxisContext(
-    data: NumberRange | DateTimeRange,
-    size: Size,
-    padding: Padding,
-    drawings: { [name: string]: DrawingContext }
-): XAxisContext {
-    const global = {
-        min: 0,
-        max: 0,
-        scale: 1,
-        translate: 0
-    };
-    const delta = {
-        min: 5,
-        max: 500,
-        scale: 0,
-        translate: 0
-    };
+export default abstract class XAxis<
+    DataT extends NumberRange | DateTimeRange,
+    AxesT extends AxesReal
+        // | AxesGroupReal
+> extends Axis<AxesT> {
+    protected constructor(
+        axes: AxesT,
+        public readonly data: DataT,
+        visible: boolean = true,
+        scrollSpeed: number = 1,
+        name: string = 'x',
+        grid: AxisGrid = {
+            amount: 5,
+            color: '#d9d9d9',
+            width: 1
+        },
+        font: Font = {
+            family: 'Serif',
+            size: 10
+        }
+    ) {
+        super(axes, 'x', visible, scrollSpeed, name, grid, font);
 
-    const left = size.width * padding.left,
-        right = size.width * (1 - padding.right);
+        const left = axes.size.width * axes.padding.left,
+            right = axes.size.width * (1 - axes.padding.right);
 
-    global.min = Math.min.apply(null, Object.values(drawings)
-        .map(drawing => drawing.local.x.min));
-    global.max = Math.max.apply(null, Object.values(drawings)
-        .map(drawing => drawing.local.x.max));
+        this.global.min = Math.min.apply(null, this.axes.drawings
+            .map(drawing => drawing.local.x.min));
+        this.global.max = Math.max.apply(null, this.axes.drawings
+            .map(drawing => drawing.local.x.max));
 
-    global.scale = (right - left) / (global.max - global.min);
-    global.translate = left - (right - left) /
-        (global.max - global.min) * global.min;
+        this.global.scale = (right - left) / (this.global.max - this.global.min);
+        this.global.translate = left - (right - left) /
+            (this.global.max - this.global.min) * this.global.min;
 
-    const local = { ...global };
-    if (global.max > delta.max) {
-        local.min = global.max - delta.max;
-        delta.scale = (right - left) * (
-            1 / delta.max - 1 / (global.max - global.min));
-        delta.translate = (right - left) * (global.min /
-            (global.max - global.min) - local.min / delta.max);
+        this.local = { ...this.global };
+        if (this.global.max > this.delta.max) {
+            this.local.min = this.global.max - this.delta.max;
+            this.delta.scale = (right - left) * (
+                1 / this.delta.max - 1 / (this.global.max - this.global.min));
+            this.delta.translate = (right - left) * (this.global.min /
+                (this.global.max - this.global.min) - this.local.min / this.delta.max);
+        }
     }
 
-    // @ts-ignore
-    return {
-        data,
-        global,
-        local,
-        delta
-    };
-}
+    public reScale(ds: number) {
+        const left = this.axes.size.width * this.axes.padding.left,
+            right = this.axes.size.width * (1 - this.axes.padding.right);
 
-export function useXAxis(
-    visible = true,
-    deltaMin: number = 5,
-    deltaMax: number = 500,
-    name?: string
-) {
-    const axis = useAxis('x', 1, deltaMin, deltaMax, name);
-
-    const context = useContext(axesContext);
-    const self = context.axis.x;
-
-    function reScale(ds: number) {
-        const global = { ...self.global },
-            local = { ...self.local },
-            delta = { ...self.delta };
-
-        const left = context.size.width * context.padding.left,
-            right = context.size.width * (1 - context.padding.right);
-
-        delta.scale = truncate(
-            delta.scale + ds,
+        this.delta.scale = truncate(
+            this.delta.scale + ds,
             (right - left) * (
-                1 / delta.max - 1 / (global.max - global.min)),
+                1 / this.delta.max - 1 / (this.global.max - this.global.min)),
             (right - left) * (
-                1 / delta.min - 1 / (global.max - global.min))
+                1 / this.delta.min - 1 / (this.global.max - this.global.min))
         );
-        // Scale
-        local.min = truncate(
-            local.max - 1 / (
-                1 / (global.max - global.min) + delta.scale / (right - left)),
-            global.min,
-            global.max - delta.min
+
+        this.local.min = truncate(
+            this.local.max - 1 / (
+                1 / (this.global.max - this.global.min) + this.delta.scale / (right - left)),
+            this.global.min,
+            this.global.max - this.delta.min
         );
-        // Translate
-        const dt = left - local.min * (local.scale + delta.scale)
-            - (local.translate + delta.translate);
-        delta.translate += dt
+
+        const dt = left - this.local.min * (this.local.scale + this.delta.scale)
+            - (this.local.translate + this.delta.translate);
+        this.delta.translate += dt
         const multiplier = (right - left) / (
-            right - left + delta.scale * (global.max - global.min));
-        const offset = multiplier * delta.translate / global.scale;
-        local.max = truncate(
-            multiplier * global.max - offset,
-            global.min + delta.min,
-            global.max
+            right - left + this.delta.scale * (this.global.max - this.global.min));
+        const offset = multiplier * this.delta.translate / this.global.scale;
+        this.local.max = truncate(
+            multiplier * this.global.max - offset,
+            this.global.min + this.delta.min,
+            this.global.max
         );
-        local.min = truncate(
-            multiplier * global.min - offset,
-            global.min,
-            global.max - delta.min
+        this.local.min = truncate(
+            multiplier * this.global.min - offset,
+            this.global.min,
+            this.global.max - this.delta.min
         );
-        // context.dispatch({
-        //     ...context,
-        //     axis: {
-        //         ...context.axis,
-        //         x: {
-        //             ...self,
-        //             global,
-        //             local,
-        //             delta
-        //         }
-        //     }
-        // });
-        // TODO: Applying changes
-        // await this.axes.coordinatesTransform({
-        //     start: this.metadata.local.min / this.metadata.global.max,
-        //     end: this.metadata.local.max / this.metadata.global.max,
-        // }, callback)
+
+        this.axes.localize({
+            start: this.local.min / this.global.max,
+            end: this.local.max / this.global.max,
+        });
     }
 
-    function reTranslate(dt: number) {
-        const global = { ...self.global },
-            local = { ...self.local },
-            delta = { ...self.delta };
+    public reTranslate(dt: number) {
+        const left = this.axes.size.width * this.axes.padding.left,
+            right = this.axes.size.width * (1 - this.axes.padding.right);
 
-        const left = context.size.width * context.padding.left,
-            right = context.size.width * (1 - context.padding.right);
-
-        delta.translate += dt
+        this.delta.translate += dt;
         const multiplier = (right - left) / (
-            right - left + delta.scale * (global.max - global.min));
-        let offset = multiplier * delta.translate / global.scale;
+            right - left + this.delta.scale * (this.global.max - this.global.min));
+        let offset = multiplier * this.delta.translate / this.global.scale;
 
-        delta.translate -= (
-            Math.min(0, global.max * (1 - multiplier) + offset)
-            + Math.max(0, global.min * (1 - multiplier) + offset)
-        ) * (local.scale + delta.scale);
+        this.delta.translate -= (
+            Math.min(0, this.global.max * (1 - multiplier) + offset)
+            + Math.max(0, this.global.min * (1 - multiplier) + offset)
+        ) * (this.local.scale + this.delta.scale);
 
-        offset = multiplier * delta.translate / global.scale;
-        local.max = truncate(
-            multiplier * global.max - offset,
-            global.min + delta.min,
-            global.max
+        offset = multiplier * this.delta.translate / this.global.scale;
+        this.local.max = truncate(
+            multiplier * this.global.max - offset,
+            this.global.min + this.delta.min,
+            this.global.max
         );
-        local.min = truncate(
-            multiplier * global.min - offset,
-            global.min,
-            global.max - delta.min
+        this.local.min = truncate(
+            multiplier * this.global.min - offset,
+            this.global.min,
+            this.global.max - this.delta.min
         );
-        // context.dispatch({
-        //     ...context,
-        //     axis: {
-        //         ...context.axis,
-        //         x: {
-        //             ...self,
-        //             global,
-        //             local,
-        //             delta
-        //         }
-        //     }
-        // });
-        // TODO: apply transform
-        // await this.axes.coordinatesTransform({
-        //     start: this.metadata.local.min / this.metadata.global.max,
-        //     end: this.metadata.local.max / this.metadata.global.max,
-        // }, callback)
+
+        this.axes.localize({
+            start: this.local.min / this.global.max,
+            end: this.local.max / this.global.max,
+        });
     }
 
-    function transform(){
-        // context.dispatch({
-        //     ...context,
-        //     axis: {
-        //         ...context.axis,
-        //         x: {
-        //             ...self,
-        //             // data: data.slice( // TODO: x data localization ?
-        //             //     Math.floor(data.length * dataRange.start),
-        //             //     Math.ceil(data.length * dataRange.end)
-        //             // )
-        //         }
-        //     }
-        // });
+    public transform() {
+        // TODO: x axis transform
     }
 
-    useEffect(() => {
-        axis.tooltipRef.current?.addEventListener(
-            'wheel', axis.wheelHandler(reScale), { passive: false });
-    }, []);
+    public render() {
+        const mainRef = createRef<HTMLCanvasElement>(),
+        tooltipRef = createRef<HTMLCanvasElement>();
 
-    function render() {
-        return visible ? <>
+        // eslint-disable-next-line react-hooks/rules-of-hooks
+        useEffect(() => {
+            tooltipRef.current?.addEventListener(
+                'wheel', this.wheelHandler, { passive: false });
+
+            this.ctx = {
+                main: mainRef.current?.getContext('2d'),
+                tooltip: tooltipRef.current?.getContext('2d')
+            };
+        }, []);
+
+        return this.visible ? <>
             <canvas
-                ref={axis.scaleRef}
+                ref={mainRef}
                 className={'axes x scale'}
                 style={{
-                    width: context.size.width,
+                    width: this.axes.size.width,
                     height: axisSize_.height
                 }}
-                width={context.size.width}
+                width={this.axes.size.width}
                 height={axisSize_.height}
             ></canvas>
             <canvas
-                ref={axis.tooltipRef}
+                ref={tooltipRef}
                 className={'axes x tooltip'}
                 style={{
-                    width: context.size.width,
+                    width: this.axes.size.width,
                     height: axisSize_.height
                 }}
-                width={context.size.width}
+                width={this.axes.size.width}
                 height={axisSize_.height}
-                onMouseMove={axis.mouseMoveHandler(reScale)}
-                onMouseOut={axis.mouseOutHandler}
-                onMouseDown={axis.mouseDownHandler}
-                onMouseUp={axis.mouseUpHandler}
+                onMouseMove={this.mouseMoveHandler}
+                onMouseOut={this.mouseOutHandler}
+                onMouseDown={this.mouseDownHandler}
+                onMouseUp={this.mouseUpHandler}
             ></canvas>
-        </> : null;
+        </> : null
     }
-
-    return {
-        ...axis,
-        reScale,
-        reTranslate,
-        transform,
-        render
-    }
-}
+};

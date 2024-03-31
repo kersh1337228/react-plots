@@ -1,17 +1,10 @@
 import {
-    AxesComponent,
-    AxesContext, axesContextInit,
+    AxesPlaceholderProps,
     AxesReal
 } from '../axes/Axes';
 import {
-    AxesGroupContext
-} from '../axesGroup/AxesGroup';
-import {
-    cloneElement,
-    createContext,
-    createElement,
-    useReducer,
-    Children, useEffect, useRef
+    Children,
+    useMemo, useState
 } from 'react';
 import {
     axisSize_
@@ -26,163 +19,122 @@ import {
     fillData,
     plotDataTypeVectorised
 } from '../../../utils_refactor/functions/plotDataProcessing';
-import {
-    Geometrical,
-    TimeSeries
-} from '../../../utils_refactor/types/plotData';
-import {
-    AxesGroupComponent
-} from '../axesGroup/AxesGroup';
-import {
-    DrawingComponent,
-    initDrawingContext
-} from '../drawing/Drawing';
-import {
-    initXAxisContext
-} from '../axes/axis/x/base';
-import {
-    initYAxisContext
-} from '../axes/axis/y/base';
+import drawingModule from '../drawing/index';
+import { DrawingProps } from '../drawing/Drawing';
 
 declare type FigureProps = {
     width: number;
     height: number;
     name: string;
-    children: (AxesComponent | AxesGroupComponent)
-        | (AxesComponent | AxesGroupComponent)[];
+    children: React.ReactElement<
+        AxesPlaceholderProps
+        // | AxesGroupPlaceholderProps
+    > | React.ReactElement<
+        AxesPlaceholderProps
+        // | AxesGroupPlaceholderProps
+    >[];
 };
 
 declare type FigureState = {}; // TODO: Figure state
 
-declare type FigureContext = {
-    children: {
-        [name: string]: AxesContext | AxesGroupContext
-    };
-};
-
-export const FigureContext = createContext<
-    FigureContext & {
-        dispatch: React.Dispatch<(context: FigureContext) => FigureContext>
-    }
->({
-    children: {},
-    dispatch: () => {}
-});
-
 export default function Figure(
     props: FigureProps
 ) {
-    const grid = {
-        rows: Math.max.apply(null, Children.map(
-            props.children, child => child.props.position.row.end)),
-        columns: Math.max.apply(null, Children.map(
-            props.children, child => child.props.position.column.end)),
-    };
-    const cellWidth = props.width / grid.columns,
-        cellHeight = props.height / grid.rows;
+    const [_, setState] = useState({}),
+        rerender = () => { setState({}); }
 
-    const childrenContextInit = {} as {
-        [name: string]: AxesContext | AxesGroupContext
-    };
-
-    const childrenModified = Children.map(props.children, (child, index) => {
-        const childContextInit: AxesContext = { ...axesContextInit };
-
-        const childProps = {
-            ...child.props,
-            xAxis: child.props.xAxis ?? true,
-            yAxis: child.props.yAxis ?? true,
-            padding: child.props.padding ?? {
-                left: 0, top: 0, right: 0, bottom: 0, ...child.props.padding
-            },
-            size: {
-                width: (
-                    child.props.position.column.end -
-                    child.props.position.column.start
-                ) * cellWidth - (
-                    child.props.yAxis === false ? 0 : axisSize_.width
-                ),
-                height: (
-                    child.props.position.row.end -
-                    child.props.position.row.start
-                ) * cellHeight - (
-                    child.props.xAxis === false ? 0 : axisSize_.height
-                )
-            },
-            key: index
+    const children = useMemo(() => {
+        const grid = {
+            rows: Math.max.apply(null, Children.map(
+                props.children, child => child.props.position.row.end)),
+            columns: Math.max.apply(null, Children.map(
+                props.children, child => child.props.position.column.end)),
         };
+        const cellWidth = props.width / grid.columns,
+            cellHeight = props.height / grid.rows;
 
-        const drawingsArray = Children.map(child.props.children, d => d) as DrawingComponent[];
-        if (child.type.name === 'Axes') {
-            let xAxisData: NumberRange | DateTimeRange;
-            let xAxisLabels: number[] | string[];
-            const dType = plotDataTypeVectorised(drawingsArray);
-            if (drawingsArray.length) {
-                if (dType)
-                    if (dType === 'Geometrical') {
-                        xAxisData = plotNumberRange(drawingsArray);
-                        xAxisLabels = [...xAxisData];
-                    } else {
-                        xAxisData = plotDateTimeRange(drawingsArray);
-                        xAxisLabels = [...xAxisData.format('%Y-%m-%d')];
-                    }
-                else
-                    throw Error("<Axes> drawings must have uniform data type.")
-            } else
-                throw Error("<Axes> must contain at least one drawing.")
-            const drawings = drawingsArray.map(drawing => {
-                if (!drawing.props.data.length)
-                    throw Error('Drawing data can not be empty.');
-                childContextInit.drawings[drawing.props.name] = initDrawingContext(drawing.props);
-                return cloneElement(drawing, {
-                    ...drawing.props,
-                    data: fillData(drawing.props.data, xAxisLabels),
-                    key: drawing.props.name
-                });
-            })
+        return Children.map(props.children, child => {
+            const drawingsArray = Children.map(child.props.children, d => d) as
+                React.ReactElement<DrawingProps<any>>[];
 
-            childContextInit.padding = { ...childProps.padding };
-            childContextInit.position = childProps.position;
-            childContextInit.size = childProps.size;
-            childContextInit.axis.x = initXAxisContext(xAxisData,
-                childProps.size, childProps.padding, childContextInit.drawings);
-            childContextInit.axis.y = initYAxisContext(
-                childProps.size, childProps.padding, childContextInit.drawings);
-            childrenContextInit[childProps.name] = childContextInit;
+            // @ts-ignore
+            if (child.type.name === 'Axes') {
+                let xAxisData: NumberRange | DateTimeRange;
+                let xAxisLabels: number[] | string[];
+                const dType = plotDataTypeVectorised(drawingsArray);
+                if (drawingsArray.length) {
+                    if (dType)
+                        if (dType === 'Geometrical') {
+                            xAxisData = plotNumberRange(drawingsArray);
+                            xAxisLabels = [...xAxisData];
+                        } else {
+                            xAxisData = plotDateTimeRange(drawingsArray);
+                            xAxisLabels = [...xAxisData.format('%Y-%m-%d')];
+                        }
+                    else
+                        throw Error("<Axes> drawings must have uniform data type.");
+                } else
+                    throw Error("<Axes> must contain at least one drawing.");
 
-            return createElement(AxesReal, { key: childProps.name, ...childProps, xAxisData }, drawings)
-            // } else if (child.type.name === 'AxesGroup')
-            //     return React.createElement(AxesGroupReal, childProps)
-        }
-        else
-            throw Error("Only <Axes> and <AxesGroup> can appear as <Figure> children.")
-    });
+                const drawings = drawingsArray.map(drawing => {
+                    if (!drawing.props.data.length)
+                        throw Error('Drawing data can not be empty.');
+                    // @ts-ignore
+                    return new (drawingModule[`${drawing.type.name}Real`])(
+                        fillData(drawing.props.data, xAxisLabels),
+                        drawing.props.name,
+                        drawing.props.style,
+                        drawing.props.vfield
+                    );
+                    // @ts-ignore
+                }) as Drawing[];
 
-    const [figureContext, dispatch] = useReducer(
-        (
-            context: FigureContext,
-            action: (context: FigureContext) => FigureContext
-        ) => {
-            return action(context);
-        },
-        {
-            children: childrenContextInit
-        }
-    );
+                return new AxesReal(
+                    rerender,
+                    drawings,
+                    child.props.position,
+                    child.props.name,
+                    {
+                        left: 0,
+                        top: 0,
+                        right: 0,
+                        bottom: 0,
+                        ...child.props.padding
+                    },
+                    {
+                        width: (
+                            child.props.position.column.end -
+                            child.props.position.column.start
+                        ) * cellWidth - (
+                            child.props.yAxis === false ? 0 : axisSize_.width
+                        ),
+                        height: (
+                            child.props.position.row.end -
+                            child.props.position.row.start
+                        ) * cellHeight - (
+                            child.props.xAxis === false ? 0 : axisSize_.height
+                        )
+                    },
+                    xAxisData,
+                    child.props.xAxis ?? true,
+                    child.props.yAxis ?? true,
+                );
+                // } else if (child.type.name === 'AxesGroup')
+                //     return React.createElement(AxesGroupReal, childProps)
+            }
+            else
+                throw Error("Only <Axes> and <AxesGroup> can appear as <Figure> children.")
+        });
+    }, []);
 
-    return <FigureContext.Provider value={{
-        ...figureContext,
-        dispatch
-    }}>
+    return <div
+        className={'figureGrid'}
+        style={{
+            width: props.width,
+            height: props.height
+        }}
+    >
         {/*<FigureSettings />*/}
-        <div
-            className={'figureGrid'}
-            style={{
-                width: props.width,
-                height: props.height
-            }}
-        >
-            {childrenModified}
-        </div>
-    </FigureContext.Provider>
+        {children.map(child => <child.render key={child.name} />)}
+    </div>
 }

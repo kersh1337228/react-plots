@@ -1,115 +1,96 @@
-import {
-    DrawingProps,
-    useDrawing
+import Drawing, {
+    DrawingProps
 } from './Drawing';
 import {
-    forwardRef,
-    useContext,
-    useEffect,
-    useMemo
-} from 'react';
-import {
-    axesContext
-} from '../axes/Axes';
+    PlotData
+} from '../../../utils_refactor/types/plotData';
 
 declare type LineStyle = {
     color: string
     width: number
 };
 
-const Line = forwardRef((
-    {
-        data,
-        name,
-        style = {
+export default function Line(_: DrawingProps<LineStyle>) {
+    return null;
+}
+
+export class LineReal extends Drawing<
+    Path2D,
+    LineStyle
+> {
+    public constructor(
+        data: PlotData[],
+        name: string,
+        style: LineStyle = {
             color: '#000000',
             width: 1
         },
-        vfield
-    }: DrawingProps<LineStyle>,
-    ref
-) => {
-    const drawing = useDrawing({ data, name, style, vfield });
-
-    const geometry = useMemo(() => {
-        const line = new Path2D();
+        vfield?: string
+    ) {
+        super(data, name, new Path2D(), style, vfield);
         const i0 = [...Array(data.length).keys()].findIndex(
-            i => drawing.pointAt(i)[1] !== null);
-        line.moveTo(...drawing.pointAt(i0) as [number, number]);
+            i => this.point(i)[1] !== null);
+        this.geometry.moveTo(...this.point(i0) as [number, number]);
         data.slice(i0).forEach((_, i) => {
-            const [x, y] = drawing.pointAt(i0 + i);
-            if (y)
-                line.lineTo(x, y);
-        })
-        return line;
-    }, [drawing.style.width]);
+            const [x, y] = this.point(i0 + i);
+            if (y != null)
+                this.geometry.lineTo(x, y);
+        });
+    }
 
-    const {
-        ctx: {
-            plot: ctx
-        },
-        transformMatrix,
-        density
-    } = useContext(axesContext);
-
-    function plot() {
-        if (drawing.visible && ctx) {
+    public override draw() {
+        const ctx = this.axes.ctx.main;
+        if (this.visible && ctx) {
             ctx.save();
 
-            ctx.lineWidth = drawing.style.width;
-            ctx.strokeStyle = drawing.style.color;
+            ctx.lineWidth = this.style.width;
+            ctx.strokeStyle = this.style.color;
             let temp = new Path2D();
-            temp.addPath(geometry, transformMatrix);
+            temp.addPath(this.geometry, this.axes.transformMatrix);
             ctx.stroke(temp);
 
             ctx.restore();
         }
     }
 
-    function drawTooltip(
-        globalX: number
-    ) {
-        const [xi, yi] = drawing.pointAt(globalX);
-        if (yi && ctx) {
+    public override drawTooltip(localX: number) {
+        const ctx = this.axes.ctx.tooltip;
+        const [xi, yi] = this.point(this.globalize(localX));
+        if (yi !== null && ctx) {
             ctx.save();
             ctx.beginPath();
-            ctx.arc(xi * transformMatrix.a + transformMatrix.e,
-                yi * transformMatrix.d + transformMatrix.f,
-                3 * density,
+            ctx.arc(
+                xi * this.axes.transformMatrix.a + this.axes.transformMatrix.e,
+                yi * this.axes.transformMatrix.d + this.axes.transformMatrix.f,
+                3 * this.axes.density,
                 0,
-                2 * Math.PI);
-            ctx.fillStyle = drawing.style.color;
+                2 * Math.PI
+            );
+            ctx.fillStyle = this.style.color;
             ctx.fill();
             ctx.closePath();
             ctx.restore();
         }
     }
 
-    function showStyle() {
-        return <div key={name}>
-            <label htmlFor={'visible'}>{name}</label>
+    public override settings() {
+        return <div key={this.name}>
+            <label htmlFor={'visible'}>{this.name}</label>
             <input
                 type={'checkbox'}
                 name={'visible'}
-                onChange={async (event) => {
-                    drawing.dispatch((context) => {
-                        context.drawings[name].visible = event.target.checked;
-                        return context;
-                    });
+                onChange={event => {
+                    this.visible = event.target.checked;
                     // this.axes.plot() // TODO: full replot
-                }} defaultChecked={drawing.visible}
+                }} defaultChecked={this.visible}
             />
             <ul>
                 <li>
                     Line color: <input
                     type={'color'}
-                    defaultValue={drawing.style.color}
-                    onChange={async (event) => {
-                        drawing.dispatch((context) => {
-                            (context.drawings[name].style as LineStyle)
-                                .color = event.target.value;
-                            return context;
-                        });
+                    defaultValue={this.style.color}
+                    onChange={event => {
+                        this.style.color = event.target.value;
                         // this.axes.plot()
                     }}
                 /></li>
@@ -117,21 +98,13 @@ const Line = forwardRef((
                     Line width: <input
                     type={'number'}
                     min={1} max={3} step={1}
-                    defaultValue={drawing.style.width}
+                    defaultValue={this.style.width}
                     onChange={event => {
-                        drawing.dispatch((context) => {
-                            (context.drawings[name].style as LineStyle)
-                                .width = event.target.valueAsNumber;
-                            return context;
-                        });
+                        this.style.width = event.target.valueAsNumber;
                         // this.axes.plot()
                     }}/>
                 </li>
             </ul>
         </div>;
     }
-
-    return null;
-})
-
-export default Line;
+}

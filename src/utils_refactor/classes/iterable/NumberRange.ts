@@ -2,7 +2,9 @@ import TypedRange from "./TypedRange";
 import {
 	PlotData
 } from "../../types/plotData";
-import { DrawingComponent } from '../../../components/plot/drawing/Drawing';
+import {
+	DrawingProps
+} from '../../../components/plot/drawing/Drawing';
 
 export default class NumberRange extends TypedRange<number> {
 	constructor(arrays: number[][]) {
@@ -35,12 +37,16 @@ export default class NumberRange extends TypedRange<number> {
 		return Math.abs(nearest_value - x) < tolerance ? nearest_value : undefined
 	}
 	public indexOf(value: number, tolerance: number = Infinity): number | undefined {
-		const nearest_value = this.nearest(value, tolerance)
-		return nearest_value ? this.container.indexOf(nearest_value) : undefined
+		const nearest_value = this.nearest(value, tolerance);
+		return nearest_value !== undefined ?
+			this.container.indexOf(nearest_value)
+			: undefined;
 	}
 }
 
-export function plotNumberRange(drawings: DrawingComponent[]): NumberRange {
+export function plotNumberRange(
+	drawings: React.ReactElement<DrawingProps<any>>[]
+): NumberRange {
 	return new NumberRange(drawings.map(
 		drawing => {
 			const data = drawing.props.data as PlotData[];

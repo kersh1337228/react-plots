@@ -1,154 +1,148 @@
 import {
     AxisData,
     AxisGrid,
-    Font
+    Font,
+    Point
 } from '../../../../utils_refactor/types/display';
-import { useContext, useEffect, useRef, useState } from 'react';
-import { axesContext } from '../Axes';
-import { DrawingData } from '../../drawing/Drawing';
-
-export declare type AxisProps = {
-    visible: boolean;
-    name: string;
-}
-
-export declare type AxisState = {
-    grid: AxisGrid;
-    font: Font;
-    visible: boolean;
-    drag: boolean;
-    mousePos: {
-        x: number;
-        y: number;
-    };
-    ctx: {
-        scale: CanvasRenderingContext2D | null;
-        tooltip: CanvasRenderingContext2D | null;
-    };
-}
+import {
+    AxesReal
+} from '../Axes';
 
 export declare type AxisContext = {
     global: AxisData;
     local: AxisData;
     delta: AxisData;
-}
+};
 
-export default function useAxis(
-    label: 'x' | 'y',
-    scrollSpeed: number = 1,
-    deltaMin: number = 5,
-    deltaMax: number = 500,
-    name?: string,
-    visible: boolean = true,
-    grid: AxisGrid = {
-        amount: 5,
-        color: '#d9d9d9',
-        width: 1
-    },
-    font: Font = {
-        family: 'Serif',
-        size: 10
-    }
-) {
-    const [state, setState] = useState<AxisState>({
-        grid,
-        font,
-        visible,
-        drag: false,
-        mousePos: {
-            x: 0,
-            y: 0
+export default abstract class Axis<
+    AxesT extends AxesReal
+        // | AxesGroupReal
+> {
+    public readonly global: AxisData = {
+        min: 0,
+        max: 0,
+        scale: 1,
+        translate: 0
+    };
+    public local: AxisData = {
+        min: 0,
+        max: 0,
+        scale: 1,
+        translate: 0
+    };
+    public delta: AxisData = {
+        min: 5,
+        max: 500,
+        scale: 0,
+        translate: 0
+    };
+    protected ctx: {
+        main: CanvasRenderingContext2D | null | undefined;
+        tooltip: CanvasRenderingContext2D | null | undefined;
+    } = {
+        main: null,
+        tooltip: null
+    };
+    protected drag: boolean = false;
+    protected mousePos: Point = {
+        x: 0,
+        y: 0
+    };
+
+    protected constructor(
+        protected axes: AxesT,
+        protected label: 'x' | 'y',
+        protected visible: boolean = true,
+        protected scrollSpeed: number = 1,
+        public readonly name: string = label,
+        public readonly grid: AxisGrid = {
+            amount: 5,
+            color: '#d9d9d9',
+            width: 1
         },
-        ctx: {
-            scale: null,
-            tooltip: null
+        public readonly font: Font = {
+            family: 'Serif',
+            size: 10
         }
-    });
+    ) {
+        this.reScale = this.reScale.bind(this);
+        this.reTranslate = this.reTranslate.bind(this);
+        this.drawTicks = this.drawTicks.bind(this);
+        this.drawTooltip = this.drawTooltip.bind(this);
+        this.hideTooltip = this.hideTooltip.bind(this);
+        this.wheelHandler = this.wheelHandler.bind(this);
+        this.mouseMoveHandler = this.mouseMoveHandler.bind(this);
+        this.mouseOutHandler = this.mouseOutHandler.bind(this);
+        this.mouseDownHandler = this.mouseDownHandler.bind(this);
+        this.mouseUpHandler = this.mouseUpHandler.bind(this);
+        this.render = this.render.bind(this);
+    }
 
-    const scaleRef = useRef<HTMLCanvasElement>(null),
-        tooltipRef = useRef<HTMLCanvasElement>(null);
+    public abstract reScale(ds: number): void;
 
-    function hideTooltip() {
-        state.ctx.tooltip?.clearRect(
+    public abstract reTranslate(dt: number): void;
+
+    public abstract transform(): void;
+
+    public abstract drawTicks(): void;
+
+    public abstract drawTooltip(at: number): void;
+
+    public hideTooltip() {
+        this.ctx.tooltip?.clearRect(
             0, 0,
-            (tooltipRef.current as HTMLCanvasElement).width,
-            (tooltipRef.current as HTMLCanvasElement).height
+            this.ctx.tooltip?.canvas.width,
+            this.ctx.tooltip?.canvas.height
         );
     }
 
-    function wheelHandler(reScale: (ds: number) => void) {
-        return (event: WheelEvent) => {
-            event.preventDefault();
-            event.stopPropagation();
-            // reScale(-event.deltaY / 2000 * (
-            //     state.local.scale + state.delta.scale));
-        };
+    public abstract render(): React.ReactNode;
+
+    public wheelHandler(event: WheelEvent) {
+        event.preventDefault();
+        event.stopPropagation();
+        this.reScale(
+            -event.deltaY / 2000 * (this.local.scale + this.delta.scale)
+        );
+        this.axes.draw();
+        this.axes.drawTooltip(
+            this.axes.mousePos.x,
+            this.axes.mousePos.y
+        );
     }
 
-    function mouseMoveHandler(reScale: (ds: number) => void) {
-        return (event: React.MouseEvent) => {
-            if (state.drag) {
-                const window = (event.target as HTMLCanvasElement)
-                    .getBoundingClientRect();
-                const coordinates = {
-                    x: event.clientX - window.left,
-                    y: event.clientY - window.top
-                };
-                // this.reScale(( // TODO: callback
-                //     state.mousePos[label] - coordinates[label]
-                // ) * this.scrollSpeed * this.scale,
-                //     () => {
-                //         this.setState({
-                //             ...this,
-                //             mousePosition: coordinates
-                //         });
-                //     }
-                // );
-            }
+    public mouseMoveHandler(event: React.MouseEvent) {
+        if (this.drag) {
+            const window = (event.target as HTMLCanvasElement)
+                .getBoundingClientRect();
+            const coordinates = {
+                x: event.clientX - window.left,
+                y: event.clientY - window.top
+            };
+            this.reScale((this.mousePos[this.label] - coordinates[this.label])
+                * this.scrollSpeed * (this.local.scale + this.delta.scale));
+            this.axes.draw();
+            this.mousePos = coordinates;
         }
     }
 
-    function mouseOutHandler(_: React.MouseEvent) {
-        setState({
-            ...state,
-            drag: false
-        });
+    public mouseOutHandler(_: React.MouseEvent) {
+        this.drag = false;
     }
 
-    function mouseDownHandler(event: React.MouseEvent) {
-        setState({
-            ...state,
-            mousePos: {
-                x: event.clientX - (
-                    event.target as HTMLCanvasElement
-                ).getBoundingClientRect().left,
-                y: event.clientY - (
-                    event.target as HTMLCanvasElement
-                ).getBoundingClientRect().top,
-            }
-        });
+    public mouseDownHandler(event: React.MouseEvent) {
+        this.drag = true;
+        this.mousePos = {
+            x: event.clientX - (
+                event.target as HTMLCanvasElement
+            ).getBoundingClientRect().left,
+            y: event.clientY - (
+                event.target as HTMLCanvasElement
+            ).getBoundingClientRect().top,
+        };
     }
 
-    function mouseUpHandler(_: React.MouseEvent) {
-        setState({
-            ...state,
-            drag: false
-        });
+    public mouseUpHandler(_: React.MouseEvent) {
+        this.drag = false;
     }
-
-    return {
-        state,
-        setState,
-        label,
-        scrollSpeed,
-        name,
-        scaleRef,
-        tooltipRef,
-        hideTooltip,
-        wheelHandler,
-        mouseMoveHandler,
-        mouseOutHandler,
-        mouseDownHandler,
-        mouseUpHandler
-    };
-}
+};
