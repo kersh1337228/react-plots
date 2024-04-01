@@ -42,7 +42,8 @@ export class HistReal extends Drawing<
             pos: new Path2D(),
             neg: new Path2D()
         }, style, vfield);
-        data.forEach((_, i) => {
+
+        for (let i = 0; i < data.length; ++i) {
             const [x, y] = this.point(i);
             if (y) {
                 const column = new Path2D();
@@ -53,7 +54,7 @@ export class HistReal extends Drawing<
                 const type = y > 0 ? 'pos' : 'neg';
                 this.geometry[type].addPath(column);
             }
-        });
+        }
     }
 
     public override draw() {

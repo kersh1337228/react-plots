@@ -1,23 +1,23 @@
 import {
     axisSize_
-} from '../../../../../utils_refactor/constants/plot';
+} from '../../../../../../utils_refactor/constants/plot';
 import React, {
     createRef,
     useEffect
 } from 'react';
 import {
     numberPower
-} from '../../../../../utils_refactor/functions/numberProcessing';
+} from '../../../../../../utils_refactor/functions/numberProcessing';
 import {
     AxesReal
 } from '../../Axes';
 import {
     AxisGrid,
     Font
-} from '../../../../../utils_refactor/types/display';
+} from '../../../../../../utils_refactor/types/display';
 import Axis from '../base';
 
-export default class YAxis extends Axis<AxesReal> {
+export default class YAxis extends Axis {
     public constructor(
         axes: AxesReal,
         visible: boolean = true,
@@ -48,15 +48,15 @@ export default class YAxis extends Axis<AxesReal> {
             (this.global.max - this.global.min) * this.global.min;
 
         this.local = { ...this.global };
-    }
+    };
 
-    public reScale(_: number) {
+    public override reScale(_: number) {
         // TODO: y rescale
-    }
+    };
 
-    public reTranslate(dt: number) {
+    public override reTranslate(_: number) {
         // TODO: y retranslate
-    }
+    };
 
     public transform() {
         this.local.min = Math.min.apply(null, this.axes.drawings
@@ -70,15 +70,33 @@ export default class YAxis extends Axis<AxesReal> {
         this.local.scale = (bottom - top) / (this.local.max - this.local.min);
         this.local.translate = top - (bottom - top) /
             (this.local.max - this.local.min) * this.local.min;
+    };
+
+    public override drawGrid() {
+        const ctx = this.axes.ctx.main;
+        if (ctx) {
+            ctx.save();
+            ctx.lineWidth = this.grid.width;
+            ctx.strokeStyle = this.grid.color;
+
+            const step = this.axes.size.height /
+                (this.grid.amount + 1) * this.axes.density;
+            for (let index = 0; index < this.grid.amount; ++index) {
+                const y = (this.grid.amount - index) * step;
+
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(this.axes.size.width, y);
+                ctx.stroke();
+                ctx.closePath();
+            }
+            ctx.restore();
+        }
     }
 
-    public drawTicks() {
-        const ctx = this.ctx.main,
-            axesCtx = this.axes.ctx.main;
-        if (axesCtx && ctx) {
-            axesCtx.save();
-            axesCtx.lineWidth = this.grid.width;
-            axesCtx.strokeStyle = this.grid.color;
+    public override drawTicks() {
+        const ctx = this.ctx.main;
+        if (ctx) {
             ctx.save();
             const {
                 width: scaleWidth,
@@ -120,19 +138,12 @@ export default class YAxis extends Axis<AxesReal> {
                     axisSize_.width * 0.85,
                     y + 4
                 );
-
-                axesCtx.beginPath();
-                axesCtx.moveTo(0, y);
-                axesCtx.lineTo(this.axes.size.width, y);
-                axesCtx.stroke();
-                axesCtx.closePath();
             }
             ctx.restore();
-            axesCtx.restore();
         }
-    }
+    };
 
-    public drawTooltip(y: number) {
+    public override drawTooltip(y: number) {
         const axesCtx = this.axes.ctx.tooltip;
         if (axesCtx) {
             axesCtx.beginPath();
@@ -175,9 +186,9 @@ export default class YAxis extends Axis<AxesReal> {
             ctx.fillText(value, axisSize_.width * 0.05, y + 3);
             ctx.restore();
         }
-    }
+    };
 
-    public render() {
+    public override render() {
         const mainRef = createRef<HTMLCanvasElement>(),
             tooltipRef = createRef<HTMLCanvasElement>();
 
@@ -218,5 +229,5 @@ export default class YAxis extends Axis<AxesReal> {
                 onMouseUp={this.mouseUpHandler}
             ></canvas>
         </> : null;
-    }
+    };
 }

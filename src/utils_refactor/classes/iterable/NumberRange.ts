@@ -7,53 +7,101 @@ import {
 } from '../../../components/plot/drawing/Drawing';
 
 export default class NumberRange extends TypedRange<number> {
-	constructor(arrays: number[][]) {
+	public constructor(
+		arrays: number[][]
+	) {
 		super([...new Set(([] as Array<number>).concat(...arrays).sort(
 			(a, b) => a < b ? -1 : a > b ? 1 : 0
-		))])
-	}
-	public format(format_string: string): string[] {
-		const matches = [...format_string.matchAll(/%\.(\d*)f/g)]
+		))]);
+	};
+
+	public override format(
+		fstring: string
+	): string[] {
+		const matches = [...fstring.matchAll(/%\.(\d*)f/g)];
 		return this.container.map(num => {
-			let fstr = format_string
-			matches.forEach(match => {
-				fstr = fstr.replace(match[0], String(Math.round((
-					num + Number.EPSILON
-				) * 10 ** parseInt(match[1])) / 10 ** parseInt(match[1])))
-			})
-			return fstr
+			let fstr = fstring;
+			for (const [format, match]  of matches)
+				fstr = fstr.replace(
+					format,
+					String(
+						Math.round(
+							(num + Number.EPSILON) * 10 ** parseInt(match)
+						) / 10 ** parseInt(match)
+					)
+				);
+			return fstr;
 		})
+	};
+
+	public override at(
+		i: number
+	): number | undefined {
+		return this.container.at(i);
+	};
+
+	public override formatAt(
+		i: number,
+		fstring: string
+	) {
+		const num = this.container.at(i);
+		if (num !== undefined) {
+			const matches = fstring.matchAll(/%\.(\d*)f/g);
+			let fstr = fstring;
+			for (const [format, match] of matches)
+				fstr = fstr.replace(
+					format,
+					String(
+						Math.round(
+							(num + Number.EPSILON) * 10 ** parseInt(match)
+						) / 10 ** parseInt(match)
+					)
+				);
+			return fstr;
+		}
+
+		return undefined;
 	}
-	public at(i: number): number | undefined {
-		return this.container.at(i)
-	}
-	public slice(begin: number, end: number): NumberRange {
-		return new NumberRange([this.container.slice(begin, end)])
-	}
-	public nearest(x: number, tolerance: number = Infinity): number | undefined {
+
+	public override slice(
+		start?: number,
+		end?: number
+	): NumberRange {
+		return new NumberRange([
+			this.container.slice(start, end)]);
+	};
+
+	public nearest(
+		val: number,
+		tol: number = Infinity
+	): number | undefined {
 		const nearest_value = [...this.container].sort(
-			(a, b) => Math.abs(a - x) < Math.abs(b - x) ? -1 : 1
+			(a, b) => Math.abs(a - val) < Math.abs(b - val) ? -1 : 1
 		).at(0) as number
-		return Math.abs(nearest_value - x) < tolerance ? nearest_value : undefined
-	}
-	public indexOf(value: number, tolerance: number = Infinity): number | undefined {
-		const nearest_value = this.nearest(value, tolerance);
+		return Math.abs(nearest_value - val) < tol ? nearest_value : undefined
+	};
+
+	public indexOf(
+		val: number,
+		tol: number = Infinity
+	): number | undefined {
+		const nearest_value = this.nearest(val, tol);
 		return nearest_value !== undefined ?
 			this.container.indexOf(nearest_value)
 			: undefined;
-	}
-}
+	};
 
-export function plotNumberRange(
-	drawings: React.ReactElement<DrawingProps<any>>[]
-): NumberRange {
-	return new NumberRange(drawings.map(
-		drawing => {
-			const data = drawing.props.data as PlotData[];
-			if ('timestamp' in data[0]) // @ts-ignore
-				return data.map(point => point.timestamp);
-			else
-				return data.map(point => point[0]);
-		}
-	))
-}
+	public static plotNumberRange(
+		drawings: React.ReactElement<DrawingProps<any>>[]
+	): NumberRange {
+		return new NumberRange(drawings.map(
+			drawing => {
+				const data = drawing.props.data as PlotData[];
+				if ('timestamp' in data[0]) // @ts-ignore
+					return data.map(point => point.timestamp);
+				else
+					return data.map(point => point[0]);
+			}
+		));
+	};
+};

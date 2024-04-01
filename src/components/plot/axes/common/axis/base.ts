@@ -1,41 +1,19 @@
+import React from 'react';
 import {
-    AxisData,
     AxisGrid,
     Font,
     Point
-} from '../../../../utils_refactor/types/display';
+} from '../../../../../utils_refactor/types/display';
 import {
     AxesReal
-} from '../Axes';
+} from '../../single/Axes';
+import {
+    AxesGroupReal
+} from '../../group/AxesGroup';
 
-export declare type AxisContext = {
-    global: AxisData;
-    local: AxisData;
-    delta: AxisData;
-};
-
-export default abstract class Axis<
-    AxesT extends AxesReal
-        // | AxesGroupReal
+export default abstract class AxisBase<
+    AxesT extends AxesReal | AxesGroupReal
 > {
-    public readonly global: AxisData = {
-        min: 0,
-        max: 0,
-        scale: 1,
-        translate: 0
-    };
-    public local: AxisData = {
-        min: 0,
-        max: 0,
-        scale: 1,
-        translate: 0
-    };
-    public delta: AxisData = {
-        min: 5,
-        max: 500,
-        scale: 0,
-        translate: 0
-    };
     protected ctx: {
         main: CanvasRenderingContext2D | null | undefined;
         tooltip: CanvasRenderingContext2D | null | undefined;
@@ -54,7 +32,7 @@ export default abstract class Axis<
         protected label: 'x' | 'y',
         protected visible: boolean = true,
         protected scrollSpeed: number = 1,
-        public readonly name: string = label,
+        public readonly name: string = 'x',
         public readonly grid: AxisGrid = {
             amount: 5,
             color: '#d9d9d9',
@@ -82,8 +60,6 @@ export default abstract class Axis<
 
     public abstract reTranslate(dt: number): void;
 
-    public abstract transform(): void;
-
     public abstract drawTicks(): void;
 
     public abstract drawTooltip(at: number): void;
@@ -94,22 +70,18 @@ export default abstract class Axis<
             this.ctx.tooltip?.canvas.width,
             this.ctx.tooltip?.canvas.height
         );
-    }
-
-    public abstract render(): React.ReactNode;
+    };
 
     public wheelHandler(event: WheelEvent) {
         event.preventDefault();
         event.stopPropagation();
-        this.reScale(
-            -event.deltaY / 2000 * (this.local.scale + this.delta.scale)
-        );
+        this.reScale(-event.deltaY / 2000);
         this.axes.draw();
         this.axes.drawTooltip(
             this.axes.mousePos.x,
             this.axes.mousePos.y
         );
-    }
+    };
 
     public mouseMoveHandler(event: React.MouseEvent) {
         if (this.drag) {
@@ -119,16 +91,16 @@ export default abstract class Axis<
                 x: event.clientX - window.left,
                 y: event.clientY - window.top
             };
-            this.reScale((this.mousePos[this.label] - coordinates[this.label])
-                * this.scrollSpeed * (this.local.scale + this.delta.scale));
+            this.reScale((this.mousePos[this.label]
+                - coordinates[this.label]) * this.scrollSpeed);
             this.axes.draw();
             this.mousePos = coordinates;
         }
-    }
+    };
 
     public mouseOutHandler(_: React.MouseEvent) {
         this.drag = false;
-    }
+    };
 
     public mouseDownHandler(event: React.MouseEvent) {
         this.drag = true;
@@ -140,9 +112,11 @@ export default abstract class Axis<
                 event.target as HTMLCanvasElement
             ).getBoundingClientRect().top,
         };
-    }
+    };
 
     public mouseUpHandler(_: React.MouseEvent) {
         this.drag = false;
-    }
+    };
+
+    public abstract render(): React.ReactNode;
 };

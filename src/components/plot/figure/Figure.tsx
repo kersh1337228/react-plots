@@ -1,26 +1,26 @@
 import {
     AxesPlaceholderProps,
     AxesReal
-} from '../axes/Axes';
+} from '../axes/single/Axes';
 import {
-    Children,
+    Children, JSXElementConstructor,
     useMemo, useState
 } from 'react';
-import {
-    axisSize_
-} from '../../../utils_refactor/constants/plot';
-import NumberRange, {
-    plotNumberRange
-} from '../../../utils_refactor/classes/iterable/NumberRange';
-import DateTimeRange, {
-    plotDateTimeRange
-} from '../../../utils_refactor/classes/iterable/DateTimeRange';
+import NumberRange from '../../../utils_refactor/classes/iterable/NumberRange';
+import DateTimeRange from '../../../utils_refactor/classes/iterable/DateTimeRange';
 import {
     fillData,
     plotDataTypeVectorised
 } from '../../../utils_refactor/functions/plotDataProcessing';
+import {
+    DrawingProps
+} from '../drawing/Drawing';
+import {
+    AxesGroupPlaceholderProps,
+    AxesGroupReal
+} from '../axes/group/AxesGroup';
 import drawingModule from '../drawing/index';
-import { DrawingProps } from '../drawing/Drawing';
+import './Figure.css';
 
 declare type FigureProps = {
     width: number;
@@ -28,10 +28,10 @@ declare type FigureProps = {
     name: string;
     children: React.ReactElement<
         AxesPlaceholderProps
-        // | AxesGroupPlaceholderProps
+        | AxesGroupPlaceholderProps
     > | React.ReactElement<
         AxesPlaceholderProps
-        // | AxesGroupPlaceholderProps
+        | AxesGroupPlaceholderProps
     >[];
 };
 
@@ -44,31 +44,39 @@ export default function Figure(
         rerender = () => { setState({}); }
 
     const children = useMemo(() => {
-        const grid = {
-            rows: Math.max.apply(null, Children.map(
-                props.children, child => child.props.position.row.end)),
-            columns: Math.max.apply(null, Children.map(
-                props.children, child => child.props.position.column.end)),
-        };
-        const cellWidth = props.width / grid.columns,
-            cellHeight = props.height / grid.rows;
+        const rows = Math.max.apply(null, Children.map(props.children,
+                    child => child.props.position.row.end)) - 1,
+            columns = Math.max.apply(null, Children.map(props.children,
+                    child => child.props.position.column.end)) - 1;
+        const cellWidth = props.width / columns,
+            cellHeight = props.height / rows;
 
         return Children.map(props.children, child => {
+            const size = {
+                width: (
+                    child.props.position.column.end -
+                    child.props.position.column.start
+                ) * cellWidth,
+                height: (
+                    child.props.position.row.end -
+                    child.props.position.row.start
+                ) * cellHeight
+            };
+
             const drawingsArray = Children.map(child.props.children, d => d) as
                 React.ReactElement<DrawingProps<any>>[];
 
-            // @ts-ignore
-            if (child.type.name === 'Axes') {
-                let xAxisData: NumberRange | DateTimeRange;
-                let xAxisLabels: number[] | string[];
-                const dType = plotDataTypeVectorised(drawingsArray);
+            if ((child.type as JSXElementConstructor<any>).name === 'Axes') {
+                let xAxisData: NumberRange | DateTimeRange,
+                    xAxisLabels: number[] | string[];
+                const dtype = plotDataTypeVectorised(drawingsArray);
                 if (drawingsArray.length) {
-                    if (dType)
-                        if (dType === 'Geometrical') {
-                            xAxisData = plotNumberRange(drawingsArray);
+                    if (dtype)
+                        if (dtype === 'Numeric') {
+                            xAxisData = NumberRange.plotNumberRange(drawingsArray);
                             xAxisLabels = [...xAxisData];
                         } else {
-                            xAxisData = plotDateTimeRange(drawingsArray);
+                            xAxisData = DateTimeRange.plotDateTimeRange(drawingsArray);
                             xAxisLabels = [...xAxisData.format('%Y-%m-%d')];
                         }
                     else
@@ -86,8 +94,7 @@ export default function Figure(
                         drawing.props.style,
                         drawing.props.vfield
                     );
-                    // @ts-ignore
-                }) as Drawing[];
+                });
 
                 return new AxesReal(
                     rerender,
@@ -99,31 +106,26 @@ export default function Figure(
                         top: 0,
                         right: 0,
                         bottom: 0,
-                        ...child.props.padding
+                        ...(child.props as AxesPlaceholderProps).padding
                     },
-                    {
-                        width: (
-                            child.props.position.column.end -
-                            child.props.position.column.start
-                        ) * cellWidth - (
-                            child.props.yAxis === false ? 0 : axisSize_.width
-                        ),
-                        height: (
-                            child.props.position.row.end -
-                            child.props.position.row.start
-                        ) * cellHeight - (
-                            child.props.xAxis === false ? 0 : axisSize_.height
-                        )
-                    },
+                    size,
                     xAxisData,
                     child.props.xAxis ?? true,
-                    child.props.yAxis ?? true,
+                    (child.props as AxesPlaceholderProps).yAxis ?? true,
                 );
-                // } else if (child.type.name === 'AxesGroup')
-                //     return React.createElement(AxesGroupReal, childProps)
-            }
+            } else if ((child.type as JSXElementConstructor<any>).name === 'AxesGroup')
+                return new AxesGroupReal(
+                    rerender,
+                    child.props.children as
+                        React.ReactElement<AxesPlaceholderProps>
+                        | React.ReactElement<AxesPlaceholderProps>[],
+                    child.props.position,
+                    child.props.name,
+                    size,
+                    child.props.xAxis ?? true
+                );
             else
-                throw Error("Only <Axes> and <AxesGroup> can appear as <Figure> children.")
+                throw Error("Only <Axes> and <AxesGroup> are allowed to be <Figure> children.")
         });
     }, []);
 

@@ -1,9 +1,9 @@
 import {
-    ObjectGeometrical,
+    ObjectNumeric,
     ObjectTimeSeries,
     PlotData,
     PlotDataName,
-    PointGeometrical
+    PointNumeric
 } from '../../../utils_refactor/types/plotData';
 import {
     JSX
@@ -17,7 +17,7 @@ import {
 } from '../../../utils_refactor/types/display';
 import {
     AxesReal
-} from '../axes/Axes';
+} from '../axes/single/Axes';
 import NumberRange from '../../../utils_refactor/classes/iterable/NumberRange';
 import {
     round
@@ -58,12 +58,12 @@ export default abstract class Drawing<
         let xs: number[], ys: number[], x: Bounds;
         const dtype = plotDataType(data) as PlotDataName;
 
-        if (dtype.includes('Geometrical')) {
+        if (dtype.includes('Numeric')) {
             if (dtype.includes('Point'))
-                xs = (data as PointGeometrical[])
+                xs = (data as PointNumeric[])
                     .map(point => point[0]);
             else
-                xs = (data as ObjectGeometrical[])
+                xs = (data as ObjectNumeric[])
                     .map(point => point.timestamp);
             x = {
                 min: Math.min.apply(null, xs),
@@ -76,11 +76,11 @@ export default abstract class Drawing<
             };
 
         if (dtype.includes('Point'))
-            ys = (data as PointGeometrical[])
+            ys = (data as PointNumeric[])
                 .map(point => point[1])
                 .filter(y => y !== null) as number[];
         else
-            ys = (data as ObjectGeometrical[])
+            ys = (data as ObjectNumeric[])
                 .map(point => point[vfield as string])
                 .filter(y => y !== null) as number[];
 
@@ -104,11 +104,11 @@ export default abstract class Drawing<
 
         let ys: number[];
         if (this.dtype.includes('Point'))
-            ys = (localData as PointGeometrical[])
+            ys = (localData as PointNumeric[])
                 .map(point => point[1] as number)
                 .filter(y => y !== null);
         else
-            ys = (localData as ObjectGeometrical[])
+            ys = (localData as ObjectNumeric[])
                 .map(point => point[this.vfield as string] as number)
                 .filter(y => y !== null);
 
@@ -127,7 +127,7 @@ export default abstract class Drawing<
     public globalize(
         localX: number
     ): number {
-        if (this.dtype.includes('Geometrical'))
+        if (this.dtype.includes('Numeric'))
             return (this.axes.axis.x.data as NumberRange).indexOf((
                 localX - this.axes.transformMatrix.e
             ) / this.axes.transformMatrix.a) as number;
@@ -137,14 +137,14 @@ export default abstract class Drawing<
             ) / this.axes.transformMatrix.a);
     }
 
-    public point(at: number): PointGeometrical {
+    public point(at: number): PointNumeric {
         switch (this.dtype) {
-            case "PointGeometrical":
-                return this.data[at] as PointGeometrical;
+            case "PointNumeric":
+                return this.data[at] as PointNumeric;
             case "PointTimeSeries":
                 return [at + 0.55, this.data[at][1]];
-            case "ObjectGeometrical":
-                const point = this.data[at] as ObjectGeometrical;
+            case "ObjectNumeric":
+                const point = this.data[at] as ObjectNumeric;
                 return [point.timestamp, point[this.vfield as string]];
             case "ObjectTimeSeries":
                 return [at + 0.55, (

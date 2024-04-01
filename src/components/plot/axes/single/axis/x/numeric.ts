@@ -1,19 +1,18 @@
 import {
     AxesReal
 } from '../../Axes';
-import NumberRange from '../../../../../utils_refactor/classes/iterable/NumberRange';
+import NumberRange from '../../../../../../utils_refactor/classes/iterable/NumberRange';
 import XAxis from './base';
 import {
     AxisGrid,
     Font
-} from '../../../../../utils_refactor/types/display';
+} from '../../../../../../utils_refactor/types/display';
 import {
     numberPower
-} from '../../../../../utils_refactor/functions/numberProcessing';
+} from '../../../../../../utils_refactor/functions/numberProcessing';
 
-export default class XAxisGeometric extends XAxis<
-    NumberRange,
-    AxesReal
+export default class XAxisNumeric extends XAxis<
+    NumberRange
 > {
     public constructor(
         axes: AxesReal,
@@ -37,14 +36,29 @@ export default class XAxisGeometric extends XAxis<
         this.delta.max = Math.min(100, delta);
     }
 
-    public drawTicks() {
-        const ctx = this.ctx.main,
-            axesCtx = this.axes.ctx.main;
-        if (axesCtx && ctx) {
-            axesCtx.save();
-            axesCtx.lineWidth = this.grid.width;
-            axesCtx.strokeStyle = this.grid.color;
+    public override drawGrid() {
+        const ctx = this.axes.ctx.main;
+        if (ctx) {
+            ctx.save();
+            ctx.lineWidth = this.grid.width;
+            ctx.strokeStyle = this.grid.color;
 
+            for (let i = 1; i <= this.grid.amount; ++i) {
+                const x = i / (this.grid.amount + 1) * this.axes.size.width;
+
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, this.axes.size.height);
+                ctx.stroke();
+                ctx.closePath();
+            }
+            ctx.restore();
+        }
+    }
+
+    public override drawTicks() {
+        const ctx = this.ctx.main;
+        if (ctx) {
             ctx.save();
             const {
                 width: scaleWidth,
@@ -83,19 +97,12 @@ export default class XAxisGeometric extends XAxis<
                     x,
                     scaleHeight * 0.3
                 );
-
-                axesCtx.beginPath();
-                axesCtx.moveTo(x, 0);
-                axesCtx.lineTo(x, this.axes.size.height);
-                axesCtx.stroke();
-                axesCtx.closePath();
             }
-            ctx?.restore();
-            axesCtx.restore();
+            ctx.restore();
         }
     }
 
-    public drawTooltip(x: number) {
+    public override drawTooltip(x: number) {
         const scale = this.local.scale + this.delta.scale;
         const translate = this.local.translate + this.delta.translate;
 
@@ -133,7 +140,7 @@ export default class XAxisGeometric extends XAxis<
             ), 0, 30, 25);
             ctx.font = `${this.font.size}px ${this.font.family}`;
             ctx.fillStyle = '#ffffff';
-            const text = this.data.format('%.2f').at(i);
+            const text = this.data.formatAt(i, '%.2f');
             ctx.textAlign = 'center';
             ctx.fillText(
                 text ? text : '',

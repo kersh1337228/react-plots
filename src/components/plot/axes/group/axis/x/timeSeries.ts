@@ -1,20 +1,16 @@
 import XAxis from './base';
 import {
-    AxesReal
-} from '../../Axes';
-import {
     AxisGrid,
     Font
-} from '../../../../../utils_refactor/types/display';
-import DateTimeRange from '../../../../../utils_refactor/classes/iterable/DateTimeRange';
+} from '../../../../../../utils_refactor/types/display';
+import {
+    AxesGroupReal
+} from '../../AxesGroup';
+import DateTimeRange from '../../../../../../utils_refactor/classes/iterable/DateTimeRange';
 
-export default class XAxisTimeSeries extends XAxis<
-    DateTimeRange,
-    AxesReal
-> {
+export default class XAxisTimeSeries extends XAxis {
     public constructor(
-        axes: AxesReal,
-        data: DateTimeRange,
+        axes: AxesGroupReal,
         visible: boolean = true,
         name: string = 'x',
         grid: AxisGrid = {
@@ -27,18 +23,12 @@ export default class XAxisTimeSeries extends XAxis<
             size: 10
         }
     ) {
-        super(axes, data, visible, 0.01, name, grid, font);
-    }
+        super(axes, visible, 0.01, name, grid, font);
+    };
 
-    public drawTicks() {
-        const ctx = this.ctx.main,
-            axesCtx = this.axes.ctx.main;
-
-        if (axesCtx && ctx) {
-            axesCtx.save();
-            axesCtx.lineWidth = this.grid.width;
-            axesCtx.strokeStyle = this.grid.color;
-
+    public override drawTicks() {
+        const ctx = this.ctx.main;
+        if (ctx) {
             ctx.save();
             const {
                 width: scaleWidth,
@@ -51,10 +41,12 @@ export default class XAxisTimeSeries extends XAxis<
             );
             ctx.font = `${this.font.size}px ${this.font.family}`;
 
-            const scale = this.local.scale + this.delta.scale;
-            const translate = this.local.translate + this.delta.translate;
+            const axes = this.axes.axes[0],
+                axis = axes.axis.x;
+            const scale = axis.local.scale + axis.delta.scale;
+            const translate = axis.local.translate + axis.delta.translate;
             const step = this.axes.size.width /
-                (this.grid.amount + 1) * this.axes.density;
+                (this.grid.amount + 1) * axes.density;
 
             for (let i = 1; i <= this.grid.amount; ++i) {
                 const t = Math.floor((i * step - translate) / scale);
@@ -67,41 +59,36 @@ export default class XAxisTimeSeries extends XAxis<
                 );
                 ctx.stroke();
                 ctx.closePath();
-                const text = this.data.at(t)?.format('%Y-%m-%d');
+                const text = (axis.data as DateTimeRange).formatAt(t, '%Y-%m-%d');
                 ctx.textAlign = 'center';
                 ctx.fillText(
                     text ? text : '',
                     (t + 0.55) * scale + translate,
                     scaleHeight * 0.3
                 );
-
-                axesCtx.beginPath();
-                axesCtx.moveTo((t + 0.55) * scale + translate, 0);
-                axesCtx.lineTo((t + 0.55) * scale + translate, this.axes.size.height);
-                axesCtx.stroke();
-                axesCtx.closePath();
             }
             ctx.restore();
-            axesCtx.restore();
         }
-    }
+    };
 
-    public drawTooltip(x: number) {
-        const scale = this.local.scale + this.delta.scale;
-        const translate = this.local.translate + this.delta.translate;
+    public override drawTooltip(x: number) {
+        const axes = this.axes.axes[0],
+            axis = axes.axis.x;
+        const scale = axis.local.scale + axis.delta.scale;
+        const translate = axis.local.translate + axis.delta.translate;
 
         const t = Math.floor((
-            x * this.axes.density - translate
+            x * axes.density - translate
         ) / scale);
 
-        const axesCtx = this.axes.ctx.tooltip;
-        if (axesCtx) {
-            axesCtx.beginPath();
-            axesCtx.moveTo((t + 0.55) * scale + translate, 0);
-            axesCtx.lineTo((t + 0.55) * scale + translate, this.axes.size.height);
-            axesCtx.stroke();
-            axesCtx.closePath();
-        }
+        // const axesCtx = this.axes.ctx;
+        // if (axesCtx) {
+        //     axesCtx.beginPath();
+        //     axesCtx.moveTo((t + 0.55) * scale + translate, 0);
+        //     axesCtx.lineTo((t + 0.55) * scale + translate, this.axes.size.height);
+        //     axesCtx.stroke();
+        //     axesCtx.closePath();
+        // }
 
         const ctx = this.ctx.tooltip;
         if (ctx) {
@@ -121,7 +108,7 @@ export default class XAxisTimeSeries extends XAxis<
                 this.axes.size.width - 60,
                 Math.max(0, (t + 0.55) * scale + translate - 30)
             ), 0, 60, 25);
-            const text = this.data.at(t)?.format('%Y-%m-%d');
+            const text = axis.data.formatAt(t, '%Y-%m-%d');
             ctx.textAlign = 'center';
             ctx.font = `${this.font.size}px ${this.font.family}`;
             ctx.fillStyle = '#ffffff';
@@ -135,5 +122,5 @@ export default class XAxisTimeSeries extends XAxis<
             );
             ctx.restore();
         }
-    }
-}
+    };
+};

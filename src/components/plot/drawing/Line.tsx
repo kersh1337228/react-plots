@@ -28,14 +28,15 @@ export class LineReal extends Drawing<
         vfield?: string
     ) {
         super(data, name, new Path2D(), style, vfield);
+
         const i0 = [...Array(data.length).keys()].findIndex(
             i => this.point(i)[1] !== null);
         this.geometry.moveTo(...this.point(i0) as [number, number]);
-        data.slice(i0).forEach((_, i) => {
-            const [x, y] = this.point(i0 + i);
+        for (let i = i0; i < data.length; ++i) {
+            const [x, y] = this.point(i);
             if (y != null)
                 this.geometry.lineTo(x, y);
-        });
+        }
     }
 
     public override draw() {

@@ -3,37 +3,27 @@ import React, {
     useEffect
 } from 'react';
 import {
-    AxesReal
-} from '../../Axes';
-import {
     truncate
-} from '../../../../../utils_refactor/functions/numberProcessing';
+} from '../../../../../../utils_refactor/functions/numberProcessing';
 import {
     axisSize_
-} from '../../../../../utils_refactor/constants/plot';
-import {
-    AxisContext
-} from '../base';
+} from '../../../../../../utils_refactor/constants/plot';
 import {
     AxisGrid,
     Font
-} from '../../../../../utils_refactor/types/display';
-import NumberRange from '../../../../../utils_refactor/classes/iterable/NumberRange';
-import DateTimeRange from '../../../../../utils_refactor/classes/iterable/DateTimeRange';
+} from '../../../../../../utils_refactor/types/display';
+import NumberRange from '../../../../../../utils_refactor/classes/iterable/NumberRange';
+import DateTimeRange from '../../../../../../utils_refactor/classes/iterable/DateTimeRange';
 import Axis from '../base';
-
-
-export declare interface XAxisContext extends AxisContext {
-    data: NumberRange | DateTimeRange
-}
+import {
+    AxesReal
+} from '../../Axes';
 
 export default abstract class XAxis<
-    DataT extends NumberRange | DateTimeRange,
-    AxesT extends AxesReal
-        // | AxesGroupReal
-> extends Axis<AxesT> {
+    DataT extends NumberRange | DateTimeRange
+> extends Axis {
     protected constructor(
-        axes: AxesT,
+        axes: AxesReal,
         public readonly data: DataT,
         visible: boolean = true,
         scrollSpeed: number = 1,
@@ -72,12 +62,12 @@ export default abstract class XAxis<
         }
     }
 
-    public reScale(ds: number) {
+    public override reScale(ds: number) {
         const left = this.axes.size.width * this.axes.padding.left,
             right = this.axes.size.width * (1 - this.axes.padding.right);
 
         this.delta.scale = truncate(
-            this.delta.scale + ds,
+            this.delta.scale + ds * (this.local.scale + this.delta.scale),
             (right - left) * (
                 1 / this.delta.max - 1 / (this.global.max - this.global.min)),
             (right - left) * (
@@ -114,7 +104,7 @@ export default abstract class XAxis<
         });
     }
 
-    public reTranslate(dt: number) {
+    public override reTranslate(dt: number) {
         const left = this.axes.size.width * this.axes.padding.left,
             right = this.axes.size.width * (1 - this.axes.padding.right);
 
@@ -146,11 +136,7 @@ export default abstract class XAxis<
         });
     }
 
-    public transform() {
-        // TODO: x axis transform
-    }
-
-    public render() {
+    public override render() {
         const mainRef = createRef<HTMLCanvasElement>(),
         tooltipRef = createRef<HTMLCanvasElement>();
 
@@ -190,6 +176,6 @@ export default abstract class XAxis<
                 onMouseDown={this.mouseDownHandler}
                 onMouseUp={this.mouseUpHandler}
             ></canvas>
-        </> : null
+        </> : null;
     }
 };
