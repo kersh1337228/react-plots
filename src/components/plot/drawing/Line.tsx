@@ -76,15 +76,6 @@ export class LineReal extends Drawing<
 
     public override settings() {
         return <div key={this.name}>
-            <label htmlFor={'visible'}>{this.name}</label>
-            <input
-                type={'checkbox'}
-                name={'visible'}
-                onChange={event => {
-                    this.visible = event.target.checked;
-                    this.axes.draw();
-                }} defaultChecked={this.visible}
-            />
             <ul>
                 <li>
                     Line color: <input

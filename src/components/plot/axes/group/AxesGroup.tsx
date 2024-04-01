@@ -51,7 +51,6 @@ export class AxesGroupReal extends AxesBase<
 > {
     public axes: AxesReal[];
     public ctx: CanvasRenderingContext2D | null | undefined = null;
-    private readonly axisSize: Point;
     public readonly rows: number;
 
     public constructor(
@@ -60,10 +59,10 @@ export class AxesGroupReal extends AxesBase<
             | React.ReactElement<AxesPlaceholderProps>[],
         public position: GridPosition,
         public readonly name: string,
-        public size: Size,
+        size: Size,
         xAxis: boolean = true
     ) {
-        super();
+        super(size, xAxis);
 
         const drawings = new Array<
             React.ReactElement<DrawingProps<any>>
@@ -132,22 +131,18 @@ export class AxesGroupReal extends AxesBase<
                     height: (
                         child.props.position.row.end -
                         child.props.position.row.start
-                    ) * cellHeight,
+                    ) * cellHeight - this.axisSize.x / this.rows,
                 },
                 xAxisData,
                 false,
-                yAxis
+                yAxis,
+                false
             );
         });
 
         this.x = xAxisData instanceof NumberRange ?
             new XAxisNumeric(this, xAxis) :
             new XAxisTimeSeries(this, xAxis);
-
-        this.axisSize = {
-            x: xAxis ? axisSize_.height : 0,
-            y: yAxis ? axisSize_.width : 0
-        };
     };
 
     public localize(
@@ -212,7 +207,7 @@ export class AxesGroupReal extends AxesBase<
         return <div
             className={'axesGroupGrid'}
             style={{
-                width: this.size.width,
+                width: this.size.width + this.axisSize.y,
                 height: this.size.height + this.axisSize.x,
                 gridRowStart: this.position.row.start,
                 gridRowEnd: this.position.row.end,
@@ -249,6 +244,18 @@ export class AxesGroupReal extends AxesBase<
                 onMouseUp={this.mouseUpHandler}
             ></div>
             <this.x.render/>
+            <div
+                style={{
+                    width: axisSize_.width,
+                    height: axisSize_.height,
+                    gridRowStart: this.rows + 1,
+                    gridRowEnd: this.rows + 2,
+                    gridColumnStart: 1,
+                    gridColumnEnd: 2
+                }}
+            >
+
+            </div>
             {/*<AxesGroupSettings axesGroup={this}/>*/}
         </div>
     };

@@ -10,6 +10,7 @@ import {
 import {
     numberPower
 } from '../../../../../../utils_refactor/functions/numberProcessing';
+import { axisSize_ } from '../../../../../../utils_refactor/constants/plot';
 
 export default class XAxisNumeric extends XAxis {
     public constructor(
@@ -44,7 +45,8 @@ export default class XAxisNumeric extends XAxis {
             );
             ctx.font = `${this.font.size}px ${this.font.family}`;
 
-            const axis = this.axes.axes[0].x;
+            const axes = this.axes.axes[0],
+                axis = axes.x;
             const spread = axis.local.max - axis.local.min;
             const scale = axis.local.scale + axis.delta.scale;
             const translate = axis.local.translate + axis.delta.translate;
@@ -62,8 +64,11 @@ export default class XAxisNumeric extends XAxis {
                 ctx.fillText(
                     numberPower(
                         i * step + translate * (
-                            spread / this.axes.size.width - 1 / scale
-                        ) + axis.local.min, 2
+                            spread / this.axes.size.width * (
+                                1 - axes.padding.left - axes.padding.right
+                            ) - 1 / scale
+                        ) + axis.local.min - axes.padding.right *
+                        this.axes.size.width / scale, 2
                     ),
                     x,
                     scaleHeight * 0.3

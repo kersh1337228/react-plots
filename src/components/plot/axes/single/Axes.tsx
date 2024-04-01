@@ -23,6 +23,7 @@ import {
 import Drawing from '../../drawing/Drawing';
 import './Axes.css';
 import AxesBase from '../common/base';
+import AxesSettings from './settings/AxesSettings';
 
 export declare type AxesPlaceholderProps = {
     children: React.ReactElement<DrawingProps<any>>
@@ -58,8 +59,6 @@ export class AxesReal extends AxesBase<
         tooltip: null
     };
     public density: number = 1;
-    public size: Size;
-    private readonly axisSize: Point;
     private tooltips: React.JSX.Element[] | null = null;
 
     public constructor(
@@ -71,18 +70,10 @@ export class AxesReal extends AxesBase<
         size: Size,
         xAxisData: NumberRange | DateTimeRange,
         xAxis: boolean = true,
-        yAxis: boolean = true
+        yAxis: boolean = true,
+        private settings: boolean = true
     ) {
-        super();
-
-        this.axisSize = {
-            x: xAxis ? axisSize_.height : 0,
-            y: yAxis ? axisSize_.width : 0
-        };
-        this.size = {
-            width: size.width - this.axisSize.y,
-            height: size.height - this.axisSize.x
-        };
+        super(size, settings);
 
         this.drawings = drawings.map(drawing => {
             drawing.axes = this;
@@ -194,8 +185,8 @@ export class AxesReal extends AxesBase<
         return <div
             className={'axesGrid'}
             style={{
-                width: this.size.width,
-                height: this.size.height,
+                width: this.size.width + this.axisSize.y,
+                height: this.size.height + this.axisSize.x,
                 gridRowStart: this.position.row.start,
                 gridRowEnd: this.position.row.end,
                 gridColumnStart: this.position.column.start,
@@ -231,7 +222,7 @@ export class AxesReal extends AxesBase<
             ></canvas>
             <this.x.render />
             <this.y.render />
-            {/*{this.settings}*/}
+            <AxesSettings axes={this} visible={this.settings} />
         </div>;
     };
 }

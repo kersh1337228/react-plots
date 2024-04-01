@@ -113,7 +113,6 @@ export default class Dialog extends React.Component<
                             }
                         })}
                     </ul>
-                    <hr style={{borderColor: 'black'}}/>
                     <div className={'dialogActiveTab'}>
                         {this.props.tabs[this.state.activeTab]}
                     </div>

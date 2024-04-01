@@ -1,22 +1,39 @@
 import React from 'react';
 import {
     DataRange,
-    Point
+    Point, Size
 } from '../../../../utils_refactor/types/display';
 import AxisBase from './axis/base';
+import {
+    axisSize_
+} from '../../../../utils_refactor/constants/plot';
 
 export default abstract class AxesBase<
     XAxisT extends AxisBase<any>
 > {
     // @ts-ignore
     public x: XAxisT;
+    public size: Size;
+    protected readonly axisSize: Point;
     protected drag: boolean = false;
     public mousePos: Point = {
         x: 0,
         y: 0
     };
 
-    protected constructor() {
+    protected constructor(
+        size: Size,
+        x: boolean
+    ) {
+        this.axisSize = {
+            x: axisSize_.height * +x,
+            y: axisSize_.width,
+        };
+        this.size = {
+            width: size.width - this.axisSize.y,
+            height: size.height - this.axisSize.x
+        };
+
         this.localize = this.localize.bind(this);
         this.draw = this.draw.bind(this);
         this.drawTooltip = this.drawTooltip.bind(this);

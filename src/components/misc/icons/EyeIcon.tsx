@@ -1,9 +1,10 @@
 import React from 'react'
 
-export default function EyeIcon(): JSX.Element {
-	const [visible, setVisible] = React.useState(true)
+export default function EyeIcon() {
+	const [visible, setVisible] = React.useState(true);
+
 	return (
-		<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 22" width="24" height="22" fill="none" onClick={() => {
+		<svg xmlns="http://www.w3.org/2000/svg" viewBox="4 3 16 16" width="16" height="16" fill="none" onClick={() => {
 			setVisible(!visible)
 		}}>
 			{visible ?

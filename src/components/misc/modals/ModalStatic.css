@@ -8,8 +8,7 @@
     align-items: center;
     justify-content: center;
     z-index: 10;
-    background: rgba(255, 255, 255, 0.5);
-    backdrop-filter: blur(7px);
+    background: #ffffff;
     opacity: 0;
     transition: opacity 0.3s;
     pointer-events: none;
