@@ -1,0 +1,78 @@
+import React from 'react';
+import {
+    DataRange,
+    Point
+} from '../../../../utils_refactor/types/display';
+import AxisBase from './axis/base';
+
+export default abstract class AxesBase<
+    XAxisT extends AxisBase<any>
+> {
+    // @ts-ignore
+    public x: XAxisT;
+    protected drag: boolean = false;
+    public mousePos: Point = {
+        x: 0,
+        y: 0
+    };
+
+    protected constructor() {
+        this.localize = this.localize.bind(this);
+        this.draw = this.draw.bind(this);
+        this.drawTooltip = this.drawTooltip.bind(this);
+        this.hideTooltip = this.hideTooltip.bind(this);
+        this.mouseMoveHandler = this.mouseMoveHandler.bind(this);
+        this.mouseOutHandler = this.mouseOutHandler.bind(this);
+        this.mouseDownHandler = this.mouseDownHandler.bind(this);
+        this.mouseUpHandler = this.mouseUpHandler.bind(this);
+        this.render = this.render.bind(this);
+    }
+
+    public abstract localize(
+        range: DataRange
+    ): void;
+
+    public abstract draw(): void;
+
+    public abstract drawTooltip(
+        x: number,
+        y: number
+    ): void;
+
+    public abstract hideTooltip(): void;
+
+    public mouseMoveHandler(event: React.MouseEvent) {
+        const window = (event.target as HTMLCanvasElement)
+            .getBoundingClientRect();
+        const x = event.clientX - window.left,
+            y = event.clientY - window.top;
+        if (this.drag)
+            this.x.reTranslate(x - this.mousePos.x);
+        this.mousePos = { x, y };
+        this.draw();
+        this.drawTooltip(x, y);
+    };
+
+    public async mouseOutHandler(_: React.MouseEvent) {
+        this.drag = false;
+        this.hideTooltip();
+    };
+
+    public mouseDownHandler(event: React.MouseEvent) {
+        this.drag = true;
+        this.mousePos = {
+            x: event.clientX - (
+                event.target as HTMLCanvasElement
+            ).getBoundingClientRect().left,
+            y: event.clientY - (
+                event.target as HTMLCanvasElement
+            ).getBoundingClientRect().top,
+        };
+    };
+
+    public mouseUpHandler() {
+        this.drag = false;
+    };
+
+    public abstract render(): React.ReactNode;
+};

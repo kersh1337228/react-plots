@@ -82,7 +82,7 @@ export class LineReal extends Drawing<
                 name={'visible'}
                 onChange={event => {
                     this.visible = event.target.checked;
-                    // this.axes.plot() // TODO: full replot
+                    this.axes.draw();
                 }} defaultChecked={this.visible}
             />
             <ul>
@@ -92,7 +92,7 @@ export class LineReal extends Drawing<
                     defaultValue={this.style.color}
                     onChange={event => {
                         this.style.color = event.target.value;
-                        // this.axes.plot()
+                        this.axes.draw();
                     }}
                 /></li>
                 <li>
@@ -102,7 +102,7 @@ export class LineReal extends Drawing<
                     defaultValue={this.style.width}
                     onChange={event => {
                         this.style.width = event.target.valueAsNumber;
-                        // this.axes.plot()
+                        this.axes.draw();
                     }}/>
                 </li>
             </ul>

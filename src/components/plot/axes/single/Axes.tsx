@@ -15,7 +15,6 @@ import {
     axisSize_
 } from '../../../../utils_refactor/constants/plot';
 import YAxis from './axis/y/base';
-import XAxis from './axis/x/base';
 import XAxisNumeric from './axis/x/numeric';
 import XAxisTimeSeries from './axis/x/timeSeries';
 import {
@@ -23,6 +22,7 @@ import {
 } from '../../drawing/Drawing';
 import Drawing from '../../drawing/Drawing';
 import './Axes.css';
+import AxesBase from '../common/base';
 
 export declare type AxesPlaceholderProps = {
     children: React.ReactElement<DrawingProps<any>>
@@ -40,12 +40,11 @@ export default function Axes(
     return null;
 };
 
-export class AxesReal {
+export class AxesReal extends AxesBase<
+    XAxisNumeric | XAxisTimeSeries
+> {
     public drawings: Drawing<any, any>[];
-    public axis: {
-        x: XAxis<any>,
-        y: YAxis
-    };
+    public y: YAxis;
     public transformMatrix: DOMMatrix = new DOMMatrix([
         1, 0,
         0, 1,
@@ -62,11 +61,6 @@ export class AxesReal {
     public size: Size;
     private readonly axisSize: Point;
     private tooltips: React.JSX.Element[] | null = null;
-    private drag: boolean = false;
-    public mousePos: Point = {
-        x: 0,
-        y: 0
-    };
 
     public constructor(
         private rerender: () => void,
@@ -79,6 +73,8 @@ export class AxesReal {
         xAxis: boolean = true,
         yAxis: boolean = true
     ) {
+        super();
+
         this.axisSize = {
             x: xAxis ? axisSize_.height : 0,
             y: yAxis ? axisSize_.width : 0
@@ -93,54 +89,44 @@ export class AxesReal {
             return drawing;
         });
 
-        this.axis = {
-            x: xAxisData instanceof NumberRange ?
-                new XAxisNumeric(this, xAxisData as NumberRange, xAxis) :
-                new XAxisTimeSeries(this, xAxisData as DateTimeRange, xAxis),
-            y: new YAxis(this, yAxis)
-        };
-
-        this.localize = this.localize.bind(this);
-        this.hideTooltip = this.hideTooltip.bind(this);
-        this.mouseMoveHandler = this.mouseMoveHandler.bind(this);
-        this.mouseOutHandler = this.mouseOutHandler.bind(this);
-        this.mouseDownHandler = this.mouseDownHandler.bind(this);
-        this.mouseUpHandler = this.mouseUpHandler.bind(this);
-        this.render = this.render.bind(this);
+        this.x = xAxisData instanceof NumberRange ?
+            new XAxisNumeric(this, xAxisData as NumberRange, xAxis) :
+            new XAxisTimeSeries(this, xAxisData as DateTimeRange, xAxis);
+        this.y = new YAxis(this, yAxis);
     }
 
-    public localize(
+    public override localize(
         range: DataRange
     ) {
         for (const drawing of this.drawings)
             drawing.localize(range);
-        // this.axis.x.transform();
-        this.axis.y.transform();
+        // this.x.transform();
+        this.y.transform();
         this.transformMatrix = new DOMMatrix([
-            this.axis.x.local.scale + this.axis.x.delta.scale, 0,
-            0, this.axis.y.local.scale + this.axis.y.delta.scale,
-            this.axis.x.local.translate + this.axis.x.delta.translate,
-            this.axis.y.local.translate + this.axis.y.delta.translate
+            this.x.local.scale + this.x.delta.scale, 0,
+            0, this.y.local.scale + this.y.delta.scale,
+            this.x.local.translate + this.x.delta.translate,
+            this.y.local.translate + this.y.delta.translate
         ]);
     };
 
-    public draw() {
+    public override draw() {
         this.ctx.main?.clearRect(
             0, 0,
             this.size.width,
             this.size.height
         );
         if (this.drawings.length) {
-            this.axis.x.drawGrid();
-            this.axis.x.drawTicks();
-            this.axis.y.drawGrid();
-            this.axis.y.drawTicks();
+            this.x.drawGrid();
+            this.x.drawTicks();
+            this.y.drawGrid();
+            this.y.drawTicks();
             for (const drawing of this.drawings)
                 drawing.draw();
         }
     };
 
-    public drawTooltip(
+    public override drawTooltip(
         x: number,
         y: number
     ) {
@@ -156,8 +142,8 @@ export class AxesReal {
                 ctx.lineWidth = this.density;
                 ctx.strokeStyle = '#696969';
                 ctx.setLineDash([5, 5]);
-                this.axis.x.drawTooltip(x);
-                this.axis.y.drawTooltip(y);
+                this.x.drawTooltip(x);
+                this.y.drawTooltip(y);
                 ctx.restore();
 
                 this.tooltips = [];
@@ -171,60 +157,27 @@ export class AxesReal {
         }
     };
 
-    public hideTooltip() {
+    public override hideTooltip() {
         this.ctx.tooltip?.clearRect(
             0, 0,
             this.size.width,
             this.size.height
         );
-        this.axis.x.hideTooltip();
-        this.axis.y.hideTooltip();
+        this.x.hideTooltip();
+        this.y.hideTooltip();
 
         this.tooltips = null;
         this.rerender();
     };
 
-    public mouseMoveHandler(event: React.MouseEvent) {
-        const window = (event.target as HTMLCanvasElement)
-            .getBoundingClientRect();
-        const x = event.clientX - window.left,
-            y = event.clientY - window.top;
-        if (this.drag)
-            this.axis.x.reTranslate(x - this.mousePos.x);
-            this.mousePos = { x, y };
-            this.draw();
-        this.drawTooltip(x, y);
-    };
-
-    public async mouseOutHandler(_: React.MouseEvent) {
-        this.drag = false;
-        this.hideTooltip();
-    };
-
-    public mouseDownHandler(event: React.MouseEvent) {
-        this.drag = true;
-        this.mousePos = {
-            x: event.clientX - (
-                event.target as HTMLCanvasElement
-            ).getBoundingClientRect().left,
-                y: event.clientY - (
-                event.target as HTMLCanvasElement
-            ).getBoundingClientRect().top,
-        };
-    };
-
-    public mouseUpHandler() {
-        this.drag = false;
-    };
-
-    public render() {
+    public override render() {
         const mainRef = createRef<HTMLCanvasElement>(),
             tooltipRef = createRef<HTMLCanvasElement>();
 
         // eslint-disable-next-line react-hooks/rules-of-hooks
         useEffect(() => {
             tooltipRef.current?.addEventListener(
-                'wheel', this.axis.x.wheelHandler, { passive: false });
+                'wheel', this.x.wheelHandler, { passive: false });
 
             this.ctx = {
                 main: mainRef.current?.getContext('2d'),
@@ -232,8 +185,8 @@ export class AxesReal {
             };
 
             this.localize({
-                start: this.axis.x.local.min / this.axis.x.global.max,
-                end: this.axis.x.local.max / this.axis.x.global.max,
+                start: this.x.local.min / this.x.global.max,
+                end: this.x.local.max / this.x.global.max,
             });
             this.draw();
         }, []);
@@ -276,8 +229,8 @@ export class AxesReal {
                 onMouseDown={this.mouseDownHandler}
                 onMouseUp={this.mouseUpHandler}
             ></canvas>
-            <this.axis.x.render />
-            <this.axis.y.render />
+            <this.x.render />
+            <this.y.render />
             {/*{this.settings}*/}
         </div>;
     };

@@ -37,12 +37,12 @@ export default abstract class XAxis extends AxisBase<
 
     public override reScale(ds: number) {
         for (const axes of this.axes.axes)
-            axes.axis.x.reScale(ds);
+            axes.x.reScale(ds);
     };
 
     public override reTranslate(dt: number) {
         for (const axes of this.axes.axes)
-            axes.axis.x.reTranslate(dt);
+            axes.x.reTranslate(dt);
     }
 
     public override render() {

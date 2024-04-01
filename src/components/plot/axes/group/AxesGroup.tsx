@@ -10,8 +10,11 @@ import {
 } from '../../../../utils_refactor/types/display';
 import NumberRange from '../../../../utils_refactor/classes/iterable/NumberRange';
 import DateTimeRange from '../../../../utils_refactor/classes/iterable/DateTimeRange';
-import {
-    Children, createRef, useEffect
+import React, {
+    Children,
+    createRef,
+    ReactElement,
+    useEffect
 } from 'react';
 import {
     DrawingProps
@@ -27,6 +30,7 @@ import drawingModule from '../../drawing';
 import XAxisNumeric from './axis/x/numeric';
 import XAxisTimeSeries from './axis/x/timeSeries';
 import './AxesGroup.css';
+import AxesBase from '../common/base';
 
 export declare type AxesGroupPlaceholderProps = {
     children: React.ReactElement<AxesPlaceholderProps>
@@ -42,17 +46,13 @@ export default function AxesGroup(
     return null;
 }
 
-export class AxesGroupReal {
+export class AxesGroupReal extends AxesBase<
+    XAxisNumeric | XAxisTimeSeries
+> {
     public axes: AxesReal[];
-    public axis: XAxisNumeric | XAxisTimeSeries;
     public ctx: CanvasRenderingContext2D | null | undefined = null;
     private readonly axisSize: Point;
     public readonly rows: number;
-    private drag: boolean = false;
-    public mousePos: Point = {
-        x: 0,
-        y: 0
-    };
 
     public constructor(
         private rerender: () => void,
@@ -63,6 +63,8 @@ export class AxesGroupReal {
         public size: Size,
         xAxis: boolean = true
     ) {
+        super();
+
         const drawings = new Array<
             React.ReactElement<DrawingProps<any>>
         >().concat(...Children.map(axes, child => child.props.children));
@@ -81,8 +83,18 @@ export class AxesGroupReal {
         else
             throw Error('<Axes> drawings inside of <AxesGroup> must have uniform data type.');
 
-        this.rows = Math.max.apply(null, Children.map(axes,
-                child => child.props.position.row.end)) - 1;
+        let yAxis = true;
+        let left = 0,
+            right = 0;
+        this.rows = 0;
+        for (const child of Children.toArray(axes) as ReactElement<AxesPlaceholderProps>[]) {
+            this.rows = Math.max(this.rows, child.props.position.row.end);
+            if (yAxis && child.props.yAxis === false)
+                yAxis = false;
+            left = Math.max(left, child.props.padding?.left ?? 0);
+            right = Math.max(right, child.props.padding?.right ?? 0);
+        }
+        this.rows -= 1;
         const cellHeight = size.height / this.rows;
 
         this.axes = Children.map(axes, child => {
@@ -99,7 +111,7 @@ export class AxesGroupReal {
             });
 
             return new AxesReal(
-                rerender,
+                () => {},
                 drawings,
                 {
                     row: child.props.position.row,
@@ -110,11 +122,10 @@ export class AxesGroupReal {
                 },
                 child.props.name,
                 {
-                    left: 0,
-                    top: 0,
-                    right: 0,
-                    bottom: 0,
-                    ...child.props.padding
+                    left: left,
+                    top: child.props.padding?.top ?? 0,
+                    right: right,
+                    bottom: child.props.padding?.bottom ?? 0,
                 },
                 {
                     width: size.width,
@@ -125,26 +136,18 @@ export class AxesGroupReal {
                 },
                 xAxisData,
                 false,
-                child.props.yAxis ?? true
+                yAxis
             );
         });
 
-        this.axis = xAxisData instanceof NumberRange ?
+        this.x = xAxisData instanceof NumberRange ?
             new XAxisNumeric(this, xAxis) :
             new XAxisTimeSeries(this, xAxis);
 
         this.axisSize = {
             x: xAxis ? axisSize_.height : 0,
-            y: 0
+            y: yAxis ? axisSize_.width : 0
         };
-
-        this.localize = this.localize.bind(this);
-        this.hideTooltip = this.hideTooltip.bind(this);
-        this.mouseMoveHandler = this.mouseMoveHandler.bind(this);
-        this.mouseOutHandler = this.mouseOutHandler.bind(this);
-        this.mouseDownHandler = this.mouseDownHandler.bind(this);
-        this.mouseUpHandler = this.mouseUpHandler.bind(this);
-        this.render = this.render.bind(this);
     };
 
     public localize(
@@ -152,20 +155,20 @@ export class AxesGroupReal {
     ) {
         for (const axes of this.axes)
             axes.localize(range);
-        // this.axis.x.transform();
+        // this.x.transform();
     };
 
     public draw() {
         for (const axes of this.axes)
             axes.draw();
-        this.axis.drawTicks();
+        this.x.drawTicks();
     };
 
     public drawTooltip(
         x: number,
         y: number
     ) {
-        this.axis.drawTooltip(x);
+        this.x.drawTooltip(x);
 
         let offset = y;
         for (const axes of this.axes) {
@@ -182,7 +185,7 @@ export class AxesGroupReal {
         //     this.size.width,
         //     this.size.height
         // );
-        this.axis.hideTooltip();
+        this.x.hideTooltip();
 
         for (const axes of this.axes)
             axes.hideTooltip();
@@ -190,48 +193,15 @@ export class AxesGroupReal {
         this.rerender();
     };
 
-    public mouseMoveHandler(event: React.MouseEvent) {
-        const window = (event.target as HTMLCanvasElement)
-            .getBoundingClientRect();
-        const x = event.clientX - window.left,
-            y = event.clientY - window.top;
-        if (this.drag)
-            this.axis.reTranslate(x - this.mousePos.x);
-        this.mousePos = { x, y };
-        this.draw();
-        this.drawTooltip(x, y);
-    };
-
-    public async mouseOutHandler(_: React.MouseEvent) {
-        this.drag = false;
-        this.hideTooltip();
-    };
-
-    public mouseDownHandler(event: React.MouseEvent) {
-        this.drag = true;
-        this.mousePos = {
-            x: event.clientX - (
-                event.target as HTMLCanvasElement
-            ).getBoundingClientRect().left,
-            y: event.clientY - (
-                event.target as HTMLCanvasElement
-            ).getBoundingClientRect().top,
-        };
-    };
-
-    public mouseUpHandler() {
-        this.drag = false;
-    };
-
     public render() {
-        const tooltipRef = createRef<HTMLCanvasElement>();
+        const tooltipRef = createRef<HTMLDivElement>();
 
         // eslint-disable-next-line react-hooks/rules-of-hooks
         useEffect(() => {
             tooltipRef.current?.addEventListener(
-                'wheel', this.axis.wheelHandler, { passive: false });
+                'wheel', this.x.wheelHandler, { passive: false });
             // this.ctx = tooltipRef.current?.getContext('2d');
-            const x = this.axes[0].axis.x;
+            const x = this.axes[0].x;
             this.localize({
                 start: x.local.min / x.global.max,
                 end: x.local.max / x.global.max,
@@ -242,7 +212,7 @@ export class AxesGroupReal {
         return <div
             className={'axesGroupGrid'}
             style={{
-                width: this.size.width + this.axisSize.y,
+                width: this.size.width,
                 height: this.size.height + this.axisSize.x,
                 gridRowStart: this.position.row.start,
                 gridRowEnd: this.position.row.end,
@@ -254,7 +224,7 @@ export class AxesGroupReal {
             <div
                 className={'axesGroup placeholder'}
                 style={{
-                    width: axisSize_.width,
+                    width: this.axisSize.y,
                     height: this.size.height,
                     gridRowStart: 1,
                     gridRowEnd: this.rows + 1,
@@ -262,7 +232,7 @@ export class AxesGroupReal {
                     gridColumnEnd: 2
                 }}
             ></div>
-            <canvas
+            <div
                 ref={tooltipRef}
                 className={'axesGroup tooltip'}
                 style={{
@@ -273,14 +243,12 @@ export class AxesGroupReal {
                     gridColumnStart: 2,
                     gridColumnEnd: 3
                 }}
-                width={this.size.width}
-                height={this.size.height}
                 onMouseMove={this.mouseMoveHandler}
                 onMouseOut={this.mouseOutHandler}
                 onMouseDown={this.mouseDownHandler}
                 onMouseUp={this.mouseUpHandler}
-            ></canvas>
-            <this.axis.render/>
+            ></div>
+            <this.x.render/>
             {/*<AxesGroupSettings axesGroup={this}/>*/}
         </div>
     };

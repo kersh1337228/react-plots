@@ -44,7 +44,7 @@ export default class XAxisNumeric extends XAxis {
             );
             ctx.font = `${this.font.size}px ${this.font.family}`;
 
-            const axis = this.axes.axes[0].axis.x;
+            const axis = this.axes.axes[0].x;
             const spread = axis.local.max - axis.local.min;
             const scale = axis.local.scale + axis.delta.scale;
             const translate = axis.local.translate + axis.delta.translate;
@@ -74,7 +74,7 @@ export default class XAxisNumeric extends XAxis {
     };
 
     public override drawTooltip(x: number) {
-        const axis = this.axes.axes[0].axis.x;
+        const axis = this.axes.axes[0].x;
         const scale = axis.local.scale + axis.delta.scale;
         const translate = axis.local.translate + axis.delta.translate;
 

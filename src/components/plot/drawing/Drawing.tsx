@@ -128,7 +128,7 @@ export default abstract class Drawing<
         localX: number
     ): number {
         if (this.dtype.includes('Numeric'))
-            return (this.axes.axis.x.data as NumberRange).indexOf((
+            return (this.axes.x.data as NumberRange).indexOf((
                 localX - this.axes.transformMatrix.e
             ) / this.axes.transformMatrix.a) as number;
         else

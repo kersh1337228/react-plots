@@ -51,3 +51,10 @@ export declare interface AxisData extends Bounds {
 	scale: number;
 	translate: number;
 }
+
+type a = {
+	a: number;
+}
+type b = {
+	b: number;
+}

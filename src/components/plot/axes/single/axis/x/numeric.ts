@@ -88,9 +88,9 @@ export default class XAxisNumeric extends XAxis<
                 ctx.fillText(
                     numberPower(
                         i * step + translate * (
-                            // TODO: axes padded width
-                            // spread / this.axes.paddedWidth - 1 / scale
-                            spread / this.axes.size.width - 1 / scale
+                            spread / this.axes.size.width * (
+                                1 - this.axes.padding.left - this.axes.padding.right
+                            ) - 1 / scale
                         ) + this.local.min - this.axes.padding.right *
                         this.axes.size.width / scale, 2
                     ),

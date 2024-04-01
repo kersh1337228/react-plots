@@ -42,7 +42,7 @@ export default class XAxisTimeSeries extends XAxis {
             ctx.font = `${this.font.size}px ${this.font.family}`;
 
             const axes = this.axes.axes[0],
-                axis = axes.axis.x;
+                axis = axes.x;
             const scale = axis.local.scale + axis.delta.scale;
             const translate = axis.local.translate + axis.delta.translate;
             const step = this.axes.size.width /
@@ -73,7 +73,7 @@ export default class XAxisTimeSeries extends XAxis {
 
     public override drawTooltip(x: number) {
         const axes = this.axes.axes[0],
-            axis = axes.axis.x;
+            axis = axes.x;
         const scale = axis.local.scale + axis.delta.scale;
         const translate = axis.local.translate + axis.delta.translate;
 

@@ -10,7 +10,6 @@ export declare type HistStyle = {
         pos: string;
         neg: string;
     };
-    width: number
 };
 
 export default function Hist(_: DrawingProps<HistStyle>) {
@@ -34,7 +33,6 @@ export class HistReal extends Drawing<
                 pos: '#53e9b5',
                 neg: '#da2c4d'
             },
-            width: 0.9
         },
         vfield?: string
     ) {
@@ -48,8 +46,8 @@ export class HistReal extends Drawing<
             if (y) {
                 const column = new Path2D();
                 column.rect(
-                    x - this.style.width / 2, 0,
-                    this.style.width, y
+                    x - 0.05, 0,
+                    0.1, y
                 );
                 const type = y > 0 ? 'pos' : 'neg';
                 this.geometry[type].addPath(column);
@@ -77,7 +75,7 @@ export class HistReal extends Drawing<
     }
 
     public override drawTooltip(_: number) {
-        // TODO: empty
+        // TODO: hist draw tooltip
     }
 
     public override settings() {
@@ -88,7 +86,7 @@ export class HistReal extends Drawing<
                 name={'visible'}
                 onChange={event => {
                     this.visible = event.target.checked;
-                    // this.axes.plot() // TODO: full replot
+                    this.axes.draw();
                 }}
                 defaultChecked={this.visible}
             />
@@ -98,7 +96,7 @@ export class HistReal extends Drawing<
                     defaultValue={this.style.color.pos}
                     onChange={event => {
                         this.style.color.pos = event.target.value;
-                        // this.axes.plot()
+                        this.axes.draw();
                     }}
                 /></li>
                 <li>Negative color: <input
@@ -106,7 +104,7 @@ export class HistReal extends Drawing<
                     defaultValue={this.style.color.neg}
                     onChange={event => {
                         this.style.color.neg = event.target.value;
-                        // this.axes.plot()
+                        this.axes.draw();
                     }}
                 /></li>
             </ul>
