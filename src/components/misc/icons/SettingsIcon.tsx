@@ -1,8 +1,21 @@
 import React from 'react'
 
-export default function SettingsIcon(): JSX.Element {
+export default function SettingsIcon(
+	{
+		onClick
+	}: {
+		onClick?: React.MouseEventHandler
+	}
+): React.JSX.Element {
 	return (
-		<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 14 14" width="14" height="14" fill="none">
+		<svg
+			xmlns="http://www.w3.org/2000/svg"
+			viewBox="0 0 14 14"
+			width="14"
+			height="14"
+			fill="none"
+			onClick={onClick}
+		>
 			<path
 				fill="currentColor"
 				fillRule="evenodd"

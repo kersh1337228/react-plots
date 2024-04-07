@@ -3,14 +3,16 @@ import {
 } from 'react';
 import Dialog from '../../../../misc/dialog/Dialog';
 import SettingsIcon from '../../../../misc/icons/SettingsIcon';
-import './AxesSettings.css';
-import AxesObjectTree from './objectTree/AxesObjectTree';
+import AxesObjectTree from './objectTree/ObjectTree';
 import {
     AxesReal
 } from '../Axes';
-import { axisSize_ } from '../../../../../utils_refactor/constants/plot';
+import {
+    axisSize_
+} from '../../../../../utils_refactor/constants/plot';
+import './Settings.css';
 
-export default function AxesSettings(
+export default function Settings(
     {
         axes,
         visible = true
@@ -23,15 +25,14 @@ export default function AxesSettings(
 
     return visible ? <div
         className={'axesSettings'}
-        onClick={() => {
-            setActive(active => !active)
-        }}
         style={{
             width: axisSize_.width,
             height: axisSize_.height
         }}
     >
-        <SettingsIcon/>
+        <SettingsIcon onClick={() => {
+            setActive(active => !active);
+        }}/>
         <Dialog
             title={axes.name}
             tabs={{

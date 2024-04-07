@@ -1,0 +1,28 @@
+.axesGroupSettings {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    grid-column-start: 1;
+    grid-column-end: 2;
+}
+
+.axesGroupSettings svg {
+    cursor: pointer;
+}
+
+.groupObjectTree {
+    margin: -8px 0 -8px 0;
+    padding: 0;
+    list-style: none;
+
+    border-spacing: 0 8px;
+}
+
+.axesSettingsHeader {
+    font-weight: bold;
+}
+
+.groupObjectTree .groupObjectTreeElement {
+    /*margin-left: 10px;*/
+}

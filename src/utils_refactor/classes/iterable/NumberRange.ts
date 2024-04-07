@@ -6,13 +6,23 @@ import {
 	DrawingProps
 } from '../../../components/plot/drawing/Drawing';
 
-export default class NumberRange extends TypedRange<number> {
+export default class NumberRange extends TypedRange<
+	number,
+	number
+> {
 	public constructor(
 		arrays: number[][]
 	) {
-		super([...new Set(([] as Array<number>).concat(...arrays).sort(
+		const init = [...new Set(([] as Array<number>).concat(...arrays).sort(
 			(a, b) => a < b ? -1 : a > b ? 1 : 0
-		))]);
+		))];
+		let freq = Number.MAX_VALUE;
+		for (let i = 1; i < init.length; ++i) {
+			const step = init[i] - init[i - 1];
+			freq = step < freq ? step : freq;
+		}
+		// TODO: Fill gaps (DateTimeRange-like)
+		super(init, freq);
 	};
 
 	public override format(

@@ -30,10 +30,11 @@ export class LineReal extends Drawing<
         super(data, name, new Path2D(), style, vfield);
 
         const i0 = [...Array(data.length).keys()].findIndex(
-            i => this.point(i)[1] !== null);
-        this.geometry.moveTo(...this.point(i0) as [number, number]);
+            i => this.data.point(i)[1] !== null);
+        this.geometry.moveTo(
+            ...this.data.point(i0) as [number, number]);
         for (let i = i0; i < data.length; ++i) {
-            const [x, y] = this.point(i);
+            const [x, y] = this.data.point(i);
             if (y != null)
                 this.geometry.lineTo(x, y);
         }
@@ -56,7 +57,8 @@ export class LineReal extends Drawing<
 
     public override drawTooltip(localX: number) {
         const ctx = this.axes.ctx.tooltip;
-        const [xi, yi] = this.point(this.globalize(localX));
+        const [xi, yi] = this.data.point(
+            this.data.globalize(localX));
         if (yi !== null && ctx) {
             ctx.save();
             ctx.beginPath();

@@ -36,12 +36,19 @@ export default class YAxis extends Axis {
         const top = axes.size.height * (1 - axes.padding.top),
             bottom = axes.size.height * axes.padding.bottom;
 
-        this.global.min = Math.min.apply(
-            null, axes.drawings.map(
-                drawing => drawing.local.y.min));
-        this.global.max = Math.min.apply(
-            null, axes.drawings.map(
-                drawing => drawing.local.y.max));
+        for (const {
+            data: {
+                global: {
+                    y: {
+                        min,
+                        max
+                    }
+                }
+            }
+        } of axes.drawings) {
+            this.global.min = min < this.global.min ? min : this.global.min;
+            this.global.max = this.global.max < max ? max : this.global.max;
+        }
 
         this.global.scale = (bottom - top) / (this.global.max - this.global.min);
         this.global.translate = top - (bottom - top) /
@@ -59,10 +66,28 @@ export default class YAxis extends Axis {
     };
 
     public transform() {
-        this.local.min = Math.min.apply(null, this.axes.drawings
-            .map(drawing => drawing.local.y.min));
-        this.local.max = Math.min.apply(null, this.axes.drawings
-            .map(drawing => drawing.local.y.max));
+        this.local = {
+            min: Number.MAX_VALUE,
+            max: Number.MIN_VALUE,
+            scale: 1,
+            translate: 0
+        };
+
+        for (const {
+            visible,
+            data: {
+                local: {
+                    y: {
+                        min,
+                        max
+                    }
+                }
+            }
+        } of this.axes.drawings)
+            if (visible) {
+                this.local.min = min < this.local.min ? min : this.local.min;
+                this.local.max = this.local.max < max ? max : this.local.max;
+            }
 
         const top = this.axes.size.height * (1 - this.axes.padding.top),
             bottom = this.axes.size.height * this.axes.padding.bottom;
@@ -81,8 +106,8 @@ export default class YAxis extends Axis {
 
             const step = this.axes.size.height /
                 (this.grid.amount + 1) * this.axes.density;
-            for (let index = 0; index < this.grid.amount; ++index) {
-                const y = (this.grid.amount - index) * step;
+            for (let i = 0; i < this.grid.amount; ++i) {
+                const y = (this.grid.amount - i) * step;
 
                 ctx.beginPath();
                 ctx.moveTo(0, y);
@@ -90,6 +115,7 @@ export default class YAxis extends Axis {
                 ctx.stroke();
                 ctx.closePath();
             }
+
             ctx.restore();
         }
     }
@@ -110,12 +136,14 @@ export default class YAxis extends Axis {
             ctx.font = `${this.font.size}px ${this.font.family}`;
             ctx.textAlign = 'right';
 
-            const spread = this.local.max - this.local.min;
             const scale = this.local.scale + this.delta.scale;
-            const dyt = (-this.axes.size.height / spread - scale) * spread;
             const step = this.axes.size.height / (this.grid.amount + 1) * this.axes.density;
-            for (let index = 0; index < this.grid.amount; ++index) {
-                const y = (this.grid.amount - index) * step;
+            const dy = this.local.min + 0.5 * ((
+                this.local.max - this.local.min
+            ) - this.axes.size.height / scale);
+
+            for (let i = 0; i < this.grid.amount; ++i) {
+                const y = (this.grid.amount - i) * step;
 
                 ctx.beginPath();
                 ctx.moveTo(
@@ -128,17 +156,17 @@ export default class YAxis extends Axis {
                 );
                 ctx.stroke();
                 ctx.closePath();
-                const value = numberPower(
-                    this.local.min + 0.5 * dyt / scale -
-                    (this.axes.size.height + dyt - y) / scale,
-                    2
-                );
+
                 ctx.fillText(
-                    value,
+                    numberPower(
+                        dy + y / scale,
+                        2
+                    ),
                     axisSize_.width * 0.85,
                     y + 4
                 );
             }
+
             ctx.restore();
         }
     };
@@ -160,7 +188,7 @@ export default class YAxis extends Axis {
         }
 
         const ctx = this.ctx.tooltip;
-        if (ctx) { // Drawing tooltip
+        if (ctx) {
             const {
                 width: tooltipWidth,
                 height: tooltipHeight
@@ -171,19 +199,24 @@ export default class YAxis extends Axis {
                 tooltipHeight
             );
             ctx.save();
+
             ctx.fillStyle = '#323232';
             ctx.fillRect(0, y - 12.5, axisSize_.width, 25);
+
+            const scale = this.local.scale + this.delta.scale;
+            const dy = this.local.min + 0.5 * ((
+                this.local.max - this.local.min
+            ) - this.axes.size.height / scale);
             ctx.font = `${this.font.size}px ${this.font.family}`;
             ctx.fillStyle = '#ffffff';
-            // Value tooltip
-            const spread = this.local.max - this.local.min;
-            const scale = this.local.scale + this.delta.scale;
-            const dyt = (-this.axes.size.height / spread - scale) * spread;
-            const value = numberPower(
-                this.local.min + 0.5 * dyt / scale -
-                (this.axes.size.height + dyt - y) / scale, 2
+            ctx.fillText(
+                numberPower(
+                    dy + y / scale, 2
+                ),
+                axisSize_.width * 0.05,
+                y + 3
             );
-            ctx.fillText(value, axisSize_.width * 0.05, y + 3);
+
             ctx.restore();
         }
     };

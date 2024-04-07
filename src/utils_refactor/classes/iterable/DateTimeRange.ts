@@ -14,16 +14,24 @@ import {
 	DrawingProps
 } from '../../../components/plot/drawing/Drawing';
 
-export default class DateTimeRange extends TypedRange<DateTime> {
+export default class DateTimeRange extends TypedRange<
+	DateTime,
+	Duration
+> {
 	public constructor(
 		start: DateTime | Date | string,
 		end: DateTime | Date | string,
-		public readonly freq: Duration = Duration.days(1)
+		freq: Duration = Duration.days(1)
 	) {
-		super();
-		const [first, last] = [new DateTime(start), new DateTime(end)];
-		for(let i = first.object; i <= last.object; i = new Date(i.getTime() + freq.milliseconds))
-			this.container.push(new DateTime(i))
+		const first = new DateTime(start),
+			last = new DateTime(end);
+
+		const n = DateTime.diff(last, first).milliseconds / freq.milliseconds;
+		super(new Array<DateTime>(n), freq);
+
+		for (let i = 0; i < n; ++i)
+			this.container[i] = new DateTime(new Date(
+				first.object.getTime() + i * freq.milliseconds));
 	};
 
 	public override format(fstring: string): string[] {
@@ -67,8 +75,10 @@ export default class DateTimeRange extends TypedRange<DateTime> {
 			})).sort((a, b) => a > b ? 1 : a < b ? -1 : 0))];
 
 		let freq = Infinity;
-		for (let i = 1; i < dates.length; ++i)
-			freq = Math.min(dates[i] - dates[i - 1], freq);
+		for (let i = 1; i < dates.length; ++i) {
+			const delta = dates[i] - dates[i - 1];
+			freq = delta < freq ? delta : freq;
+		}
 
 		return new DateTimeRange(
 			new Date(dates[0]),

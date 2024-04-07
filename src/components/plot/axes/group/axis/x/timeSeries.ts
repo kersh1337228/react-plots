@@ -7,6 +7,7 @@ import {
     AxesGroupReal
 } from '../../AxesGroup';
 import DateTimeRange from '../../../../../../utils_refactor/classes/iterable/DateTimeRange';
+import { truncate } from '../../../../../../utils_refactor/functions/numberProcessing';
 
 export default class XAxisTimeSeries extends XAxis {
     public constructor(
@@ -59,6 +60,7 @@ export default class XAxisTimeSeries extends XAxis {
                 );
                 ctx.stroke();
                 ctx.closePath();
+
                 const text = (axis.data as DateTimeRange).formatAt(t, '%Y-%m-%d');
                 ctx.textAlign = 'center';
                 ctx.fillText(
@@ -81,15 +83,6 @@ export default class XAxisTimeSeries extends XAxis {
             x * axes.density - translate
         ) / scale);
 
-        // const axesCtx = this.axes.ctx;
-        // if (axesCtx) {
-        //     axesCtx.beginPath();
-        //     axesCtx.moveTo((t + 0.55) * scale + translate, 0);
-        //     axesCtx.lineTo((t + 0.55) * scale + translate, this.axes.size.height);
-        //     axesCtx.stroke();
-        //     axesCtx.closePath();
-        // }
-
         const ctx = this.ctx.tooltip;
         if (ctx) {
             const {
@@ -104,22 +97,33 @@ export default class XAxisTimeSeries extends XAxis {
             );
             ctx.save();
             ctx.fillStyle = '#323232';
-            ctx.fillRect(Math.min(
-                this.axes.size.width - 60,
-                Math.max(0, (t + 0.55) * scale + translate - 30)
-            ), 0, 60, 25);
+
+            const globalX = (t + 0.55) * scale + translate;
+            ctx.fillRect(
+                truncate(
+                    globalX - 30,
+                    0,
+                    this.axes.size.width - 60
+                ),
+                0,
+                60,
+                25
+            );
+
             const text = axis.data.formatAt(t, '%Y-%m-%d');
             ctx.textAlign = 'center';
             ctx.font = `${this.font.size}px ${this.font.family}`;
             ctx.fillStyle = '#ffffff';
             ctx.fillText(
                 text ? text : '',
-                Math.min(
+                truncate(
+                    globalX,
+                    30,
                     this.axes.size.width - 30,
-                    Math.max(30, (t + 0.55) * scale + translate)
                 ),
                 scaleHeight * 0.3
             );
+
             ctx.restore();
         }
     };

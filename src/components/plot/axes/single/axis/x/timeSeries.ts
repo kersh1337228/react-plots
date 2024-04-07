@@ -7,6 +7,7 @@ import {
     Font
 } from '../../../../../../utils_refactor/types/display';
 import DateTimeRange from '../../../../../../utils_refactor/classes/iterable/DateTimeRange';
+import { truncate } from '../../../../../../utils_refactor/functions/numberProcessing';
 
 export default class XAxisTimeSeries extends XAxis<
     DateTimeRange
@@ -42,14 +43,17 @@ export default class XAxisTimeSeries extends XAxis<
                 (this.grid.amount + 1) * this.axes.density;
 
             for (let i = 1; i <= this.grid.amount; ++i) {
-                const t = Math.floor((i * step - translate) / scale);
+                const t = (Math.floor(
+                    (i * step - translate) / scale
+                ) + 0.55) * scale + translate;
 
                 ctx.beginPath();
-                ctx.moveTo((t + 0.55) * scale + translate, 0);
-                ctx.lineTo((t + 0.55) * scale + translate, this.axes.size.height);
+                ctx.moveTo(t, 0);
+                ctx.lineTo(t, this.axes.size.height);
                 ctx.stroke();
                 ctx.closePath();
             }
+
             ctx.restore();
         }
     }
@@ -75,21 +79,23 @@ export default class XAxisTimeSeries extends XAxis<
                 (this.grid.amount + 1) * this.axes.density;
 
             for (let i = 1; i <= this.grid.amount; ++i) {
-                const t = Math.floor((i * step - translate) / scale);
+                const t = Math.floor((i * step - translate) / scale),
+                    globalX = (t + 0.55) * scale + translate;
 
                 ctx.beginPath();
-                ctx.moveTo((t + 0.55) * scale + translate, 0);
+                ctx.moveTo(globalX, 0);
                 ctx.lineTo(
-                    (t + 0.55) * scale + translate,
+                    globalX,
                     scaleHeight * 0.1
                 );
                 ctx.stroke();
                 ctx.closePath();
+
                 const text = this.data.formatAt(t, '%Y-%m-%d');
                 ctx.textAlign = 'center';
                 ctx.fillText(
                     text ? text : '',
-                    (t + 0.55) * scale + translate,
+                    globalX,
                     scaleHeight * 0.3
                 );
             }
@@ -101,15 +107,14 @@ export default class XAxisTimeSeries extends XAxis<
         const scale = this.local.scale + this.delta.scale;
         const translate = this.local.translate + this.delta.translate;
 
-        const t = Math.floor((
-            x * this.axes.density - translate
-        ) / scale);
+        const t = Math.floor((x * this.axes.density - translate) / scale),
+            globalX = (t + 0.55) * scale + translate;
 
         const axesCtx = this.axes.ctx.tooltip;
         if (axesCtx) {
             axesCtx.beginPath();
-            axesCtx.moveTo((t + 0.55) * scale + translate, 0);
-            axesCtx.lineTo((t + 0.55) * scale + translate, this.axes.size.height);
+            axesCtx.moveTo(globalX, 0);
+            axesCtx.lineTo(globalX, this.axes.size.height);
             axesCtx.stroke();
             axesCtx.closePath();
         }
@@ -128,22 +133,32 @@ export default class XAxisTimeSeries extends XAxis<
             );
             ctx.save();
             ctx.fillStyle = '#323232';
-            ctx.fillRect(Math.min(
-                this.axes.size.width - 60,
-                Math.max(0, (t + 0.55) * scale + translate - 30)
-            ), 0, 60, 25);
+
+            ctx.fillRect(
+                truncate(
+                    globalX - 30,
+                    0,
+                    this.axes.size.width - 60
+                ),
+                0,
+                60,
+                25
+            );
+
             const text = this.data.formatAt(t, '%Y-%m-%d');
             ctx.textAlign = 'center';
             ctx.font = `${this.font.size}px ${this.font.family}`;
             ctx.fillStyle = '#ffffff';
             ctx.fillText(
                 text ? text : '',
-                Math.min(
-                    this.axes.size.width - 30,
-                    Math.max(30, (t + 0.55) * scale + translate)
+                truncate(
+                    globalX,
+                    30,
+                    this.axes.size.width - 30
                 ),
                 scaleHeight * 0.3
             );
+
             ctx.restore();
         }
     }

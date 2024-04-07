@@ -43,10 +43,19 @@ export default abstract class XAxis<
         const left = axes.size.width * axes.padding.left,
             right = axes.size.width * (1 - axes.padding.right);
 
-        this.global.min = Math.min.apply(null, this.axes.drawings
-            .map(drawing => drawing.local.x.min));
-        this.global.max = Math.max.apply(null, this.axes.drawings
-            .map(drawing => drawing.local.x.max));
+        for (const {
+            data: {
+                global: {
+                    x: {
+                        min,
+                        max
+                    }
+                }
+            }
+        } of axes.drawings) {
+            this.global.min = min < this.global.min ? min : this.global.min;
+            this.global.max = this.global.max < max ? max : this.global.max;
+        }
 
         this.global.scale = (right - left) / (this.global.max - this.global.min);
         this.global.translate = left - (right - left) /
@@ -113,9 +122,10 @@ export default abstract class XAxis<
             right - left + this.delta.scale * (this.global.max - this.global.min));
         let offset = multiplier * this.delta.translate / this.global.scale;
 
+        const min = this.global.max * (1 - multiplier) + offset,
+            max = this.global.min * (1 - multiplier) + offset;
         this.delta.translate -= (
-            Math.min(0, this.global.max * (1 - multiplier) + offset)
-            + Math.max(0, this.global.min * (1 - multiplier) + offset)
+            (min < 0 ? min : 0) + (0 < max ? max : 0)
         ) * (this.local.scale + this.delta.scale);
 
         offset = multiplier * this.delta.translate / this.global.scale;

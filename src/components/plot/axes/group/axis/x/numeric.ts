@@ -8,9 +8,8 @@ import {
     AxesGroupReal
 } from '../../AxesGroup';
 import {
-    numberPower
+    numberPower, truncate
 } from '../../../../../../utils_refactor/functions/numberProcessing';
-import { axisSize_ } from '../../../../../../utils_refactor/constants/plot';
 
 export default class XAxisNumeric extends XAxis {
     public constructor(
@@ -27,7 +26,7 @@ export default class XAxisNumeric extends XAxis {
             size: 10
         }
     ) {
-        super(axes, visible, 1, name, grid, font);
+        super(axes, visible, 0.01, name, grid, font);
     };
 
     public override drawTicks() {
@@ -47,13 +46,17 @@ export default class XAxisNumeric extends XAxis {
 
             const axes = this.axes.axes[0],
                 axis = axes.x;
-            const spread = axis.local.max - axis.local.min;
             const scale = axis.local.scale + axis.delta.scale;
-            const translate = axis.local.translate + axis.delta.translate;
-            const step = this.axes.size.width / (this.grid.amount + 1) / scale;
+            const gridGap = this.axes.size.width / (this.grid.amount + 1);
+            const dx = (axis.local.translate + axis.delta.translate) * (
+                (axis.local.max - axis.local.min) / this.axes.size.width * (
+                    1 - axes.padding.left - axes.padding.right
+                ) - 1 / scale
+            ) + axis.local.min - axes.padding.right *
+            this.axes.size.width / scale
 
             for (let i = 1; i <= this.grid.amount; ++i) {
-                const x = i / (this.grid.amount + 1) * this.axes.size.width;
+                const x = i * gridGap;
 
                 ctx.beginPath();
                 ctx.moveTo(x, 0);
@@ -63,12 +66,7 @@ export default class XAxisNumeric extends XAxis {
                 ctx.textAlign = 'center';
                 ctx.fillText(
                     numberPower(
-                        i * step + translate * (
-                            spread / this.axes.size.width * (
-                                1 - axes.padding.left - axes.padding.right
-                            ) - 1 / scale
-                        ) + axis.local.min - axes.padding.right *
-                        this.axes.size.width / scale, 2
+                        x / scale + dx, 2
                     ),
                     x,
                     scaleHeight * 0.3
@@ -85,8 +83,8 @@ export default class XAxisNumeric extends XAxis {
 
         const i = (axis.data as NumberRange).indexOf(
             (x - translate) / scale
-        ) as number;
-        const xi = axis.data.at(i) as number;
+        ) as number,
+            globalX = (axis.data.at(i) as number) * scale + translate;
 
         const ctx = this.ctx.tooltip;
         if (ctx) {
@@ -102,22 +100,32 @@ export default class XAxisNumeric extends XAxis {
             );
             ctx.save();
             ctx.fillStyle = '#323232';
-            ctx.fillRect(Math.min(
-                this.axes.size.width - 30,
-                Math.max(0, xi * scale + translate - 15)
-            ), 0, 30, 25);
+
+            ctx.fillRect(
+                truncate(
+                    globalX - 15,
+                    0,
+                    this.axes.size.width - 30
+                ),
+                0,
+                30,
+                25
+            );
+
             ctx.font = `${this.font.size}px ${this.font.family}`;
             ctx.fillStyle = '#ffffff';
             const text = (axis.data as NumberRange).formatAt(i, '%.2f');
             ctx.textAlign = 'center';
             ctx.fillText(
                 text ? text : '',
-                Math.min(
-                    this.axes.size.width - 15,
-                    Math.max(15, xi * scale + translate)
+                truncate(
+                    globalX,
+                    15,
+                    this.axes.size.width - 15
                 ),
                 scaleHeight * 0.3
             );
+
             ctx.restore();
         }
     };

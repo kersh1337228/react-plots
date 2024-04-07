@@ -42,7 +42,7 @@ export class HistReal extends Drawing<
         }, style, vfield);
 
         for (let i = 0; i < data.length; ++i) {
-            const [x, y] = this.point(i);
+            const [x, y] = this.data.point(i);
             if (y) {
                 const column = new Path2D();
                 column.rect(

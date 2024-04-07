@@ -2,7 +2,6 @@ import {
     DataRange,
     GridPosition,
     Padding,
-    Point,
     Size
 } from '../../../../utils_refactor/types/display';
 import NumberRange from '../../../../utils_refactor/classes/iterable/NumberRange';
@@ -11,9 +10,6 @@ import React, {
     createRef,
     useEffect
 } from 'react';
-import {
-    axisSize_
-} from '../../../../utils_refactor/constants/plot';
 import YAxis from './axis/y/base';
 import XAxisNumeric from './axis/x/numeric';
 import XAxisTimeSeries from './axis/x/timeSeries';
@@ -23,7 +19,7 @@ import {
 import Drawing from '../../drawing/Drawing';
 import './Axes.css';
 import AxesBase from '../common/base';
-import AxesSettings from './settings/AxesSettings';
+import Settings from './settings/Settings';
 
 export declare type AxesPlaceholderProps = {
     children: React.ReactElement<DrawingProps<any>>
@@ -89,8 +85,12 @@ export class AxesReal extends AxesBase<
     public override localize(
         range: DataRange
     ) {
-        for (const drawing of this.drawings)
-            drawing.localize(range);
+        for (const drawing of this.drawings) {
+            drawing.data.localize(range);
+
+            console.log(`${drawing.name}: ${drawing.data.local.y.min}, ${drawing.data.local.y.max}`)
+        }
+
         // this.x.transform();
         this.y.transform();
         this.transformMatrix = new DOMMatrix([
@@ -140,7 +140,7 @@ export class AxesReal extends AxesBase<
                 this.tooltips = [];
                 for (const drawing of this.drawings) {
                     drawing.drawTooltip(x);
-                    this.tooltips.push(drawing.tooltip(x));
+                    this.tooltips.push(drawing.data.tooltip(x));
                 }
 
                 this.rerender();
@@ -175,10 +175,7 @@ export class AxesReal extends AxesBase<
                 tooltip: tooltipRef.current?.getContext('2d')
             };
 
-            this.localize({
-                start: this.x.local.min / this.x.global.max,
-                end: this.x.local.max / this.x.global.max,
-            });
+            this.x.reScale(0);
             this.draw();
         }, []);
 
@@ -222,7 +219,7 @@ export class AxesReal extends AxesBase<
             ></canvas>
             <this.x.render />
             <this.y.render />
-            <AxesSettings axes={this} visible={this.settings} />
+            <Settings axes={this} visible={this.settings} />
         </div>;
     };
 }

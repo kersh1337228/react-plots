@@ -1,22 +1,26 @@
-export default abstract class TypedRange<T> {
-	protected readonly container: T[]
+export default abstract class TypedRange<
+	DataT extends any,
+	FreqT extends any
+> {
+	protected readonly container: DataT[]
 
 	protected constructor(
-		init: T[] = []
+		init: DataT[] = [],
+		public readonly freq: FreqT
 	) {
-		this.container = init
+		this.container = init;
 	};
 
 	public at(
 		i: number
-	): T | undefined {
+	): DataT | undefined {
 		return this.container.at(i);
 	};
 
 	public abstract slice(
 		start: number,
 		end: number
-	): TypedRange<T>;
+	): TypedRange<DataT, FreqT>;
 
 	public abstract format(
 		fstring: string

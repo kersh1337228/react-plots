@@ -8,7 +8,7 @@ import {
     Font
 } from '../../../../../../utils_refactor/types/display';
 import {
-    numberPower
+    numberPower, truncate
 } from '../../../../../../utils_refactor/functions/numberProcessing';
 
 export default class XAxisNumeric extends XAxis<
@@ -29,11 +29,11 @@ export default class XAxisNumeric extends XAxis<
             size: 10
         }
     ) {
-        super(axes, data, visible, 1, name, grid, font);
+        super(axes, data, visible, 0.01, name, grid, font);
 
-        const delta = (data.at(-1) as number) - (data.at(0) as number);
-        this.delta.min = Math.min(5, delta);
-        this.delta.max = Math.min(100, delta);
+        const spread = (data.at(-1) as number) - (data.at(0) as number);
+        this.delta.min = data.freq * 5 < spread ? data.freq * 5 : spread;
+        this.delta.max = data.freq * 500 < spread ? data.freq * 500 : spread;
     }
 
     public override drawGrid() {
@@ -52,6 +52,7 @@ export default class XAxisNumeric extends XAxis<
                 ctx.stroke();
                 ctx.closePath();
             }
+
             ctx.restore();
         }
     }
@@ -71,33 +72,34 @@ export default class XAxisNumeric extends XAxis<
             );
             ctx.font = `${this.font.size}px ${this.font.family}`;
 
-            const spread = this.local.max - this.local.min;
             const scale = this.local.scale + this.delta.scale;
-            const translate = this.local.translate + this.delta.translate;
-            const step = this.axes.size.width / (this.grid.amount + 1) / scale;
+            const gridGap = this.axes.size.width / (this.grid.amount + 1);
+
+            const dx = (
+                this.local.translate + this.delta.translate
+            ) * (
+                (this.local.max - this.local.min) / this.axes.size.width * (
+                    1 - this.axes.padding.left - this.axes.padding.right
+                ) - 1 / scale
+            ) + this.local.min - this.axes.padding.right * this.axes.size.width / scale;
 
             for (let i = 1; i <= this.grid.amount; ++i) {
-                const x = i / (this.grid.amount + 1) * this.axes.size.width;
+                const x = i * gridGap;
 
                 ctx.beginPath();
                 ctx.moveTo(x, 0);
                 ctx.lineTo(x, scaleHeight * 0.1);
                 ctx.stroke();
                 ctx.closePath();
+
                 ctx.textAlign = 'center';
                 ctx.fillText(
-                    numberPower(
-                        i * step + translate * (
-                            spread / this.axes.size.width * (
-                                1 - this.axes.padding.left - this.axes.padding.right
-                            ) - 1 / scale
-                        ) + this.local.min - this.axes.padding.right *
-                        this.axes.size.width / scale, 2
-                    ),
+                    numberPower(x / scale + dx, 2),
                     x,
                     scaleHeight * 0.3
                 );
             }
+
             ctx.restore();
         }
     }
@@ -108,14 +110,14 @@ export default class XAxisNumeric extends XAxis<
 
         const i = (this.data as NumberRange).indexOf(
             (x - translate) / scale
-        ) as number;
-        const xi = this.data.at(i) as number;
+        ) as number,
+            globalX = (this.data.at(i) as number) * scale + translate;
 
         const axesCtx = this.axes.ctx.tooltip;
         if (axesCtx) {
             axesCtx.beginPath();
-            axesCtx.moveTo(xi * scale + translate, 0);
-            axesCtx.lineTo(xi * scale + translate, this.axes.size.height);
+            axesCtx.moveTo(globalX, 0);
+            axesCtx.lineTo(globalX, this.axes.size.height);
             axesCtx.stroke();
             axesCtx.closePath();
         }
@@ -134,22 +136,33 @@ export default class XAxisNumeric extends XAxis<
             );
             ctx.save();
             ctx.fillStyle = '#323232';
-            ctx.fillRect(Math.min(
-                this.axes.size.width - 30,
-                Math.max(0, xi * scale + translate - 15)
-            ), 0, 30, 25);
+
+
+            ctx.fillRect(
+                truncate(
+                    globalX - 15,
+                    0,
+                    this.axes.size.width - 30
+                ),
+                0,
+                30,
+                25
+            );
+
             ctx.font = `${this.font.size}px ${this.font.family}`;
             ctx.fillStyle = '#ffffff';
             const text = this.data.formatAt(i, '%.2f');
             ctx.textAlign = 'center';
             ctx.fillText(
                 text ? text : '',
-                Math.min(
-                    this.axes.size.width - 15,
-                    Math.max(15, xi * scale + translate)
+                truncate(
+                    globalX,
+                    15,
+                    this.axes.size.width - 15
                 ),
                 scaleHeight * 0.3
             );
+
             ctx.restore();
         }
     }

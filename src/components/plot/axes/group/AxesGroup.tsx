@@ -5,7 +5,6 @@ import {
 import {
     DataRange,
     GridPosition,
-    Point,
     Size
 } from '../../../../utils_refactor/types/display';
 import NumberRange from '../../../../utils_refactor/classes/iterable/NumberRange';
@@ -31,6 +30,7 @@ import XAxisNumeric from './axis/x/numeric';
 import XAxisTimeSeries from './axis/x/timeSeries';
 import './AxesGroup.css';
 import AxesBase from '../common/base';
+import AxesGroupSettings from './settings/Settings';
 
 export declare type AxesGroupPlaceholderProps = {
     children: React.ReactElement<AxesPlaceholderProps>
@@ -175,11 +175,6 @@ export class AxesGroupReal extends AxesBase<
     };
 
     public hideTooltip() {
-        // this.ctx?.clearRect(
-        //     0, 0,
-        //     this.size.width,
-        //     this.size.height
-        // );
         this.x.hideTooltip();
 
         for (const axes of this.axes)
@@ -195,7 +190,6 @@ export class AxesGroupReal extends AxesBase<
         useEffect(() => {
             tooltipRef.current?.addEventListener(
                 'wheel', this.x.wheelHandler, { passive: false });
-            // this.ctx = tooltipRef.current?.getContext('2d');
             const x = this.axes[0].x;
             this.localize({
                 start: x.local.min / x.global.max,
@@ -244,19 +238,19 @@ export class AxesGroupReal extends AxesBase<
                 onMouseUp={this.mouseUpHandler}
             ></div>
             <this.x.render/>
-            <div
-                style={{
-                    width: axisSize_.width,
-                    height: axisSize_.height,
-                    gridRowStart: this.rows + 1,
-                    gridRowEnd: this.rows + 2,
-                    gridColumnStart: 1,
-                    gridColumnEnd: 2
-                }}
-            >
+            {/*<div*/}
+            {/*    style={{*/}
+            {/*        width: axisSize_.width,*/}
+            {/*        height: axisSize_.height,*/}
+            {/*        gridRowStart: this.rows + 1,*/}
+            {/*        gridRowEnd: this.rows + 2,*/}
+            {/*        gridColumnStart: 1,*/}
+            {/*        gridColumnEnd: 2*/}
+            {/*    }}*/}
+            {/*>*/}
 
-            </div>
-            {/*<AxesGroupSettings axesGroup={this}/>*/}
+            {/*</div>*/}
+            <AxesGroupSettings axes={this}/>
         </div>
     };
 }
