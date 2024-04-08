@@ -1,9 +1,9 @@
 import {
     AxesGroupReal
 } from '../../AxesGroup';
-import AxesGroupObjectTreeElement from './ObjectTreeElement';
+import GroupObjectTreeElement from './ObjectTreeElement';
 
-export default function AxesGroupObjectTree(
+export default function GroupObjectTree(
     {
         group
     }: {
@@ -13,7 +13,7 @@ export default function AxesGroupObjectTree(
     return <table className={'group object-tree'}>
         <tbody>
             {group.axes.map((axes, index) =>
-                <AxesGroupObjectTreeElement key={index} axes={axes}/>
+                <GroupObjectTreeElement key={index} axes={axes}/>
             )}
         </tbody>
     </table>;

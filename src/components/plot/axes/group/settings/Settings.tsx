@@ -6,11 +6,12 @@ import {
 } from '../AxesGroup';
 import SettingsIcon from '../../../../misc/icons/SettingsIcon';
 import Dialog from '../../../../misc/dialog/Dialog';
-import AxesGroupObjectTree from './objectTree/ObjectTree';
+import GroupObjectTree from './objectTree/ObjectTree';
 import {
     axisSize_
 } from '../../../../../utils/constants/plot';
 import './Settings.css';
+import GroupGrid from './grid/Grid';
 
 export default function AxesGroupSettings(
     {
@@ -36,8 +37,8 @@ export default function AxesGroupSettings(
         <Dialog
             title={group.name}
             tabs={{
-                'Object Tree': <AxesGroupObjectTree group={group}/>,
-                // 'Axes Grid': <AxesGroupGrid axesGroup={this.props.axesGroup}/>
+                'Object Tree': <GroupObjectTree group={group}/>,
+                'Axes Grid': <GroupGrid group={group}/>
             }}
             active={active}
             close={() => {

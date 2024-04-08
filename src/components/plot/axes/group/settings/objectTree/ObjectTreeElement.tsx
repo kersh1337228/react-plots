@@ -3,7 +3,7 @@ import {
 } from '../../../single/Axes';
 import AxesObjectTree from '../../../single/settings/objectTree/ObjectTree';
 
-export default function AxesGroupObjectTreeElement(
+export default function GroupObjectTreeElement(
     {
         axes
     }: {

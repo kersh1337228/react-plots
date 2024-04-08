@@ -40,8 +40,24 @@ export default abstract class XAxis<
     ) {
         super(axes, 'x', visible, scrollSpeed, name, grid, font);
 
-        const left = axes.size.width * axes.padding.left,
-            right = axes.size.width * (1 - axes.padding.right);
+        this.init();
+        this.local = { ...this.global };
+        if (this.global.max > this.delta.max) {
+            this.local.min = this.global.max - this.delta.max;
+
+            const left = this.axes.size.width * this.axes.padding.left,
+                right = this.axes.size.width * (1 - this.axes.padding.right);
+
+            this.delta.scale = (right - left) * (
+                1 / this.delta.max - 1 / (this.global.max - this.global.min));
+            this.delta.translate = (right - left) * (this.global.min /
+                (this.global.max - this.global.min) - this.local.min / this.delta.max);
+        }
+    }
+
+    public override init() {
+        const left = this.axes.size.width * this.axes.padding.left,
+            right = this.axes.size.width * (1 - this.axes.padding.right);
 
         for (const {
             data: {
@@ -52,7 +68,7 @@ export default abstract class XAxis<
                     }
                 }
             }
-        } of axes.drawings) {
+        } of this.axes.drawings) {
             this.global.min = min < this.global.min ? min : this.global.min;
             this.global.max = this.global.max < max ? max : this.global.max;
         }
@@ -60,15 +76,6 @@ export default abstract class XAxis<
         this.global.scale = (right - left) / (this.global.max - this.global.min);
         this.global.translate = left - (right - left) /
             (this.global.max - this.global.min) * this.global.min;
-
-        this.local = { ...this.global };
-        if (this.global.max > this.delta.max) {
-            this.local.min = this.global.max - this.delta.max;
-            this.delta.scale = (right - left) * (
-                1 / this.delta.max - 1 / (this.global.max - this.global.min));
-            this.delta.translate = (right - left) * (this.global.min /
-                (this.global.max - this.global.min) - this.local.min / this.delta.max);
-        }
     }
 
     public override reScale(ds: number) {

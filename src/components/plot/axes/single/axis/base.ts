@@ -9,7 +9,7 @@ import AxisBase from '../../common/axis/base';
 export default abstract class Axis extends AxisBase<
     AxesReal
 > {
-    public readonly global: AxisData = {
+    public global: AxisData = {
         min: Number.MAX_VALUE,
         max: Number.MIN_VALUE,
         scale: 1,
@@ -28,5 +28,6 @@ export default abstract class Axis extends AxisBase<
         translate: 0
     };
 
+    public abstract init(): void;
     public abstract drawGrid(): void;
 };

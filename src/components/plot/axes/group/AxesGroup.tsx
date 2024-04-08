@@ -51,7 +51,7 @@ export class AxesGroupReal extends AxesBase<
     public readonly rows: number;
 
     public constructor(
-        private rerender: () => void,
+        public rerender: () => void,
         axes: React.ReactElement<AxesPlaceholderProps>
             | React.ReactElement<AxesPlaceholderProps>[],
         public position: GridPosition,
@@ -102,6 +102,7 @@ export class AxesGroupReal extends AxesBase<
                     fillData(drawing.props.data, xAxisLabels),
                     drawing.props.name,
                     drawing.props.style,
+                    xAxisData,
                     drawing.props.vfield
                 );
             });

@@ -22,3 +22,24 @@
 .settings-header {
     font-weight: bold;
 }
+
+.group.grid {
+    display: grid;
+    padding: 8px;
+    grid-gap: 8px;
+    width: 150px;
+}
+
+.group.grid .grid-tile {
+    padding: 8px;
+
+    grid-column-start: 1;
+    grid-column-end: 2;
+
+    border: solid white 1px;
+    border-radius: 7px;
+
+    text-align: center;
+
+    cursor: pointer;
+}

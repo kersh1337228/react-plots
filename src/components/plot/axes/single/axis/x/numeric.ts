@@ -56,48 +56,50 @@ export default class XAxisNumeric extends XAxis<
     }
 
     public override drawTicks() {
-        const ctx = this.ctx.main as CanvasRenderingContext2D;
-        ctx.save();
-        const {
-            width: scaleWidth,
-            height: scaleHeight
-        } = ctx.canvas as HTMLCanvasElement;
-        ctx.clearRect(
-            0, 0,
-            scaleWidth,
-            scaleHeight
-        );
-        ctx.font = `${this.font.size}px ${this.font.family}`;
-
-        const scale = this.local.scale + this.delta.scale;
-        const gridGap = this.axes.size.width / (this.grid.amount + 1);
-
-        const dx = (
-            this.local.translate + this.delta.translate
-        ) * (
-            (this.local.max - this.local.min) / this.axes.size.width * (
-                1 - this.axes.padding.left - this.axes.padding.right
-            ) - 1 / scale
-        ) + this.local.min - this.axes.padding.right * this.axes.size.width / scale;
-
-        for (let i = 1; i <= this.grid.amount; ++i) {
-            const x = i * gridGap;
-
-            ctx.beginPath();
-            ctx.moveTo(x, 0);
-            ctx.lineTo(x, scaleHeight * 0.1);
-            ctx.stroke();
-            ctx.closePath();
-
-            ctx.textAlign = 'center';
-            ctx.fillText(
-                numberPower(x / scale + dx, 2),
-                x,
-                scaleHeight * 0.3
+        const ctx = this.ctx.main;
+        if (ctx) {
+            ctx.save();
+            const {
+                width: scaleWidth,
+                height: scaleHeight
+            } = ctx.canvas as HTMLCanvasElement;
+            ctx.clearRect(
+                0, 0,
+                scaleWidth,
+                scaleHeight
             );
-        }
+            ctx.font = `${this.font.size}px ${this.font.family}`;
 
-        ctx.restore();
+            const scale = this.local.scale + this.delta.scale;
+            const gridGap = this.axes.size.width / (this.grid.amount + 1);
+
+            const dx = (
+                this.local.translate + this.delta.translate
+            ) * (
+                (this.local.max - this.local.min) / this.axes.size.width * (
+                    1 - this.axes.padding.left - this.axes.padding.right
+                ) - 1 / scale
+            ) + this.local.min - this.axes.padding.right * this.axes.size.width / scale;
+
+            for (let i = 1; i <= this.grid.amount; ++i) {
+                const x = i * gridGap;
+
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, scaleHeight * 0.1);
+                ctx.stroke();
+                ctx.closePath();
+
+                ctx.textAlign = 'center';
+                ctx.fillText(
+                    numberPower(x / scale + dx, 2),
+                    x,
+                    scaleHeight * 0.3
+                );
+            }
+
+            ctx.restore();
+        }
     }
 
     public override drawTooltip(x: number) {
@@ -116,46 +118,48 @@ export default class XAxisNumeric extends XAxis<
         axesCtx.stroke();
         axesCtx.closePath();
 
-        const ctx = this.ctx.tooltip as CanvasRenderingContext2D;
-        const {
-            width: scaleWidth,
-            height: scaleHeight
-        } = ctx.canvas as HTMLCanvasElement;
+        const ctx = this.ctx.tooltip;
+        if (ctx) {
+            const {
+                width: scaleWidth,
+                height: scaleHeight
+            } = ctx.canvas as HTMLCanvasElement;
 
-        ctx.clearRect(
-            0, 0,
-            scaleWidth,
-            scaleHeight
-        );
-        ctx.save();
-        ctx.fillStyle = '#323232';
+            ctx.clearRect(
+                0, 0,
+                scaleWidth,
+                scaleHeight
+            );
+            ctx.save();
+            ctx.fillStyle = '#323232';
 
 
-        ctx.fillRect(
-            truncate(
-                globalX - 15,
+            ctx.fillRect(
+                truncate(
+                    globalX - 15,
+                    0,
+                    this.axes.size.width - 30
+                ),
                 0,
-                this.axes.size.width - 30
-            ),
-            0,
-            30,
-            25
-        );
+                30,
+                25
+            );
 
-        ctx.font = `${this.font.size}px ${this.font.family}`;
-        ctx.fillStyle = '#ffffff';
-        const text = this.data.formatAt(i, '%.2f');
-        ctx.textAlign = 'center';
-        ctx.fillText(
-            text !== undefined ? text : '',
-            truncate(
-                globalX,
-                15,
-                this.axes.size.width - 15
-            ),
-            scaleHeight * 0.3
-        );
+            ctx.font = `${this.font.size}px ${this.font.family}`;
+            ctx.fillStyle = '#ffffff';
+            const text = this.data.formatAt(i, '%.2f');
+            ctx.textAlign = 'center';
+            ctx.fillText(
+                text !== undefined ? text : '',
+                truncate(
+                    globalX,
+                    15,
+                    this.axes.size.width - 15
+                ),
+                scaleHeight * 0.3
+            );
 
-        ctx.restore();
+            ctx.restore();
+        }
     }
 }

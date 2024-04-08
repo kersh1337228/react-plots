@@ -32,6 +32,7 @@
     flex-direction: row;
     justify-content: space-between;
     border-bottom: solid white 1px;
+    gap: 16px;
 }
 
 .dialog .dialogMenuTab {

@@ -33,8 +33,14 @@ export default class YAxis extends Axis {
         }
     ) {
         super(axes, 'y', visible, 0.001, name, grid, font);
-        const top = axes.size.height * (1 - axes.padding.bottom),
-            bottom = axes.size.height * axes.padding.top;
+
+        this.init();
+        this.local = { ...this.global };
+    };
+
+    public override init() {
+        const top = this.axes.size.height * (1 - this.axes.padding.bottom),
+            bottom = this.axes.size.height * this.axes.padding.top;
 
         for (const {
             data: {
@@ -45,7 +51,7 @@ export default class YAxis extends Axis {
                     }
                 }
             }
-        } of axes.drawings) {
+        } of this.axes.drawings) {
             this.global.min = min < this.global.min ? min : this.global.min;
             this.global.max = this.global.max < max ? max : this.global.max;
         }
@@ -53,9 +59,7 @@ export default class YAxis extends Axis {
         this.global.scale = (bottom - top) / (this.global.max - this.global.min);
         this.global.translate = top - (bottom - top) /
             (this.global.max - this.global.min) * this.global.min;
-
-        this.local = { ...this.global };
-    };
+    }
 
     public override reScale(_: number) {
         // TODO: y rescale
@@ -119,54 +123,56 @@ export default class YAxis extends Axis {
     }
 
     public override drawTicks() {
-        const ctx = this.ctx.main as CanvasRenderingContext2D;
-        ctx.save();
-        const {
-            width: scaleWidth,
-            height: scaleHeight
-        } = ctx.canvas as HTMLCanvasElement;
-        ctx.clearRect(
-            0, 0,
-            scaleWidth,
-            scaleHeight
-        );
-        ctx.font = `${this.font.size}px ${this.font.family}`;
-        ctx.textAlign = 'right';
-
-        const scale = this.local.scale + this.delta.scale;
-        const step = this.axes.size.height / (this.grid.amount + 1) * this.axes.density;
-        const dy = this.local.min + 0.5 * ((
-            this.local.max - this.local.min
-        ) - this.axes.size.height * (
-            1 - this.axes.padding.bottom + this.axes.padding.top
-        ) / scale);
-
-        for (let i = 0; i < this.grid.amount; ++i) {
-            const y = (this.grid.amount - i) * step;
-
-            ctx.beginPath();
-            ctx.moveTo(
-                scaleWidth * (1 - this.axes.padding.right),
-                y
+        const ctx = this.ctx.main;
+        if (ctx) {
+            ctx.save();
+            const {
+                width: scaleWidth,
+                height: scaleHeight
+            } = ctx.canvas as HTMLCanvasElement;
+            ctx.clearRect(
+                0, 0,
+                scaleWidth,
+                scaleHeight
             );
-            ctx.lineTo(
-                scaleWidth * (0.9 - this.axes.padding.right),
-                y
-            );
-            ctx.stroke();
-            ctx.closePath();
+            ctx.font = `${this.font.size}px ${this.font.family}`;
+            ctx.textAlign = 'right';
 
-            ctx.fillText(
-                numberPower(
-                    dy + y / scale,
-                    2
-                ),
-                axisSize_.width * 0.85,
-                y + 4
-            );
+            const scale = this.local.scale + this.delta.scale;
+            const step = this.axes.size.height / (this.grid.amount + 1) * this.axes.density;
+            const dy = this.local.min + 0.5 * ((
+                this.local.max - this.local.min
+            ) - this.axes.size.height * (
+                1 - this.axes.padding.bottom + this.axes.padding.top
+            ) / scale);
+
+            for (let i = 0; i < this.grid.amount; ++i) {
+                const y = (this.grid.amount - i) * step;
+
+                ctx.beginPath();
+                ctx.moveTo(
+                    scaleWidth * (1 - this.axes.padding.right),
+                    y
+                );
+                ctx.lineTo(
+                    scaleWidth * (0.9 - this.axes.padding.right),
+                    y
+                );
+                ctx.stroke();
+                ctx.closePath();
+
+                ctx.fillText(
+                    numberPower(
+                        dy + y / scale,
+                        2
+                    ),
+                    axisSize_.width * 0.85,
+                    y + 4
+                );
+            }
+
+            ctx.restore();
         }
-
-        ctx.restore();
     };
 
     public override drawTooltip(y: number) {
@@ -183,53 +189,55 @@ export default class YAxis extends Axis {
         axesCtx.stroke();
         axesCtx.closePath();
 
-        const ctx = this.ctx.tooltip as CanvasRenderingContext2D;
-        const {
-            width: tooltipWidth,
-            height: tooltipHeight
-        } = ctx.canvas as HTMLCanvasElement;
-        ctx.clearRect(
-            0, 0,
-            tooltipWidth,
-            tooltipHeight
-        );
-        if (0 < y && y < this.axes.size.height) {
-            ctx.save();
+        const ctx = this.ctx.tooltip;
+        if (ctx) {
+            const {
+                width: tooltipWidth,
+                height: tooltipHeight
+            } = ctx.canvas as HTMLCanvasElement;
+            ctx.clearRect(
+                0, 0,
+                tooltipWidth,
+                tooltipHeight
+            );
+            if (0 < y && y < this.axes.size.height) {
+                ctx.save();
 
-            ctx.fillStyle = '#323232';
-            ctx.fillRect(
-                0,
-                truncate(
-                    y - 13,
+                ctx.fillStyle = '#323232';
+                ctx.fillRect(
                     0,
-                    this.axes.size.height - 26
-                ),
-                axisSize_.width,
-                26
-            );
+                    truncate(
+                        y - 13,
+                        0,
+                        this.axes.size.height - 26
+                    ),
+                    axisSize_.width,
+                    26
+                );
 
-            const scale = this.local.scale + this.delta.scale;
-            const dy = this.local.min + 0.5 * ((
-                this.local.max - this.local.min
-            ) - this.axes.size.height * (
-                1 - this.axes.padding.bottom + this.axes.padding.top
-            ) / scale);
-            ctx.font = `${this.font.size}px ${this.font.family}`;
-            ctx.fillStyle = '#ffffff';
-            ctx.textAlign = 'right';
-            ctx.fillText(
-                numberPower(
-                    dy + y / scale, 2
-                ),
-                axisSize_.width * 0.85,
-                truncate(
-                    y + 3,
-                    16,
-                    this.axes.size.height - 10
-                )
-            );
+                const scale = this.local.scale + this.delta.scale;
+                const dy = this.local.min + 0.5 * ((
+                    this.local.max - this.local.min
+                ) - this.axes.size.height * (
+                    1 - this.axes.padding.bottom + this.axes.padding.top
+                ) / scale);
+                ctx.font = `${this.font.size}px ${this.font.family}`;
+                ctx.fillStyle = '#ffffff';
+                ctx.textAlign = 'right';
+                ctx.fillText(
+                    numberPower(
+                        dy + y / scale, 2
+                    ),
+                    axisSize_.width * 0.85,
+                    truncate(
+                        y + 3,
+                        16,
+                        this.axes.size.height - 10
+                    )
+                );
 
-            ctx.restore();
+                ctx.restore();
+            }
         }
     };
 

@@ -51,7 +51,7 @@ export default function AxesObjectTreeElement(
                 axes.draw();
             }}
         >
-            <EyeIcon/>
+            <EyeIcon visible={drawing.visible}/>
         </td>
     </tr>;
 }

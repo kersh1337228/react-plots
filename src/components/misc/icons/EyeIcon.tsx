@@ -1,13 +1,16 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 
 export default function EyeIcon(
-	{
-		onClick
-	}: {
+	props: {
+		visible?: boolean,
 		onClick?: React.MouseEventHandler
 	}
 ) {
-	const [visible, setVisible] = React.useState(true);
+	const [visible, setVisible] = React.useState(props.visible ?? true);
+
+	useEffect(() => {
+		setVisible(props.visible ?? true);
+	}, [props.visible]);
 
 	return (
 		<svg

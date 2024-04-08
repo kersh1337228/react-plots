@@ -5,7 +5,7 @@ import {
 import {
     AxesGroupReal
 } from '../../../axes/group/AxesGroup';
-import AxesGroupObjectTree from '../../../axes/group/settings/objectTree/ObjectTree';
+import GroupObjectTree from '../../../axes/group/settings/objectTree/ObjectTree';
 
 export default function FigureObjectTreeElement(
     {
@@ -25,7 +25,7 @@ export default function FigureObjectTreeElement(
             <td>
                 {child instanceof AxesReal ?
                     <AxesObjectTree axes={child} /> :
-                    <AxesGroupObjectTree group={child} />
+                    <GroupObjectTree group={child} />
                 }
             </td>
         </tr>
