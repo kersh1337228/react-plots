@@ -3,7 +3,9 @@ import {
 } from '../../../../../utils/types/plotData';
 import Drawing from '../../base/Drawing';
 import ObjectTimeSeriesData from '../../base/data/object/timeSeries';
-import { numberPower, round } from '../../../../../utils/functions/numberProcessing';
+import {
+    round
+} from '../../../../../utils/functions/numberProcessing';
 
 export default class QuotesData extends ObjectTimeSeriesData {
     public constructor(

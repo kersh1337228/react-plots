@@ -48,9 +48,11 @@ export class AxesReal extends AxesBase<
         0, 0
     ]);
     public ctx: {
+        grid: CanvasRenderingContext2D | null | undefined;
         main: CanvasRenderingContext2D | null | undefined;
         tooltip: CanvasRenderingContext2D | null | undefined;
     } = {
+        grid: null,
         main: null,
         tooltip: null
     };
@@ -98,18 +100,29 @@ export class AxesReal extends AxesBase<
     };
 
     public override draw() {
-        this.ctx.main?.clearRect(
-            0, 0,
-            this.size.width,
-            this.size.height
-        );
-        if (this.drawings.length) {
-            this.x.drawGrid();
+        if (this.ctx.main) {
+            this.ctx.main.clearRect(
+                0, 0,
+                this.size.width,
+                this.size.height
+            );
             this.x.drawTicks();
-            this.y.drawGrid();
             this.y.drawTicks();
             for (const drawing of this.drawings)
                 drawing.draw();
+
+            if (this.padding.left)
+                this.ctx.main.clearRect(
+                    0, 0,
+                    this.size.width * this.padding.left,
+                    this.size.height
+                );
+            if (this.padding.right)
+                this.ctx.main.clearRect(
+                    this.size.width * (1 - this.padding.right), 0,
+                    this.size.width,
+                    this.size.height
+                );
         }
     };
 
@@ -117,14 +130,18 @@ export class AxesReal extends AxesBase<
         x: number,
         y: number
     ) {
-        const ctx = this.ctx.tooltip;
-        if (ctx) {
-            ctx.clearRect(
-                0, 0,
-                this.size.width,
-                this.size.height
-            );
-            if (this.drawings.length) {
+        if (
+            this.size.width * this.padding.left < x
+            && x < this.size.width * (1 - this.padding.right)
+        ) {
+            const ctx = this.ctx.tooltip;
+            if (ctx) {
+                ctx.clearRect(
+                    0, 0,
+                    this.size.width,
+                    this.size.height
+                );
+
                 ctx.save();
                 ctx.lineWidth = this.density;
                 ctx.strokeStyle = '#696969';
@@ -134,14 +151,16 @@ export class AxesReal extends AxesBase<
                 ctx.restore();
 
                 this.tooltips = [];
-                for (const drawing of this.drawings) {
-                    drawing.drawTooltip(x);
-                    this.tooltips.push(drawing.data.tooltip(x));
-                }
+                for (const drawing of this.drawings)
+                    if (drawing.visible) {
+                        drawing.drawTooltip(x);
+                        this.tooltips.push(drawing.data.tooltip(x));
+                    }
 
                 this.rerender();
             }
-        }
+        } else
+            this.hideTooltip();
     };
 
     public override hideTooltip() {
@@ -158,7 +177,8 @@ export class AxesReal extends AxesBase<
     };
 
     public override render() {
-        const mainRef = createRef<HTMLCanvasElement>(),
+        const gridRef = createRef<HTMLCanvasElement>(),
+            mainRef = createRef<HTMLCanvasElement>(),
             tooltipRef = createRef<HTMLCanvasElement>();
 
         // eslint-disable-next-line react-hooks/rules-of-hooks
@@ -167,11 +187,14 @@ export class AxesReal extends AxesBase<
                 'wheel', this.x.wheelHandler, { passive: false });
 
             this.ctx = {
+                grid: gridRef.current?.getContext('2d'),
                 main: mainRef.current?.getContext('2d'),
                 tooltip: tooltipRef.current?.getContext('2d')
             };
 
             this.x.reScale(0);
+            this.x.drawGrid();
+            this.y.drawGrid();
             this.draw();
         }, []);
 
@@ -189,6 +212,16 @@ export class AxesReal extends AxesBase<
             <ul className={'axes-tooltips'}>
                 {this.tooltips}
             </ul>
+            <canvas
+                ref={gridRef}
+                className={'axes viewport grid'}
+                style={{
+                    width: this.size.width,
+                    height: this.size.height
+                }}
+                width={this.size.width}
+                height={this.size.height}
+            ></canvas>
             <canvas
                 ref={mainRef}
                 className={'axes viewport main'}
@@ -213,8 +246,8 @@ export class AxesReal extends AxesBase<
                 onMouseDown={this.mouseDownHandler}
                 onMouseUp={this.mouseUpHandler}
             ></canvas>
-            <this.x.render />
-            <this.y.render />
+            <this.x.render/>
+            <this.y.render/>
             <Settings
                 axes={this}
                 visible={this.settings}

@@ -18,22 +18,22 @@ export default abstract class DrawingData<
 > {
     public readonly global: DataBounds = {
         x: {
-            min: 0,
-            max: 0
+            min: Number.MAX_VALUE,
+            max: Number.MIN_VALUE
         },
         y: {
-            min: 0,
-            max: 0
+            min: Number.MAX_VALUE,
+            max: Number.MIN_VALUE
         }
     };
     public local: DataBounds = {
         x: {
-            min: 0,
-            max: 0
+            min: Number.MAX_VALUE,
+            max: Number.MIN_VALUE
         },
         y: {
-            min: 0,
-            max: 0
+            min: Number.MAX_VALUE,
+            max: Number.MIN_VALUE
         }
     };
 

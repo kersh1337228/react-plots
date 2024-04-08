@@ -40,8 +40,15 @@ export default function AxesObjectTreeElement(
         </td>
         <td
             onClick={() => {
+                const { axes } = drawing;
                 drawing.visible = !drawing.visible;
-                drawing.axes.draw();
+                axes.active = axes.drawings
+                    .some(drawing => drawing.visible);
+                axes.localize({
+                    start: axes.x.local.min / axes.x.global.max,
+                    end: axes.x.local.max / axes.x.global.max,
+                });
+                axes.draw();
             }}
         >
             <EyeIcon/>

@@ -27,7 +27,11 @@ export default class DateTimeRange extends TypedRange<
 			last = new DateTime(end);
 
 		const n = DateTime.diff(last, first).milliseconds / freq.milliseconds;
-		super(new Array<DateTime>(n), freq);
+		super(
+			new Array<DateTime>(n),
+			freq,
+			1
+		);
 
 		for (let i = 0; i < n; ++i)
 			this.container[i] = new DateTime(new Date(

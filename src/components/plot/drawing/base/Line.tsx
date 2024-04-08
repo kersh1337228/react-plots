@@ -4,6 +4,8 @@ import Drawing, {
 import {
     PlotData
 } from '../../../../utils/types/plotData';
+import NumberRange from '../../../../utils/classes/iterable/NumberRange';
+import DateTimeRange from '../../../../utils/classes/iterable/DateTimeRange';
 
 declare type LineStyle = {
     color: string
@@ -25,24 +27,27 @@ export class LineReal extends Drawing<
             color: '#000000',
             width: 1
         },
+        _: NumberRange | DateTimeRange,
         vField?: string
     ) {
         super(data, name, new Path2D(), style, vField);
 
-        const i0 = [...Array(data.length).keys()].findIndex(
-            i => this.data.point(i)[1] !== null);
+        const points = data.map(
+            (_, i) => this.data.point(i));
+        const i0 = points.findIndex(
+            point => point[1] !== null);
         this.geometry.moveTo(
-            ...this.data.point(i0) as [number, number]);
+            ...points[i0] as [number, number]);
         for (let i = i0; i < data.length; ++i) {
-            const [x, y] = this.data.point(i);
+            const [x, y] = points[i];
             if (y != null)
                 this.geometry.lineTo(x, y);
         }
     }
 
     public override draw() {
-        const ctx = this.axes.ctx.main;
-        if (this.visible && ctx) {
+        const ctx = this.axes.ctx.main as CanvasRenderingContext2D;
+        if (this.visible) {
             ctx.save();
 
             ctx.lineWidth = this.style.width;
@@ -56,10 +61,10 @@ export class LineReal extends Drawing<
     }
 
     public override drawTooltip(localX: number) {
-        const ctx = this.axes.ctx.tooltip;
+        const ctx = this.axes.ctx.tooltip as CanvasRenderingContext2D;
         const [xi, yi] = this.data.point(
             this.data.globalize(localX));
-        if (yi !== null && ctx) {
+        if (yi !== null) {
             ctx.save();
             ctx.beginPath();
             ctx.arc(

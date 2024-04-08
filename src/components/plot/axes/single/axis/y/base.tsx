@@ -98,146 +98,138 @@ export default class YAxis extends Axis {
     };
 
     public override drawGrid() {
-        const ctx = this.axes.ctx.main;
-        if (ctx) {
-            ctx.save();
-            ctx.lineWidth = this.grid.width;
-            ctx.strokeStyle = this.grid.color;
+        const ctx = this.axes.ctx.grid as CanvasRenderingContext2D;
+        ctx.save();
+        ctx.lineWidth = this.grid.width;
+        ctx.strokeStyle = this.grid.color;
 
-            const step = this.axes.size.height /
-                (this.grid.amount + 1) * this.axes.density;
-            for (let i = 0; i < this.grid.amount; ++i) {
-                const y = (this.grid.amount - i) * step;
+        const step = this.axes.size.height /
+            (this.grid.amount + 1) * this.axes.density;
+        for (let i = 0; i < this.grid.amount; ++i) {
+            const y = (this.grid.amount - i) * step;
 
-                ctx.beginPath();
-                ctx.moveTo(0, y);
-                ctx.lineTo(this.axes.size.width, y);
-                ctx.stroke();
-                ctx.closePath();
-            }
-
-            ctx.restore();
+            ctx.beginPath();
+            ctx.moveTo(0, y);
+            ctx.lineTo(this.axes.size.width, y);
+            ctx.stroke();
+            ctx.closePath();
         }
+
+        ctx.restore();
     }
 
     public override drawTicks() {
-        const ctx = this.ctx.main;
-        if (ctx) {
-            ctx.save();
-            const {
-                width: scaleWidth,
-                height: scaleHeight
-            } = ctx.canvas as HTMLCanvasElement;
-            ctx.clearRect(
-                0, 0,
-                scaleWidth,
-                scaleHeight
+        const ctx = this.ctx.main as CanvasRenderingContext2D;
+        ctx.save();
+        const {
+            width: scaleWidth,
+            height: scaleHeight
+        } = ctx.canvas as HTMLCanvasElement;
+        ctx.clearRect(
+            0, 0,
+            scaleWidth,
+            scaleHeight
+        );
+        ctx.font = `${this.font.size}px ${this.font.family}`;
+        ctx.textAlign = 'right';
+
+        const scale = this.local.scale + this.delta.scale;
+        const step = this.axes.size.height / (this.grid.amount + 1) * this.axes.density;
+        const dy = this.local.min + 0.5 * ((
+            this.local.max - this.local.min
+        ) - this.axes.size.height * (
+            1 - this.axes.padding.bottom + this.axes.padding.top
+        ) / scale);
+
+        for (let i = 0; i < this.grid.amount; ++i) {
+            const y = (this.grid.amount - i) * step;
+
+            ctx.beginPath();
+            ctx.moveTo(
+                scaleWidth * (1 - this.axes.padding.right),
+                y
             );
-            ctx.font = `${this.font.size}px ${this.font.family}`;
-            ctx.textAlign = 'right';
+            ctx.lineTo(
+                scaleWidth * (0.9 - this.axes.padding.right),
+                y
+            );
+            ctx.stroke();
+            ctx.closePath();
+
+            ctx.fillText(
+                numberPower(
+                    dy + y / scale,
+                    2
+                ),
+                axisSize_.width * 0.85,
+                y + 4
+            );
+        }
+
+        ctx.restore();
+    };
+
+    public override drawTooltip(y: number) {
+        const axesCtx = this.axes.ctx.tooltip as CanvasRenderingContext2D;
+        axesCtx.beginPath();
+        axesCtx.moveTo(
+            0,
+            y * this.axes.density
+        );
+        axesCtx.lineTo(
+            this.axes.size.width,
+            y * this.axes.density
+        );
+        axesCtx.stroke();
+        axesCtx.closePath();
+
+        const ctx = this.ctx.tooltip as CanvasRenderingContext2D;
+        const {
+            width: tooltipWidth,
+            height: tooltipHeight
+        } = ctx.canvas as HTMLCanvasElement;
+        ctx.clearRect(
+            0, 0,
+            tooltipWidth,
+            tooltipHeight
+        );
+        if (0 < y && y < this.axes.size.height) {
+            ctx.save();
+
+            ctx.fillStyle = '#323232';
+            ctx.fillRect(
+                0,
+                truncate(
+                    y - 13,
+                    0,
+                    this.axes.size.height - 26
+                ),
+                axisSize_.width,
+                26
+            );
 
             const scale = this.local.scale + this.delta.scale;
-            const step = this.axes.size.height / (this.grid.amount + 1) * this.axes.density;
             const dy = this.local.min + 0.5 * ((
                 this.local.max - this.local.min
             ) - this.axes.size.height * (
                 1 - this.axes.padding.bottom + this.axes.padding.top
             ) / scale);
-
-            for (let i = 0; i < this.grid.amount; ++i) {
-                const y = (this.grid.amount - i) * step;
-
-                ctx.beginPath();
-                ctx.moveTo(
-                    scaleWidth * (1 - this.axes.padding.right),
-                    y
-                );
-                ctx.lineTo(
-                    scaleWidth * (0.9 - this.axes.padding.right),
-                    y
-                );
-                ctx.stroke();
-                ctx.closePath();
-
-                ctx.fillText(
-                    numberPower(
-                        dy + y / scale,
-                        2
-                    ),
-                    axisSize_.width * 0.85,
-                    y + 4
-                );
-            }
+            ctx.font = `${this.font.size}px ${this.font.family}`;
+            ctx.fillStyle = '#ffffff';
+            ctx.textAlign = 'right';
+            ctx.fillText(
+                numberPower(
+                    dy + y / scale, 2
+                ),
+                axisSize_.width * 0.85,
+                truncate(
+                    y + 3,
+                    16,
+                    this.axes.size.height - 10
+                )
+            );
 
             ctx.restore();
-        }
-    };
-
-    public override drawTooltip(y: number) {
-        const axesCtx = this.axes.ctx.tooltip;
-        if (axesCtx) {
-            axesCtx.beginPath();
-            axesCtx.moveTo(
-                0,
-                y * this.axes.density
-            );
-            axesCtx.lineTo(
-                this.axes.size.width,
-                y * this.axes.density
-            );
-            axesCtx.stroke();
-            axesCtx.closePath();
-        }
-
-        const ctx = this.ctx.tooltip;
-        if (ctx) {
-            const {
-                width: tooltipWidth,
-                height: tooltipHeight
-            } = ctx.canvas as HTMLCanvasElement;
-            ctx.clearRect(
-                0, 0,
-                tooltipWidth,
-                tooltipHeight
-            );
-            if (0 < y && y < this.axes.size.height) {
-                ctx.save();
-
-                ctx.fillStyle = '#323232';
-                ctx.fillRect(
-                    0,
-                    truncate(
-                        y - 13,
-                        0,
-                        this.axes.size.height - 26
-                    ),
-                    axisSize_.width,
-                    26
-                );
-
-                const scale = this.local.scale + this.delta.scale;
-                const dy = this.local.min + 0.5 * ((
-                    this.local.max - this.local.min
-                ) - this.axes.size.height * (
-                    1 - this.axes.padding.bottom + this.axes.padding.top
-                ) / scale);
-                ctx.font = `${this.font.size}px ${this.font.family}`;
-                ctx.fillStyle = '#ffffff';
-                ctx.textAlign = 'right';
-                ctx.fillText(
-                    numberPower(
-                        dy + y / scale, 2
-                    ),
-                    axisSize_.width * 0.85,
-                    truncate(
-                        y + 3,
-                        16,
-                        this.axes.size.height - 10
-                    )
-                );
-
-                ctx.restore();
-            }
         }
     };
 

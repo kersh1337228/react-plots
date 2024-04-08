@@ -24,10 +24,6 @@ export default abstract class ObjectData<
     ) {
         super(drawing, data);
 
-        this.global.y = {
-            min: Number.MAX_VALUE,
-            max: Number.MIN_VALUE
-        };
         for (const {
             [minField]: low,
             [maxField]: high
@@ -65,14 +61,29 @@ export default abstract class ObjectData<
     public override tooltip(
         localX: number
     ) {
-        const point = this.data[this.globalize(localX)];
+        const i = this.globalize(localX);
+        if (i in this.data) {
+            const point = this.data[i];
+            return <li key={this.drawing.name} className={'drawing-tooltips'}>
+                <ul>
+                    {Object.entries(point).map(([key, value]) =>
+                        key !== 'timestamp' ? <li key={key}>
+                            {key}: {typeof value === 'number' ?
+                            round(value, 2) : typeof value === 'string' ?
+                                value : '-'}
+                        </li> : null
+                    )}
+                </ul>
+            </li>;
+        }
+        const point = this.data[0];
         return <li key={this.drawing.name} className={'drawing-tooltips'}>
             <ul>
-                {Object.entries(point).map(([key, value]) => {
-                    return typeof value === 'number' ? <li key={key}>
-                        {key}: {round(value, 2)}
-                    </li> : null;
-                })}
+                {Object.entries(point).map(([key, _]) =>
+                    key !== 'timestamp' ? <li key={key}>
+                        {key}: -
+                    </li> : null
+                )}
             </ul>
         </li>;
     }

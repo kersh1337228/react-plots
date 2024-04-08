@@ -11,6 +11,7 @@ import {
 export default abstract class AxesBase<
     XAxisT extends AxisBase<any>
 > {
+    public active: boolean = true;
     // @ts-ignore
     public x: XAxisT;
     public size: Size;
@@ -59,32 +60,38 @@ export default abstract class AxesBase<
     public abstract hideTooltip(): void;
 
     public mouseMoveHandler(event: React.MouseEvent) {
-        const window = (event.target as HTMLCanvasElement)
-            .getBoundingClientRect();
-        const x = event.clientX - window.left,
-            y = event.clientY - window.top;
-        if (this.drag)
-            this.x.reTranslate(x - this.mousePos.x);
-        this.mousePos = { x, y };
-        this.draw();
-        this.drawTooltip(x, y);
+        if (this.active) {
+            const window = (event.target as HTMLCanvasElement)
+                .getBoundingClientRect();
+            const x = event.clientX - window.left,
+                y = event.clientY - window.top;
+            if (this.drag)
+                this.x.reTranslate(x - this.mousePos.x);
+            this.mousePos = { x, y };
+            this.draw();
+            this.drawTooltip(x, y);
+        }
     };
 
     public async mouseOutHandler(_: React.MouseEvent) {
-        this.drag = false;
-        this.hideTooltip();
+        if (this.active) {
+            this.drag = false;
+            this.hideTooltip();
+        }
     };
 
     public mouseDownHandler(event: React.MouseEvent) {
-        this.drag = true;
-        this.mousePos = {
-            x: event.clientX - (
-                event.target as HTMLCanvasElement
-            ).getBoundingClientRect().left,
-            y: event.clientY - (
-                event.target as HTMLCanvasElement
-            ).getBoundingClientRect().top,
-        };
+        if (this.active) {
+            this.drag = true;
+            this.mousePos = {
+                x: event.clientX - (
+                    event.target as HTMLCanvasElement
+                ).getBoundingClientRect().left,
+                y: event.clientY - (
+                    event.target as HTMLCanvasElement
+                ).getBoundingClientRect().top,
+            };
+        }
     };
 
     public mouseUpHandler() {

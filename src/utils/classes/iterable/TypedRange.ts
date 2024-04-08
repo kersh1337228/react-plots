@@ -6,7 +6,8 @@ export default abstract class TypedRange<
 
 	protected constructor(
 		init: DataT[] = [],
-		public readonly freq: FreqT
+		public readonly freq: FreqT,
+		public readonly step: number
 	) {
 		this.container = init;
 	};

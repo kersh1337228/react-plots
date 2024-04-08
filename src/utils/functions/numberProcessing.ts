@@ -37,9 +37,9 @@ export function range(
 	start: number,
 	stop: number,
 	step: number = 1
-): number[] {
+): Int32Array {
 	const n = Math.floor((stop - start) / step);
-	const rng = new Array<number>(n);
+	const rng = new Int32Array(n);
 
 	for (let i = 0; i < n; ++i)
 		rng[i] = start + step * i;

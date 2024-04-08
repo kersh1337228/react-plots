@@ -10,14 +10,14 @@ export default abstract class Axis extends AxisBase<
     AxesReal
 > {
     public readonly global: AxisData = {
-        min: 0,
-        max: 0,
+        min: Number.MAX_VALUE,
+        max: Number.MIN_VALUE,
         scale: 1,
         translate: 0
     };
     public local: AxisData = {
-        min: 0,
-        max: 0,
+        min: Number.MAX_VALUE,
+        max: Number.MIN_VALUE,
         scale: 1,
         translate: 0
     };

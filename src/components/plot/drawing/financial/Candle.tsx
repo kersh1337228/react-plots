@@ -70,9 +70,9 @@ export class CandleReal extends Drawing<
 
                 const body = new Path2D();
                 body.rect(
-                    i + 0.1,
+                    i + 0.05,
                     open as number,
-                    0.9,
+                    1,
                     close - (open as number)
                 );
 
@@ -84,8 +84,8 @@ export class CandleReal extends Drawing<
     }
 
     public override draw() {
-        const ctx = this.axes.ctx.main;
-        if (this.visible && ctx) {
+        const ctx = this.axes.ctx.main as CanvasRenderingContext2D;
+        if (this.visible) {
             ctx.save();
 
             ctx.fillStyle = this.style.color.neg;

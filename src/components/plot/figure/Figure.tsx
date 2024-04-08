@@ -94,6 +94,7 @@ export default function Figure(
                         fillData(drawing.props.data, xAxisLabels),
                         drawing.props.name,
                         drawing.props.style,
+                        xAxisData,
                         drawing.props.vfield
                     );
                 });

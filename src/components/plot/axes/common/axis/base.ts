@@ -73,18 +73,20 @@ export default abstract class AxisBase<
     };
 
     public wheelHandler(event: WheelEvent) {
-        event.preventDefault();
-        event.stopPropagation();
-        this.reScale(-event.deltaY / 2000);
-        this.axes.draw();
-        this.axes.drawTooltip(
-            this.axes.mousePos.x,
-            this.axes.mousePos.y
-        );
+        if (this.axes.active) {
+            event.preventDefault();
+            event.stopPropagation();
+            this.reScale(-event.deltaY / 2000);
+            this.axes.draw();
+            this.axes.drawTooltip(
+                this.axes.mousePos.x,
+                this.axes.mousePos.y
+            );
+        }
     };
 
     public mouseMoveHandler(event: React.MouseEvent) {
-        if (this.drag) {
+        if (this.axes.active && this.drag) {
             const window = (event.target as HTMLCanvasElement)
                 .getBoundingClientRect();
             const coordinates = {
@@ -103,15 +105,17 @@ export default abstract class AxisBase<
     };
 
     public mouseDownHandler(event: React.MouseEvent) {
-        this.drag = true;
-        this.mousePos = {
-            x: event.clientX - (
-                event.target as HTMLCanvasElement
-            ).getBoundingClientRect().left,
-            y: event.clientY - (
-                event.target as HTMLCanvasElement
-            ).getBoundingClientRect().top,
-        };
+        if (this.axes.active) {
+            this.drag = true;
+            this.mousePos = {
+                x: event.clientX - (
+                    event.target as HTMLCanvasElement
+                ).getBoundingClientRect().left,
+                y: event.clientY - (
+                    event.target as HTMLCanvasElement
+                ).getBoundingClientRect().top,
+            };
+        }
     };
 
     public mouseUpHandler(_: React.MouseEvent) {

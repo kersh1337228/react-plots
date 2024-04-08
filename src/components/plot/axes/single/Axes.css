@@ -25,12 +25,16 @@
     grid-column-end: 2;
 }
 
-.axes-grid .viewport.main {
+.axes-grid .viewport.grid {
     z-index: 1;
 }
 
-.axes-grid .viewport.tooltip {
+.axes-grid .viewport.main {
     z-index: 2;
+}
+
+.axes-grid .viewport.tooltip {
+    z-index: 3;
 }
 
 .axes-grid .axes.viewport.tooltip {

@@ -24,8 +24,12 @@ export default class NumberRange extends TypedRange<
 			const step = init[i] - init[i - 1];
 			freq = step < freq ? step : freq;
 		}
-		// TODO: Fill gaps (DateTimeRange-like)
-		super(init, freq);
+
+		super(
+			init,
+			freq,
+			freq
+		);
 	};
 
 	public override format(

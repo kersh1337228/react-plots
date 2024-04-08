@@ -49,9 +49,9 @@ export class VolumeHistReal extends Drawing<
             if (volume !== null) {
                 const column = new Path2D();
                 column.rect(
-                    i + 0.1,
+                    i + 0.05,
                     0,
-                    0.9,
+                    1,
                     volume
                 );
 
@@ -62,8 +62,8 @@ export class VolumeHistReal extends Drawing<
     }
 
     public override draw() {
-        const ctx = this.axes.ctx.main;
-        if (this.visible && ctx) {
+        const ctx = this.axes.ctx.main as CanvasRenderingContext2D;
+        if (this.visible) {
             ctx.save();
 
             ctx.fillStyle = this.style.color.neg;

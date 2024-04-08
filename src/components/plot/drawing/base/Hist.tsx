@@ -4,6 +4,8 @@ import Drawing, {
 import {
     PlotData
 } from '../../../../utils/types/plotData';
+import NumberRange from '../../../../utils/classes/iterable/NumberRange';
+import DateTimeRange from '../../../../utils/classes/iterable/DateTimeRange';
 
 export declare type HistStyle = {
     color: {
@@ -34,7 +36,8 @@ export class HistReal extends Drawing<
                 neg: '#da2c4d'
             },
         },
-        vField?: string
+        xAxisData: NumberRange | DateTimeRange,
+        vField?: string,
     ) {
         super(
             data,
@@ -52,8 +55,10 @@ export class HistReal extends Drawing<
             if (y !== null) {
                 const column = new Path2D();
                 column.rect(
-                    x - 0.45, 0,
-                    0.9, y
+                    x - xAxisData.step / 2,
+                    0,
+                    xAxisData.step,
+                    y
                 );
                 const type = y > 0 ? 'pos' : 'neg';
                 this.geometry[type].addPath(column);
@@ -62,8 +67,8 @@ export class HistReal extends Drawing<
     }
 
     public override draw() {
-        const ctx = this.axes.ctx.main;
-        if (this.visible && ctx) {
+        const ctx = this.axes.ctx.main as CanvasRenderingContext2D;
+        if (this.visible) {
             ctx.save();
 
             ctx.fillStyle = this.style.color.neg;

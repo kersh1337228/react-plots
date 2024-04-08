@@ -22,10 +22,6 @@ export default abstract class PointData<
     ) {
         super(drawing, data);
 
-        this.global.y = {
-            min: Number.MAX_VALUE,
-            max: Number.MIN_VALUE
-        };
         for (const [_, y] of data) {
             if (y !== null) {
                 this.global.y.min = y < this.global.y.min ? y : this.global.y.min;
@@ -57,9 +53,15 @@ export default abstract class PointData<
     public override tooltip(
         localX: number
     ) {
-        const [_, y] = this.data[this.globalize(localX)];
+        const i = this.globalize(localX);
+        if (i in this.data) {
+            const [_, y] = this.data[i];
+            return <li key={this.drawing.name} className={'drawing-tooltips'}>
+                {this.drawing.name}: {y !== null ? round(y, 2) : '-'}
+            </li>;
+        }
         return <li key={this.drawing.name} className={'drawing-tooltips'}>
-            {this.drawing.name}: {y !== null ? round(y, 2) : '-'}
+            {this.drawing.name}: -
         </li>;
     }
 }
