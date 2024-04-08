@@ -1,12 +1,25 @@
 import React from 'react'
 
-export default function EyeIcon() {
+export default function EyeIcon(
+	{
+		onClick
+	}: {
+		onClick?: React.MouseEventHandler
+	}
+) {
 	const [visible, setVisible] = React.useState(true);
 
 	return (
-		<svg xmlns="http://www.w3.org/2000/svg" viewBox="4 3 16 16" width="16" height="16" fill="none" onClick={() => {
-			setVisible(!visible)
-		}}>
+		<svg
+			xmlns="http://www.w3.org/2000/svg"
+			viewBox="4 3 16 16"
+			width="16"
+			height="16"
+			fill="none"
+			onClick={() => {
+				setVisible(visible => !visible)
+			}}
+		>
 			{visible ?
 				<g className="normal-eye">
 					<path fill="currentColor" fillRule="evenodd" clipRule="evenodd"

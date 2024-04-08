@@ -1,4 +1,4 @@
-import Drawing from '../../../../drawing/Drawing';
+import Drawing from '../../../../drawing/base/Drawing';
 import SettingsIcon from '../../../../../misc/icons/SettingsIcon';
 import Dialog from '../../../../../misc/dialog/Dialog';
 import {
@@ -15,17 +15,17 @@ export default function AxesObjectTreeElement(
 ) {
     const [active, setActive] = useState(false);
 
-    return <tr className={'objectTreeElement'}>
+    return <tr className={'axes object-tree-element'}>
         <td>
             {drawing.constructor.name.replaceAll('Real', '')}
         </td>
         <td>
             {drawing.name}
         </td>
-        <td onClick={() => {
-            setActive(true);
-        }} style={{cursor: 'pointer'}}>
-            <SettingsIcon/>
+        <td>
+            <SettingsIcon onClick={() => {
+                setActive(active => !active);
+            }}/>
             <Dialog
                 title={drawing.name}
                 tabs={{
@@ -38,10 +38,12 @@ export default function AxesObjectTreeElement(
                 zIndex={12}
             />
         </td>
-        <td onClick={() => {
-            drawing.visible = !drawing.visible;
-            drawing.axes.draw();
-        }} style={{cursor: 'pointer'}}>
+        <td
+            onClick={() => {
+                drawing.visible = !drawing.visible;
+                drawing.axes.draw();
+            }}
+        >
             <EyeIcon/>
         </td>
     </tr>;

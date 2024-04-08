@@ -2,24 +2,25 @@ import {
     AxesPlaceholderProps,
     AxesReal
 } from '../axes/single/Axes';
-import {
+import React, {
     Children, JSXElementConstructor,
     useMemo, useState
 } from 'react';
-import NumberRange from '../../../utils_refactor/classes/iterable/NumberRange';
-import DateTimeRange from '../../../utils_refactor/classes/iterable/DateTimeRange';
+import NumberRange from '../../../utils/classes/iterable/NumberRange';
+import DateTimeRange from '../../../utils/classes/iterable/DateTimeRange';
 import {
     fillData,
     plotDataTypeVectorised
-} from '../../../utils_refactor/functions/plotDataProcessing';
+} from '../../../utils/functions/plotDataProcessing';
 import {
     DrawingProps
-} from '../drawing/Drawing';
+} from '../drawing/base/Drawing';
 import {
     AxesGroupPlaceholderProps,
     AxesGroupReal
 } from '../axes/group/AxesGroup';
 import drawingModule from '../drawing/index';
+import FigureSettings from './settings/Settings';
 import './Figure.css';
 
 declare type FigureProps = {
@@ -33,6 +34,7 @@ declare type FigureProps = {
         AxesPlaceholderProps
         | AxesGroupPlaceholderProps
     >[];
+    settings?: boolean;
 };
 
 declare type FigureState = {}; // TODO: Figure state
@@ -130,13 +132,23 @@ export default function Figure(
     }, []);
 
     return <div
-        className={'figureGrid'}
-        style={{
-            width: props.width,
-            height: props.height
-        }}
+        className={'figure-layout'}
     >
-        {/*<FigureSettings />*/}
-        {children.map(child => <child.render key={child.name} />)}
+        <FigureSettings
+            name={props.name}
+            children={children}
+            visible={props.settings}
+        />
+        <div
+            className={'figure-grid'}
+            style={{
+                width: props.width,
+                height: props.height
+            }}
+        >
+            {children.map(child =>
+                <child.render key={child.name}/>
+            )}
+        </div>
     </div>
 }

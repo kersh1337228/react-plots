@@ -5,9 +5,9 @@ import {
 import {
     AxisGrid,
     Font
-} from '../../../../../../utils_refactor/types/display';
-import DateTimeRange from '../../../../../../utils_refactor/classes/iterable/DateTimeRange';
-import { truncate } from '../../../../../../utils_refactor/functions/numberProcessing';
+} from '../../../../../../utils/types/display';
+import DateTimeRange from '../../../../../../utils/classes/iterable/DateTimeRange';
+import { truncate } from '../../../../../../utils/functions/numberProcessing';
 
 export default class XAxisTimeSeries extends XAxis<
     DateTimeRange
@@ -28,6 +28,10 @@ export default class XAxisTimeSeries extends XAxis<
         }
     ) {
         super(axes, data, visible, 0.01, name, grid, font);
+
+        const spread = data.length;
+        this.delta.min = 5 < spread ? 5 : spread;
+        this.delta.max = 500 < spread ? 500 : spread;
     }
 
     public override drawGrid() {

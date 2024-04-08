@@ -2,11 +2,11 @@ import React from 'react';
 import {
     DataRange,
     Point, Size
-} from '../../../../utils_refactor/types/display';
+} from '../../../../utils/types/display';
 import AxisBase from './axis/base';
 import {
     axisSize_
-} from '../../../../utils_refactor/constants/plot';
+} from '../../../../utils/constants/plot';
 
 export default abstract class AxesBase<
     XAxisT extends AxisBase<any>

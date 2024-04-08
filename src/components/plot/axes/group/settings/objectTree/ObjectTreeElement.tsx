@@ -11,12 +11,13 @@ export default function AxesGroupObjectTreeElement(
     }
 ) {
     return <>
-        <tr className={'axesSettingsHeader'}>
-            <td>
+        <tr className={'settings-header'}>
+            <td colSpan={2}>
                 {axes.name}
             </td>
         </tr>
-        <tr className={'groupObjectTreeElement'}>
+        <tr className={'group object-tree-element'}>
+            <td className={'indent'}></td>
             <td>
                 <AxesObjectTree axes={axes}/>
             </td>

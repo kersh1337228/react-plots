@@ -1,40 +1,40 @@
-.axesGroupGrid {
+.group-grid {
     display: grid;
     grid-auto-rows: minmax(min-content, max-content);
     grid-auto-columns: minmax(min-content, max-content);
 }
 
-.axesGroupGrid .axes.x {
+.group-grid .axis.viewport.x {
     grid-column-start: 2;
     grid-column-end: 3;
 }
 
-.axesGroupGrid .axes.scale {
+.group-grid .axis.viewport.main {
     z-index: 1;
 }
 
-.axesGroupGrid .axes.x.tooltip {
+.group-grid .axis.viewport.tooltip {
     z-index: 2;
+}
+
+.group-grid .axis.viewport.x.tooltip {
     cursor: e-resize;
 }
 
-.axesGroupGrid .axesGroup.placeholder {
+.group-grid .axis-placeholder {
     grid-column-start: 1;
     grid-column-end: 2;
 }
 
-.axesGroupGrid .axesGroup.tooltip {
+.group-grid .group-tooltip {
     grid-column-start: 2;
     grid-column-end: 3;
+
     z-index: 3;
+
     cursor: crosshair;
 }
 
-.axesGroupGrid .axesGroup.tooltip:active {
+.group-grid .group-tooltip:active {
     cursor: grabbing;
-}
-
-.axesGroupGrid .axesGroupSettings {
-    grid-column-start: 1;
-    grid-column-end: 2;
 }

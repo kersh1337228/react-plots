@@ -6,9 +6,9 @@ import {
     DataRange,
     GridPosition,
     Size
-} from '../../../../utils_refactor/types/display';
-import NumberRange from '../../../../utils_refactor/classes/iterable/NumberRange';
-import DateTimeRange from '../../../../utils_refactor/classes/iterable/DateTimeRange';
+} from '../../../../utils/types/display';
+import NumberRange from '../../../../utils/classes/iterable/NumberRange';
+import DateTimeRange from '../../../../utils/classes/iterable/DateTimeRange';
 import React, {
     Children,
     createRef,
@@ -17,14 +17,11 @@ import React, {
 } from 'react';
 import {
     DrawingProps
-} from '../../drawing/Drawing';
+} from '../../drawing/base/Drawing';
 import {
     fillData,
     plotDataTypeVectorised
-} from '../../../../utils_refactor/functions/plotDataProcessing';
-import {
-    axisSize_
-} from '../../../../utils_refactor/constants/plot';
+} from '../../../../utils/functions/plotDataProcessing';
 import drawingModule from '../../drawing';
 import XAxisNumeric from './axis/x/numeric';
 import XAxisTimeSeries from './axis/x/timeSeries';
@@ -199,7 +196,7 @@ export class AxesGroupReal extends AxesBase<
         }, []);
 
         return <div
-            className={'axesGroupGrid'}
+            className={'group-grid'}
             style={{
                 width: this.size.width + this.axisSize.y,
                 height: this.size.height + this.axisSize.x,
@@ -211,7 +208,7 @@ export class AxesGroupReal extends AxesBase<
         >
             {this.axes.map(axes => <axes.render key={axes.name} />)}
             <div
-                className={'axesGroup placeholder'}
+                className={'axis-placeholder'}
                 style={{
                     width: this.axisSize.y,
                     height: this.size.height,
@@ -223,7 +220,7 @@ export class AxesGroupReal extends AxesBase<
             ></div>
             <div
                 ref={tooltipRef}
-                className={'axesGroup tooltip'}
+                className={'group-tooltip'}
                 style={{
                     width: this.size.width,
                     height: this.size.height,
@@ -238,19 +235,9 @@ export class AxesGroupReal extends AxesBase<
                 onMouseUp={this.mouseUpHandler}
             ></div>
             <this.x.render/>
-            {/*<div*/}
-            {/*    style={{*/}
-            {/*        width: axisSize_.width,*/}
-            {/*        height: axisSize_.height,*/}
-            {/*        gridRowStart: this.rows + 1,*/}
-            {/*        gridRowEnd: this.rows + 2,*/}
-            {/*        gridColumnStart: 1,*/}
-            {/*        gridColumnEnd: 2*/}
-            {/*    }}*/}
-            {/*>*/}
-
-            {/*</div>*/}
-            <AxesGroupSettings axes={this}/>
+            <AxesGroupSettings
+                group={this}
+            />
         </div>
     };
 }

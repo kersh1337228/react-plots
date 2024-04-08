@@ -4,7 +4,7 @@ import {
 import {
     AxisGrid,
     Font
-} from '../../../../../../utils_refactor/types/display';
+} from '../../../../../../utils/types/display';
 import AxisBase from '../../../common/axis/base';
 import React, {
     createRef,
@@ -12,7 +12,7 @@ import React, {
 } from 'react';
 import {
     axisSize_
-} from '../../../../../../utils_refactor/constants/plot';
+} from '../../../../../../utils/constants/plot';
 
 export default abstract class XAxis extends AxisBase<
     AxesGroupReal
@@ -63,7 +63,7 @@ export default abstract class XAxis extends AxisBase<
         return this.visible ? <>
             <canvas
                 ref={mainRef}
-                className={'axes x scale'}
+                className={'axis viewport x main'}
                 style={{
                     width: this.axes.size.width,
                     height: axisSize_.height,
@@ -75,7 +75,7 @@ export default abstract class XAxis extends AxisBase<
             ></canvas>
             <canvas
                 ref={tooltipRef}
-                className={'axes x tooltip'}
+                className={'axis viewport x tooltip'}
                 style={{
                     width: this.axes.size.width,
                     height: axisSize_.height,

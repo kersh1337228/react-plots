@@ -4,7 +4,7 @@ import './Dialog.css'
 import {
     Point,
     Size
-} from "../../../utils_refactor/types/display"
+} from "../../../utils/types/display"
 import CrossIcon from "../icons/CrossIcon"
 
 interface DialogProps {

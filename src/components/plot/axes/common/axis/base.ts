@@ -3,7 +3,7 @@ import {
     AxisGrid,
     Font,
     Point
-} from '../../../../../utils_refactor/types/display';
+} from '../../../../../utils/types/display';
 import {
     AxesReal
 } from '../../single/Axes';

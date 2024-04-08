@@ -1,15 +1,15 @@
 import XAxis from './base';
-import NumberRange from '../../../../../../utils_refactor/classes/iterable/NumberRange';
+import NumberRange from '../../../../../../utils/classes/iterable/NumberRange';
 import {
     AxisGrid,
     Font
-} from '../../../../../../utils_refactor/types/display';
+} from '../../../../../../utils/types/display';
 import {
     AxesGroupReal
 } from '../../AxesGroup';
 import {
     numberPower, truncate
-} from '../../../../../../utils_refactor/functions/numberProcessing';
+} from '../../../../../../utils/functions/numberProcessing';
 
 export default class XAxisNumeric extends XAxis {
     public constructor(

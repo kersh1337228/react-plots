@@ -1,4 +1,4 @@
-.axesGroupSettings {
+.group-settings {
     display: flex;
     justify-content: center;
     align-items: center;
@@ -7,11 +7,11 @@
     grid-column-end: 2;
 }
 
-.axesGroupSettings svg {
+.group-settings svg {
     cursor: pointer;
 }
 
-.groupObjectTree {
+.group.object-tree {
     margin: -8px 0 -8px 0;
     padding: 0;
     list-style: none;
@@ -19,10 +19,6 @@
     border-spacing: 0 8px;
 }
 
-.axesSettingsHeader {
+.settings-header {
     font-weight: bold;
-}
-
-.groupObjectTree .groupObjectTreeElement {
-    /*margin-left: 10px;*/
 }

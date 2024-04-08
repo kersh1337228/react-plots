@@ -1,20 +1,20 @@
 import {
     axisSize_
-} from '../../../../../../utils_refactor/constants/plot';
+} from '../../../../../../utils/constants/plot';
 import React, {
     createRef,
     useEffect
 } from 'react';
 import {
-    numberPower
-} from '../../../../../../utils_refactor/functions/numberProcessing';
+    numberPower, truncate
+} from '../../../../../../utils/functions/numberProcessing';
 import {
     AxesReal
 } from '../../Axes';
 import {
     AxisGrid,
     Font
-} from '../../../../../../utils_refactor/types/display';
+} from '../../../../../../utils/types/display';
 import Axis from '../base';
 
 export default class YAxis extends Axis {
@@ -33,8 +33,8 @@ export default class YAxis extends Axis {
         }
     ) {
         super(axes, 'y', visible, 0.001, name, grid, font);
-        const top = axes.size.height * (1 - axes.padding.top),
-            bottom = axes.size.height * axes.padding.bottom;
+        const top = axes.size.height * (1 - axes.padding.bottom),
+            bottom = axes.size.height * axes.padding.top;
 
         for (const {
             data: {
@@ -89,8 +89,8 @@ export default class YAxis extends Axis {
                 this.local.max = this.local.max < max ? max : this.local.max;
             }
 
-        const top = this.axes.size.height * (1 - this.axes.padding.top),
-            bottom = this.axes.size.height * this.axes.padding.bottom;
+        const top = this.axes.size.height * (1 - this.axes.padding.bottom),
+            bottom = this.axes.size.height * this.axes.padding.top;
 
         this.local.scale = (bottom - top) / (this.local.max - this.local.min);
         this.local.translate = top - (bottom - top) /
@@ -140,7 +140,9 @@ export default class YAxis extends Axis {
             const step = this.axes.size.height / (this.grid.amount + 1) * this.axes.density;
             const dy = this.local.min + 0.5 * ((
                 this.local.max - this.local.min
-            ) - this.axes.size.height / scale);
+            ) - this.axes.size.height * (
+                1 - this.axes.padding.bottom + this.axes.padding.top
+            ) / scale);
 
             for (let i = 0; i < this.grid.amount; ++i) {
                 const y = (this.grid.amount - i) * step;
@@ -198,26 +200,44 @@ export default class YAxis extends Axis {
                 tooltipWidth,
                 tooltipHeight
             );
-            ctx.save();
+            if (0 < y && y < this.axes.size.height) {
+                ctx.save();
 
-            ctx.fillStyle = '#323232';
-            ctx.fillRect(0, y - 12.5, axisSize_.width, 25);
+                ctx.fillStyle = '#323232';
+                ctx.fillRect(
+                    0,
+                    truncate(
+                        y - 13,
+                        0,
+                        this.axes.size.height - 26
+                    ),
+                    axisSize_.width,
+                    26
+                );
 
-            const scale = this.local.scale + this.delta.scale;
-            const dy = this.local.min + 0.5 * ((
-                this.local.max - this.local.min
-            ) - this.axes.size.height / scale);
-            ctx.font = `${this.font.size}px ${this.font.family}`;
-            ctx.fillStyle = '#ffffff';
-            ctx.fillText(
-                numberPower(
-                    dy + y / scale, 2
-                ),
-                axisSize_.width * 0.05,
-                y + 3
-            );
+                const scale = this.local.scale + this.delta.scale;
+                const dy = this.local.min + 0.5 * ((
+                    this.local.max - this.local.min
+                ) - this.axes.size.height * (
+                    1 - this.axes.padding.bottom + this.axes.padding.top
+                ) / scale);
+                ctx.font = `${this.font.size}px ${this.font.family}`;
+                ctx.fillStyle = '#ffffff';
+                ctx.textAlign = 'right';
+                ctx.fillText(
+                    numberPower(
+                        dy + y / scale, 2
+                    ),
+                    axisSize_.width * 0.85,
+                    truncate(
+                        y + 3,
+                        16,
+                        this.axes.size.height - 10
+                    )
+                );
 
-            ctx.restore();
+                ctx.restore();
+            }
         }
     };
 
@@ -239,7 +259,7 @@ export default class YAxis extends Axis {
         return this.visible ? <>
             <canvas
                 ref={mainRef}
-                className={'axes y scale'}
+                className={'axis viewport y main'}
                 style={{
                     width: axisSize_.width,
                     height: this.axes.size.height
@@ -249,7 +269,7 @@ export default class YAxis extends Axis {
             ></canvas>
             <canvas
                 ref={tooltipRef}
-                className={'axes y tooltip'}
+                className={'axis viewport y tooltip'}
                 style={{
                     width: axisSize_.width,
                     height: this.axes.size.height

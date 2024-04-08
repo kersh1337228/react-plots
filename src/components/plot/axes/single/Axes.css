@@ -1,52 +1,55 @@
-.axesGrid {
+.axes-grid {
     display: grid;
     grid-auto-rows: minmax(min-content, max-content);
     grid-auto-columns: minmax(min-content, max-content);
 }
 
-.axesGrid .axes.plot {
+.axes-grid .axes.viewport {
     grid-row-start: 1;
     grid-row-end: 2;
     grid-column-start: 2;
     grid-column-end: 3;
 }
 
-.axesGrid .axes.x {
+.axes-grid .axis.viewport.x {
     grid-row-start: 2;
     grid-row-end: 3;
     grid-column-start: 2;
     grid-column-end: 3;
 }
 
-.axesGrid .axes.y {
+.axes-grid .axis.viewport.y {
     grid-row-start: 1;
     grid-row-end: 2;
     grid-column-start: 1;
     grid-column-end: 2;
 }
 
-.axesGrid .axes.scale {
+.axes-grid .viewport.main {
     z-index: 1;
 }
 
-.axesGrid .axes.tooltip {
+.axes-grid .viewport.tooltip {
     z-index: 2;
+}
+
+.axes-grid .axes.viewport.tooltip {
     cursor: crosshair;
 }
 
-.axesGrid .axes.tooltip:active {
+.axes-grid .axes.viewport.tooltip:active {
     cursor: grabbing;
 }
 
-.axesGrid .axes.x.tooltip {
+.axes-grid .axis.viewport.x.tooltip {
     cursor: e-resize;
 }
 
-.axesGrid .axes.y.tooltip {
+.axes-grid .axis-viewport.y.tooltip {
     cursor: n-resize;
 }
 
-.axesGrid .axes.tooltips {
+.axes-grid .axes-tooltips {
     list-style-type: none;
 
     margin: 0;
@@ -60,8 +63,6 @@
     width: max-content;
     height: max-content;
 
-    justify-content: space-between;
-
     pointer-events: none;
     user-select: none;
 
@@ -69,9 +70,6 @@
     z-index: 4;
 }
 
-.axesGrid .axesSettings {
-    grid-row-start: 2;
-    grid-row-end: 3;
-    grid-column-start: 1;
-    grid-column-end: 2;
+.axes-grid .axes-tooltips .drawing-tooltips {
+    font-size: 12px;
 }

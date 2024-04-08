@@ -3,9 +3,9 @@ import {
     GridPosition,
     Padding,
     Size
-} from '../../../../utils_refactor/types/display';
-import NumberRange from '../../../../utils_refactor/classes/iterable/NumberRange';
-import DateTimeRange from '../../../../utils_refactor/classes/iterable/DateTimeRange';
+} from '../../../../utils/types/display';
+import NumberRange from '../../../../utils/classes/iterable/NumberRange';
+import DateTimeRange from '../../../../utils/classes/iterable/DateTimeRange';
 import React, {
     createRef,
     useEffect
@@ -15,8 +15,8 @@ import XAxisNumeric from './axis/x/numeric';
 import XAxisTimeSeries from './axis/x/timeSeries';
 import {
     DrawingProps
-} from '../../drawing/Drawing';
-import Drawing from '../../drawing/Drawing';
+} from '../../drawing/base/Drawing';
+import Drawing from '../../drawing/base/Drawing';
 import './Axes.css';
 import AxesBase from '../common/base';
 import Settings from './settings/Settings';
@@ -85,12 +85,8 @@ export class AxesReal extends AxesBase<
     public override localize(
         range: DataRange
     ) {
-        for (const drawing of this.drawings) {
+        for (const drawing of this.drawings)
             drawing.data.localize(range);
-
-            console.log(`${drawing.name}: ${drawing.data.local.y.min}, ${drawing.data.local.y.max}`)
-        }
-
         // this.x.transform();
         this.y.transform();
         this.transformMatrix = new DOMMatrix([
@@ -180,7 +176,7 @@ export class AxesReal extends AxesBase<
         }, []);
 
         return <div
-            className={'axesGrid'}
+            className={'axes-grid'}
             style={{
                 width: this.size.width + this.axisSize.y,
                 height: this.size.height + this.axisSize.x,
@@ -190,12 +186,12 @@ export class AxesReal extends AxesBase<
                 gridColumnEnd: this.position.column.end
             }}
         >
-            <ul className={'axes tooltips'}>
+            <ul className={'axes-tooltips'}>
                 {this.tooltips}
             </ul>
             <canvas
                 ref={mainRef}
-                className={'axes plot scale'}
+                className={'axes viewport main'}
                 style={{
                     width: this.size.width,
                     height: this.size.height
@@ -205,7 +201,7 @@ export class AxesReal extends AxesBase<
             ></canvas>
             <canvas
                 ref={tooltipRef}
-                className={'axes plot tooltip'}
+                className={'axes viewport tooltip'}
                 style={{
                     width: this.size.width,
                     height: this.size.height
@@ -219,7 +215,10 @@ export class AxesReal extends AxesBase<
             ></canvas>
             <this.x.render />
             <this.y.render />
-            <Settings axes={this} visible={this.settings} />
+            <Settings
+                axes={this}
+                visible={this.settings}
+            />
         </div>;
     };
 }

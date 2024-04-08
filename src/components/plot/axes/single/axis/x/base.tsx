@@ -4,16 +4,16 @@ import React, {
 } from 'react';
 import {
     truncate
-} from '../../../../../../utils_refactor/functions/numberProcessing';
+} from '../../../../../../utils/functions/numberProcessing';
 import {
     axisSize_
-} from '../../../../../../utils_refactor/constants/plot';
+} from '../../../../../../utils/constants/plot';
 import {
     AxisGrid,
     Font
-} from '../../../../../../utils_refactor/types/display';
-import NumberRange from '../../../../../../utils_refactor/classes/iterable/NumberRange';
-import DateTimeRange from '../../../../../../utils_refactor/classes/iterable/DateTimeRange';
+} from '../../../../../../utils/types/display';
+import NumberRange from '../../../../../../utils/classes/iterable/NumberRange';
+import DateTimeRange from '../../../../../../utils/classes/iterable/DateTimeRange';
 import Axis from '../base';
 import {
     AxesReal
@@ -164,7 +164,7 @@ export default abstract class XAxis<
         return this.visible ? <>
             <canvas
                 ref={mainRef}
-                className={'axes x scale'}
+                className={'axis viewport x main'}
                 style={{
                     width: this.axes.size.width,
                     height: axisSize_.height
@@ -174,7 +174,7 @@ export default abstract class XAxis<
             ></canvas>
             <canvas
                 ref={tooltipRef}
-                className={'axes x tooltip'}
+                className={'axis viewport x tooltip'}
                 style={{
                     width: this.axes.size.width,
                     height: axisSize_.height

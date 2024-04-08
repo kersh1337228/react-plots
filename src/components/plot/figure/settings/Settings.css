@@ -1,0 +1,45 @@
+.figure-settings {
+    margin: 0;
+    padding: 0;
+    width: max-content;
+}
+
+.figure-settings-header {
+    width: max-content;
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+    justify-content: flex-start;
+    align-items: center;
+}
+
+.figure-settings-header svg {
+    cursor: pointer;
+}
+
+.figure-settings-header h1 {
+    margin: 0;
+    padding: 0;
+    font-size: 16px;
+}
+
+.figure.object-tree {
+    margin: 0;
+    padding: 0;
+}
+
+.figure.object-tree tr td {
+    width: max-content;
+}
+
+.object-tree .object-tree-element .indent {
+    margin: 0;
+    padding: 0;
+    width: 8px;
+    border-left: solid white 1px;
+    box-sizing: border-box;
+}
+
+.object-tree .object-tree-element svg {
+    cursor: pointer;
+}

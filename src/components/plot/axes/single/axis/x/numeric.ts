@@ -1,15 +1,15 @@
 import {
     AxesReal
 } from '../../Axes';
-import NumberRange from '../../../../../../utils_refactor/classes/iterable/NumberRange';
+import NumberRange from '../../../../../../utils/classes/iterable/NumberRange';
 import XAxis from './base';
 import {
     AxisGrid,
     Font
-} from '../../../../../../utils_refactor/types/display';
+} from '../../../../../../utils/types/display';
 import {
     numberPower, truncate
-} from '../../../../../../utils_refactor/functions/numberProcessing';
+} from '../../../../../../utils/functions/numberProcessing';
 
 export default class XAxisNumeric extends XAxis<
     NumberRange
@@ -154,7 +154,7 @@ export default class XAxisNumeric extends XAxis<
             const text = this.data.formatAt(i, '%.2f');
             ctx.textAlign = 'center';
             ctx.fillText(
-                text ? text : '',
+                text !== undefined ? text : '',
                 truncate(
                     globalX,
                     15,

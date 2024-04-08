@@ -2,12 +2,12 @@ import XAxis from './base';
 import {
     AxisGrid,
     Font
-} from '../../../../../../utils_refactor/types/display';
+} from '../../../../../../utils/types/display';
 import {
     AxesGroupReal
 } from '../../AxesGroup';
-import DateTimeRange from '../../../../../../utils_refactor/classes/iterable/DateTimeRange';
-import { truncate } from '../../../../../../utils_refactor/functions/numberProcessing';
+import DateTimeRange from '../../../../../../utils/classes/iterable/DateTimeRange';
+import { truncate } from '../../../../../../utils/functions/numberProcessing';
 
 export default class XAxisTimeSeries extends XAxis {
     public constructor(

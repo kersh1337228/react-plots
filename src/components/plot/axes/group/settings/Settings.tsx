@@ -9,34 +9,34 @@ import Dialog from '../../../../misc/dialog/Dialog';
 import AxesGroupObjectTree from './objectTree/ObjectTree';
 import {
     axisSize_
-} from '../../../../../utils_refactor/constants/plot';
+} from '../../../../../utils/constants/plot';
 import './Settings.css';
 
 export default function AxesGroupSettings(
     {
-        axes
+        group
     }: {
-        axes: AxesGroupReal
+        group: AxesGroupReal
     }
 ) {
     const [active, setActive] = useState(false);
 
     return <div
-        className={'axesGroupSettings'}
+        className={'group-settings'}
         style={{
             width: axisSize_.width,
             height: axisSize_.height,
-            gridRowStart: axes.rows + 1,
-            gridRowEnd: axes.rows + 2
+            gridRowStart: group.rows + 1,
+            gridRowEnd: group.rows + 2
         }}
     >
         <SettingsIcon onClick={() => {
             setActive(active => !active);
         }} />
         <Dialog
-            title={axes.name}
+            title={group.name}
             tabs={{
-                'Object Tree': <AxesGroupObjectTree axes={axes}/>,
+                'Object Tree': <AxesGroupObjectTree group={group}/>,
                 // 'Axes Grid': <AxesGroupGrid axesGroup={this.props.axesGroup}/>
             }}
             active={active}

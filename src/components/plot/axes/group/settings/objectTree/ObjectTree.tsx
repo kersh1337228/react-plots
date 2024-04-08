@@ -5,14 +5,14 @@ import AxesGroupObjectTreeElement from './ObjectTreeElement';
 
 export default function AxesGroupObjectTree(
     {
-        axes
+        group
     }: {
-        axes: AxesGroupReal
+        group: AxesGroupReal
     }
 ) {
-    return <table className={'groupObjectTree'}>
+    return <table className={'group object-tree'}>
         <tbody>
-            {axes.axes.map((axes, index) =>
+            {group.axes.map((axes, index) =>
                 <AxesGroupObjectTreeElement key={index} axes={axes}/>
             )}
         </tbody>

@@ -9,7 +9,7 @@ import {
 } from '../Axes';
 import {
     axisSize_
-} from '../../../../../utils_refactor/constants/plot';
+} from '../../../../../utils/constants/plot';
 import './Settings.css';
 
 export default function Settings(
@@ -24,7 +24,7 @@ export default function Settings(
     const [active, setActive] = useState(false);
 
     return visible ? <div
-        className={'axesSettings'}
+        className={'axes-settings'}
         style={{
             width: axisSize_.width,
             height: axisSize_.height
@@ -42,18 +42,15 @@ export default function Settings(
             close={() => {
                 setActive(false);
             }}
-            // size={{
-            //     width: 200
-            // }}
             zIndex={11}
         />
-    </div> : <div
-        className={'axesSettings'}
-        style={{
-            width: axisSize_.width,
-            height: axisSize_.height
-        }}
-    >
-
-    </div>;
+    </div> :
+        null;
+    //     <div
+    //     className={'axesSettings'}
+    //     style={{
+    //         width: axisSize_.width,
+    //         height: axisSize_.height
+    //     }}
+    // ></div>;
 }

@@ -10,7 +10,7 @@ export default function AxesObjectTree(
         axes: AxesReal
     }
 ) {
-    return <table className={'objectTree'}>
+    return <table className={'axes object-tree'}>
         <colgroup>
             <col span={1} width={32}/>
             <col span={1} width={128}/>
