@@ -9,12 +9,15 @@
     grid-column-end: 2;
 }
 
-.axes-settings svg {
+.axes-grid .axes-settings.placeholder {
+
+}
+
+.axes-grid .axes-settings svg {
     cursor: pointer;
 }
 
 .axes.object-tree {
-    /*margin: 0 -16px 0 -16px;*/
     padding: 0;
     list-style: none;
 }

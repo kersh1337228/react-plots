@@ -19,7 +19,7 @@ import {
 import Drawing from '../../drawing/base/Drawing';
 import './Axes.css';
 import AxesBase from '../common/base';
-import Settings from './settings/Settings';
+import AxesSettings from './settings/Settings';
 
 export declare type AxesPlaceholderProps = {
     children: React.ReactElement<DrawingProps<any>>
@@ -29,6 +29,7 @@ export declare type AxesPlaceholderProps = {
     xAxis?: boolean;
     yAxis?: boolean;
     padding?: Padding;
+    settings?: boolean;
 }
 
 export default function Axes(
@@ -69,9 +70,18 @@ export class AxesReal extends AxesBase<
         xAxisData: NumberRange | DateTimeRange,
         xAxis: boolean = true,
         yAxis: boolean = true,
-        private settings: boolean = true
+        settings: boolean = false,
+        grouped: boolean = false
     ) {
-        super(size, settings);
+        const x = !grouped && (xAxis || settings),
+            y = yAxis || settings;
+        super(size, x, y);
+
+        this.settings = <AxesSettings
+            axes={this}
+            icon={settings}
+            visible={x || y}
+        />
 
         this.drawings = drawings.map(drawing => {
             drawing.axes = this;
@@ -253,10 +263,7 @@ export class AxesReal extends AxesBase<
             ></canvas>
             <this.x.render/>
             <this.y.render/>
-            <Settings
-                axes={this}
-                visible={this.settings}
-            />
+            {this.settings}
         </div>;
     };
 }

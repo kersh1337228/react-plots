@@ -3,9 +3,6 @@ import {
     Object as ObjecT
 } from '../../../../../../utils/types/plotData';
 import {
-    round
-} from '../../../../../../utils/functions/numberProcessing';
-import {
     DataRange
 } from '../../../../../../utils/types/display';
 import Drawing from '../../Drawing';
@@ -69,7 +66,7 @@ export default abstract class ObjectData<
                     {Object.entries(point).map(([key, value]) =>
                         key !== 'timestamp' ? <li key={key}>
                             {key}: {typeof value === 'number' ?
-                            round(value, 2) : typeof value === 'string' ?
+                            value.toFixed(2) : typeof value === 'string' ?
                                 value : '-'}
                         </li> : null
                     )}

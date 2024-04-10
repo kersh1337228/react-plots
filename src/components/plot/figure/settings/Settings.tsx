@@ -18,7 +18,7 @@ export default function FigureSettings(
         name,
         children,
         rerender,
-        visible = true
+        visible = false
     }: {
         name: string;
         children: (AxesReal | AxesGroupReal)[];

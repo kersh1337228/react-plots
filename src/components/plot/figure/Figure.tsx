@@ -113,6 +113,8 @@ export default function Figure(
                     xAxisData,
                     child.props.xAxis ?? true,
                     (child.props as AxesPlaceholderProps).yAxis ?? true,
+                    child.props.settings,
+                    false
                 );
             } else if ((child.type as JSXElementConstructor<any>).name === 'AxesGroup')
                 return new AxesGroupReal(
@@ -123,7 +125,8 @@ export default function Figure(
                     child.props.position,
                     child.props.name,
                     size,
-                    child.props.xAxis ?? true
+                    child.props.xAxis ?? true,
+                    child.props.settings
                 );
             else
                 throw Error("Only <Axes> and <AxesGroup> are allowed to be <Figure> children.")

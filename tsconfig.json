@@ -21,8 +21,5 @@
         "jsx": "react-jsx",
         "experimentalDecorators": true,
         "downlevelIteration": true
-    },
-    "exclude": [
-        "src/components/plot_refactor/**/*"
-    ]
+    }
 }

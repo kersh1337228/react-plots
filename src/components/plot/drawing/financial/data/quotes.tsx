@@ -3,9 +3,6 @@ import {
 } from '../../../../../utils/types/plotData';
 import Drawing from '../../base/Drawing';
 import ObjectTimeSeriesData from '../../base/data/object/timeSeries';
-import {
-    round
-} from '../../../../../utils/functions/numberProcessing';
 
 export default class QuotesData extends ObjectTimeSeriesData {
     public constructor(
@@ -34,28 +31,28 @@ export default class QuotesData extends ObjectTimeSeriesData {
                             open: <span style={{
                             color: this.drawing.style.color[type]
                         }}>
-                            {round(open as number, 2)}
+                            {(open as number).toFixed(2)}
                         </span>
                         </li>
                         <li>
                             high: <span style={{
                             color: this.drawing.style.color[type]
                         }}>
-                            {round(high as number, 2)}
+                            {(high as number).toFixed(2)}
                         </span>
                         </li>
                         <li>
                             low: <span style={{
                             color: this.drawing.style.color[type]
                         }}>
-                            {round(low as number, 2)}
+                            {(low as number).toFixed(2)}
                         </span>
                         </li>
                         <li>
                             close: <span style={{
                             color: this.drawing.style.color[type]
                         }}>
-                            {round(close as number, 2)}
+                            {(close as number).toFixed(2)}
                         </span>
                         </li>
                     </ul>

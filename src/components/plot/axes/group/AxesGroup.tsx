@@ -35,6 +35,7 @@ export declare type AxesGroupPlaceholderProps = {
     position: GridPosition;
     name: string;
     xAxis?: boolean;
+    settings?: boolean;
 }
 
 export default function AxesGroup(
@@ -57,10 +58,9 @@ export class AxesGroupReal extends AxesBase<
         public position: GridPosition,
         public readonly name: string,
         size: Size,
-        xAxis: boolean = true
+        xAxis: boolean = true,
+        settings: boolean = false
     ) {
-        super(size, xAxis);
-
         const drawings = new Array<
             React.ReactElement<DrawingProps<any>>
         >().concat(...Children.map(axes, child => child.props.children));
@@ -80,17 +80,27 @@ export class AxesGroupReal extends AxesBase<
             throw Error('<Axes> drawings inside of <AxesGroup> must have uniform data type.');
 
         let yAxis = true;
-        let left = 0,
-            right = 0;
-        this.rows = 0;
+        let left = 0, right = 0;
+        let rows = 0;
         for (const child of Children.toArray(axes) as ReactElement<AxesPlaceholderProps>[]) {
-            this.rows = Math.max(this.rows, child.props.position.row.end);
+            rows = Math.max(rows, child.props.position.row.end);
             if (yAxis && child.props.yAxis === false)
                 yAxis = false;
             left = Math.max(left, child.props.padding?.left ?? 0);
             right = Math.max(right, child.props.padding?.right ?? 0);
         }
-        this.rows -= 1;
+
+        const x = xAxis || settings,
+            y = yAxis || settings;
+        super(size, x, y);
+
+        this.settings = <AxesGroupSettings
+            group={this}
+            icon={settings}
+            visible={x && y}
+        />;
+
+        this.rows = rows - 1;
         const cellHeight = size.height / this.rows;
 
         this.axes = Children.map(axes, child => {
@@ -133,8 +143,9 @@ export class AxesGroupReal extends AxesBase<
                 },
                 xAxisData,
                 false,
-                yAxis,
-                false
+                y,
+                false,
+                true
             );
         });
 
@@ -232,9 +243,7 @@ export class AxesGroupReal extends AxesBase<
                 onMouseUp={this.mouseUpHandler}
             ></div>
             <this.x.render/>
-            <AxesGroupSettings
-                group={this}
-            />
+            {this.settings}
         </div>
     };
 }

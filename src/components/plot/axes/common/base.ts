@@ -16,6 +16,7 @@ export default abstract class AxesBase<
     public x: XAxisT;
     public size: Size;
     public readonly axisSize: Point;
+    protected settings: React.ReactNode;
     protected drag: boolean = false;
     public mousePos: Point = {
         x: 0,
@@ -24,11 +25,12 @@ export default abstract class AxesBase<
 
     protected constructor(
         size: Size,
-        x: boolean
+        x: boolean,
+        y: boolean
     ) {
         this.axisSize = {
             x: axisSize_.height * +x,
-            y: axisSize_.width,
+            y: axisSize_.width * +y,
         };
         this.size = {
             width: size.width - this.axisSize.y,

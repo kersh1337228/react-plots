@@ -6,7 +6,9 @@ import ObjectTimeSeriesData from '../../base/data/object/timeSeries';
 import {
     DataRange
 } from '../../../../../utils/types/display';
-import { numberPower, round } from '../../../../../utils/functions/numberProcessing';
+import {
+    numberPower
+} from '../../../../../utils/functions/numberProcessing';
 
 export default class VolumeData extends ObjectTimeSeriesData {
     public constructor(

@@ -20,9 +20,9 @@ export function numberPower(
 	const abs = Math.abs(x);
 	for (const [value, symbol] of symbols)
 		if (value <= abs)
-			return `${round(x / value, digits)}${symbol}`;
+			return `${(x / value).toFixed(digits)}${symbol}`;
 
-	return String(round(x, digits));
+	return x.toFixed(digits);
 }
 
 export function truncate(

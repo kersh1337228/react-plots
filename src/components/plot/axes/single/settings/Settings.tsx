@@ -12,45 +12,51 @@ import {
 } from '../../../../../utils/constants/plot';
 import './Settings.css';
 
-export default function Settings(
+export default function AxesSettings(
     {
         axes,
-        visible = true
+        icon,
+        visible
     }: {
-        axes: AxesReal,
-        visible: boolean
+        axes: AxesReal;
+        icon: boolean;
+        visible: boolean;
     }
 ) {
     const [active, setActive] = useState(false);
 
-    return visible ? <div
-        className={'axes-settings'}
-        style={{
-            width: axisSize_.width,
-            height: axisSize_.height
-        }}
-    >
-        <SettingsIcon onClick={() => {
-            setActive(active => !active);
-        }}/>
-        <Dialog
-            title={axes.name}
-            tabs={{
-                'Object tree': <AxesObjectTree axes={axes} />
-            }}
-            active={active}
-            close={() => {
-                setActive(false);
-            }}
-            zIndex={11}
-        />
-    </div> :
-        null;
-    //     <div
-    //     className={'axesSettings'}
-    //     style={{
-    //         width: axisSize_.width,
-    //         height: axisSize_.height
-    //     }}
-    // ></div>;
+    if (visible)
+        if (icon)
+            return <div
+                className={'axes-settings'}
+                style={{
+                    width: axisSize_.width,
+                    height: axisSize_.height
+                }}
+            >
+                <SettingsIcon onClick={() => {
+                    setActive(active => !active);
+                }}/>
+                <Dialog
+                    title={axes.name}
+                    tabs={{
+                        'Object tree': <AxesObjectTree axes={axes}/>
+                    }}
+                    active={active}
+                    close={() => {
+                        setActive(false);
+                    }}
+                    zIndex={11}
+                />
+            </div>;
+        else
+            return <div
+                className={'axes-settings placeholder'}
+                style={{
+                    width: axisSize_.width,
+                    height: axisSize_.height
+                }}
+            ></div>;
+    else
+        return null;
 }

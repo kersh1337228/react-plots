@@ -28,7 +28,9 @@ export default function FigureObjectTreeElement(
                         <tbody>
                             <tr className={'group object-tree-element'}>
                                 <td className={'indent fake'}></td>
-                                <AxesObjectTree axes={child}/>
+                                <td>
+                                    <AxesObjectTree axes={child}/>
+                                </td>
                             </tr>
                         </tbody>
                     </table>
