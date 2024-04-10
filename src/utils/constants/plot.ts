@@ -3,7 +3,7 @@ export const axisSize_ = {
     width: 50
 };
 
-export const dataAmount_ = {
+export const delta_ = {
     min: 5,
     max: 100000
 };

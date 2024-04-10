@@ -18,7 +18,7 @@
 }
 
 .group-grid .axis.viewport.x.tooltip {
-    cursor: e-resize;
+    cursor: ew-resize;
 }
 
 .group-grid .axis-placeholder {

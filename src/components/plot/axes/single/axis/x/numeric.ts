@@ -10,6 +10,9 @@ import {
 import {
     numberPower, truncate
 } from '../../../../../../utils/functions/numberProcessing';
+import {
+    delta_
+} from '../../../../../../utils/constants/plot';
 
 export default class XAxisNumeric extends XAxis<
     NumberRange
@@ -35,8 +38,8 @@ export default class XAxisNumeric extends XAxis<
             axes,
             data,
             {
-                min: data.freq * 5 < spread ? data.freq * 5 : spread,
-                max: data.freq * 500 < spread ? data.freq * 500 : spread
+                min: data.freq * delta_.min < spread ? data.freq * delta_.min : spread,
+                max: data.freq * delta_.max < spread ? data.freq * delta_.max : spread
             },
             visible,
             0.01,

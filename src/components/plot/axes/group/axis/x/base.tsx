@@ -35,6 +35,11 @@ export default abstract class XAxis extends AxisBase<
         super(axes, 'x', visible, scrollSpeed, name, grid, font);
     };
 
+    public override reset() {
+        for (const axes of this.axes.axes)
+            axes.x.reset();
+    }
+
     public override reScale(ds: number) {
         for (const axes of this.axes.axes)
             axes.x.reScale(ds);
@@ -84,6 +89,7 @@ export default abstract class XAxis extends AxisBase<
                 }}
                 width={this.axes.size.width}
                 height={axisSize_.height}
+                onDoubleClick={this.doubleClickHandler}
                 onMouseMove={this.mouseMoveHandler}
                 onMouseOut={this.mouseOutHandler}
                 onMouseDown={this.mouseDownHandler}

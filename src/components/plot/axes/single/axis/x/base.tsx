@@ -62,7 +62,24 @@ export default abstract class XAxis<
         }
 
         this.init();
+        this.reset();
+    }
+
+    public override init() {
+        const left = this.axes.size.width * this.axes.padding.left,
+            right = this.axes.size.width * (1 - this.axes.padding.right);
+
+        this.global.scale = (right - left) / (this.global.max - this.global.min);
+        this.global.translate = left - (right - left) /
+            (this.global.max - this.global.min) * this.global.min;
+    }
+
+    public override reset() {
+        this.delta.scale = 0;
+        this.delta.translate = 0;
+
         this.local = structuredClone(this.global);
+
         if (this.global.max > this.delta.max) {
             this.local.min = this.global.max - this.delta.max;
 
@@ -76,49 +93,40 @@ export default abstract class XAxis<
         }
     }
 
-    public override init() {
-        const left = this.axes.size.width * this.axes.padding.left,
-            right = this.axes.size.width * (1 - this.axes.padding.right);
-
-        this.global.scale = (right - left) / (this.global.max - this.global.min);
-        this.global.translate = left - (right - left) /
-            (this.global.max - this.global.min) * this.global.min;
-    }
-
     public override reScale(ds: number) {
         const left = this.axes.size.width * this.axes.padding.left,
             right = this.axes.size.width * (1 - this.axes.padding.right);
 
+        const viewportSize = right - left,
+            globalSpread = this.global.max - this.global.min,
+            iGlobalSpread = 1 / globalSpread;
+
         this.delta.scale = truncate(
             this.delta.scale + ds * (this.local.scale + this.delta.scale),
-            (right - left) * (
-                1 / this.delta.max - 1 / (this.global.max - this.global.min)),
-            (right - left) * (
-                1 / this.delta.min - 1 / (this.global.max - this.global.min))
+            viewportSize * (1 / this.delta.max - iGlobalSpread),
+            viewportSize * (1 / this.delta.min - iGlobalSpread)
         );
 
         this.local.min = truncate(
-            this.local.max - 1 / (
-                1 / (this.global.max - this.global.min) + this.delta.scale / (right - left)),
+            this.local.max - 1 / (iGlobalSpread + this.delta.scale / viewportSize),
             this.global.min,
             this.global.max - this.delta.min
         );
-
         const dt = left - this.local.min * (this.local.scale + this.delta.scale)
             - (this.local.translate + this.delta.translate);
         this.delta.translate += dt
-        const multiplier = (right - left) / (
-            right - left + this.delta.scale * (this.global.max - this.global.min));
+
+        const multiplier = viewportSize / (viewportSize + this.delta.scale * globalSpread);
         const offset = multiplier * this.delta.translate / this.global.scale;
-        this.local.max = truncate(
-            multiplier * this.global.max - offset,
-            this.global.min + this.delta.min,
-            this.global.max
-        );
         this.local.min = truncate(
             multiplier * this.global.min - offset,
             this.global.min,
             this.global.max - this.delta.min
+        );
+        this.local.max = truncate(
+            multiplier * this.global.max - offset,
+            this.global.min + this.delta.min,
+            this.global.max
         );
 
         this.axes.localize({
@@ -131,27 +139,30 @@ export default abstract class XAxis<
         const left = this.axes.size.width * this.axes.padding.left,
             right = this.axes.size.width * (1 - this.axes.padding.right);
 
-        this.delta.translate += dt;
-        const multiplier = (right - left) / (
-            right - left + this.delta.scale * (this.global.max - this.global.min));
-        let offset = multiplier * this.delta.translate / this.global.scale;
+        const viewportSize = right - left,
+            dtgs = this.delta.translate / this.global.scale;
 
+        this.delta.translate += dt;
+
+        const multiplier = viewportSize / (
+            viewportSize + this.delta.scale * (this.global.max - this.global.min));
+        let offset = multiplier * dtgs;
         const min = this.global.max * (1 - multiplier) + offset,
             max = this.global.min * (1 - multiplier) + offset;
         this.delta.translate -= (
             (min < 0 ? min : 0) + (0 < max ? max : 0)
         ) * (this.local.scale + this.delta.scale);
 
-        offset = multiplier * this.delta.translate / this.global.scale;
-        this.local.max = truncate(
-            multiplier * this.global.max - offset,
-            this.global.min + this.delta.min,
-            this.global.max
-        );
+        offset = multiplier * dtgs;
         this.local.min = truncate(
             multiplier * this.global.min - offset,
             this.global.min,
             this.global.max - this.delta.min
+        );
+        this.local.max = truncate(
+            multiplier * this.global.max - offset,
+            this.global.min + this.delta.min,
+            this.global.max
         );
 
         this.axes.localize({
@@ -195,6 +206,7 @@ export default abstract class XAxis<
                 }}
                 width={this.axes.size.width}
                 height={axisSize_.height}
+                onDoubleClick={this.doubleClickHandler}
                 onMouseMove={this.mouseMoveHandler}
                 onMouseOut={this.mouseOutHandler}
                 onMouseDown={this.mouseDownHandler}

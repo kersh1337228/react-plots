@@ -49,12 +49,15 @@ export default abstract class AxisBase<
         this.drawTooltip = this.drawTooltip.bind(this);
         this.hideTooltip = this.hideTooltip.bind(this);
         this.wheelHandler = this.wheelHandler.bind(this);
+        this.doubleClickHandler = this.doubleClickHandler.bind(this);
         this.mouseMoveHandler = this.mouseMoveHandler.bind(this);
         this.mouseOutHandler = this.mouseOutHandler.bind(this);
         this.mouseDownHandler = this.mouseDownHandler.bind(this);
         this.mouseUpHandler = this.mouseUpHandler.bind(this);
         this.render = this.render.bind(this);
     }
+
+    public abstract reset(): void;
 
     public abstract reScale(ds: number): void;
 
@@ -78,12 +81,16 @@ export default abstract class AxisBase<
             event.stopPropagation();
             this.reScale(-event.deltaY / 2000);
             this.axes.draw();
-            this.axes.drawTooltip(
-                this.axes.mousePos.x,
-                this.axes.mousePos.y
-            );
         }
     };
+
+    public doubleClickHandler(_: React.MouseEvent) {
+        if (this.axes.active) {
+            this.reset();
+            this.reScale(0);
+            this.axes.draw();
+        }
+    }
 
     public mouseMoveHandler(event: React.MouseEvent) {
         if (this.axes.active && this.drag) {

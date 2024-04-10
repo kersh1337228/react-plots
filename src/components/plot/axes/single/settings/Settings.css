@@ -9,10 +9,6 @@
     grid-column-end: 2;
 }
 
-.axes-grid .axes-settings.placeholder {
-
-}
-
 .axes-grid .axes-settings svg {
     cursor: pointer;
 }

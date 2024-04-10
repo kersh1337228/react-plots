@@ -32,7 +32,7 @@ export default class YAxis extends Axis {
             size: 10
         }
     ) {
-        super(axes, 'y', visible, 0.001, name, grid, font);
+        super(axes, 'y', visible, 0.01, name, grid, font);
 
         for (const {
             data: {
@@ -60,12 +60,32 @@ export default class YAxis extends Axis {
             (this.global.max - this.global.min) * this.global.min;
     }
 
-    public override reScale(_: number) {
-        // TODO: y rescale
+    public override reset() {
+        this.delta.scale = 0;
+        this.delta.translate = 0;
+
+        this.axes.transformMatrix.d = this.local.scale + this.delta.scale;
+        this.axes.transformMatrix.f = this.local.translate + this.delta.translate;
+    }
+
+    public override reScale(ds: number) {
+        this.delta.scale += ds * (this.local.scale + this.delta.scale);
+        // translate = -invariant * delta.scale
+        this.delta.translate = -0.5 * (
+            this.local.max + this.local.min
+        ) * this.delta.scale;
+
+        this.axes.transformMatrix.d = this.local.scale + this.delta.scale;
+        this.axes.transformMatrix.f = this.local.translate + this.delta.translate;
     };
 
-    public override reTranslate(_: number) {
-        // TODO: y retranslate
+    public override reTranslate(dt: number) {
+        if (this.delta.scale) {
+            this.delta.translate += dt;
+
+            this.axes.transformMatrix.d = this.local.scale + this.delta.scale;
+            this.axes.transformMatrix.f = this.local.translate + this.delta.translate;
+        }
     };
 
     public transform() {
@@ -96,8 +116,11 @@ export default class YAxis extends Axis {
             bottom = this.axes.size.height * this.axes.padding.top;
 
         this.local.scale = (bottom - top) / (this.local.max - this.local.min);
-        this.local.translate = top - (bottom - top) /
-            (this.local.max - this.local.min) * this.local.min;
+        this.local.translate = top - this.local.scale * this.local.min;
+
+        this.delta.translate = -0.5 * (
+            this.local.max + this.local.min
+        ) * this.delta.scale;
     };
 
     public override drawGrid() {
@@ -275,6 +298,7 @@ export default class YAxis extends Axis {
                 }}
                 width={axisSize_.width}
                 height={this.axes.size.height}
+                onDoubleClick={this.doubleClickHandler}
                 onMouseMove={this.mouseMoveHandler}
                 onMouseOut={this.mouseOutHandler}
                 onMouseDown={this.mouseDownHandler}

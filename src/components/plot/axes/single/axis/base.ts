@@ -5,6 +5,7 @@ import {
     AxesReal
 } from '../Axes';
 import AxisBase from '../../common/axis/base';
+import { delta_ } from '../../../../../utils/constants/plot';
 
 export default abstract class Axis extends AxisBase<
     AxesReal
@@ -22,8 +23,8 @@ export default abstract class Axis extends AxisBase<
         translate: 0
     };
     public delta: AxisData = {
-        min: 5,
-        max: 500,
+        min: delta_.min,
+        max: delta_.max,
         scale: 0,
         translate: 0
     };

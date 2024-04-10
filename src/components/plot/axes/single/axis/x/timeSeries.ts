@@ -8,6 +8,7 @@ import {
 } from '../../../../../../utils/types/display';
 import DateTimeRange from '../../../../../../utils/classes/iterable/DateTimeRange';
 import { truncate } from '../../../../../../utils/functions/numberProcessing';
+import { delta_ } from '../../../../../../utils/constants/plot';
 
 export default class XAxisTimeSeries extends XAxis<
     DateTimeRange
@@ -32,8 +33,8 @@ export default class XAxisTimeSeries extends XAxis<
             axes,
             data,
             {
-                min: 5 < spread ? 5 : spread,
-                max: 500 < spread ? 500 : spread
+                min: delta_.min < spread ? delta_.min : spread,
+                max: delta_.max < spread ? delta_.max : spread
             },
             visible,
             0.01,

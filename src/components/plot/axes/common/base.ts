@@ -41,6 +41,7 @@ export default abstract class AxesBase<
         this.draw = this.draw.bind(this);
         this.drawTooltip = this.drawTooltip.bind(this);
         this.hideTooltip = this.hideTooltip.bind(this);
+        this.wheelHandler = this.wheelHandler.bind(this);
         this.mouseMoveHandler = this.mouseMoveHandler.bind(this);
         this.mouseOutHandler = this.mouseOutHandler.bind(this);
         this.mouseDownHandler = this.mouseDownHandler.bind(this);
@@ -61,14 +62,28 @@ export default abstract class AxesBase<
 
     public abstract hideTooltip(): void;
 
+    public wheelHandler(event: WheelEvent) {
+        if (this.active) {
+            event.preventDefault();
+            event.stopPropagation();
+            this.x.reScale(-event.deltaY / 2000);
+            this.draw();
+            this.drawTooltip(
+                this.mousePos.x,
+                this.mousePos.y
+            );
+        }
+    };
+
     public mouseMoveHandler(event: React.MouseEvent) {
         if (this.active) {
             const window = (event.target as HTMLCanvasElement)
                 .getBoundingClientRect();
             const x = event.clientX - window.left,
                 y = event.clientY - window.top;
-            if (this.drag)
+            if (this.drag) {
                 this.x.reTranslate(x - this.mousePos.x);
+            }
             this.mousePos = { x, y };
             this.draw();
             this.drawTooltip(x, y);

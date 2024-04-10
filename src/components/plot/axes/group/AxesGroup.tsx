@@ -198,7 +198,7 @@ export class AxesGroupReal extends AxesBase<
         // eslint-disable-next-line react-hooks/rules-of-hooks
         useEffect(() => {
             tooltipRef.current?.addEventListener(
-                'wheel', this.x.wheelHandler, { passive: false });
+                'wheel', this.wheelHandler, { passive: false });
 
             this.x.drawTicks();
         }, [this.size.width, this.size.height]);

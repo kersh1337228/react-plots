@@ -46,11 +46,11 @@
 }
 
 .axes-grid .axis.viewport.x.tooltip {
-    cursor: e-resize;
+    cursor: ew-resize;
 }
 
-.axes-grid .axis-viewport.y.tooltip {
-    cursor: n-resize;
+.axes-grid .axis.viewport.y.tooltip {
+    cursor: ns-resize;
 }
 
 .axes-grid .axes-tooltips {
