@@ -193,10 +193,15 @@ export class AxesReal extends AxesBase<
             };
 
             this.x.reScale(0);
+            this.ctx.grid?.clearRect(
+                0, 0,
+                this.size.width,
+                this.size.height
+            );
             this.x.drawGrid();
             this.y.drawGrid();
             this.draw();
-        }, []);
+        }, [this.size.width, this.size.height]);
 
         return <div
             className={'axes-grid'}

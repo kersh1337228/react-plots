@@ -23,6 +23,16 @@
     font-size: 16px;
 }
 
+.object-tree {
+    width: 100%;
+    border-spacing: 0 2px;
+}
+
+.object-tree tr td {
+    margin: 0;
+    padding: 0;
+}
+
 .figure.object-tree {
     margin: 0;
     padding: 0;
@@ -40,6 +50,31 @@
     box-sizing: border-box;
 }
 
+.object-tree .object-tree-element .indent.fake {
+    border-left: solid transparent 1px;
+}
+
 .object-tree .object-tree-element svg {
+    cursor: pointer;
+}
+
+.component-grid {
+    display: grid;
+    padding: 8px;
+    grid-gap: 8px;
+}
+
+.figure.component-grid {
+    width: 208px;
+}
+
+.component-grid .grid-tile {
+    padding: 8px;
+
+    border: solid white 1px;
+    border-radius: 7px;
+
+    text-align: center;
+
     cursor: pointer;
 }

@@ -34,14 +34,6 @@ export default class YAxis extends Axis {
     ) {
         super(axes, 'y', visible, 0.001, name, grid, font);
 
-        this.init();
-        this.local = { ...this.global };
-    };
-
-    public override init() {
-        const top = this.axes.size.height * (1 - this.axes.padding.bottom),
-            bottom = this.axes.size.height * this.axes.padding.top;
-
         for (const {
             data: {
                 global: {
@@ -55,6 +47,13 @@ export default class YAxis extends Axis {
             this.global.min = min < this.global.min ? min : this.global.min;
             this.global.max = this.global.max < max ? max : this.global.max;
         }
+        this.init();
+        this.local = structuredClone(this.global);
+    };
+
+    public override init() {
+        const top = this.axes.size.height * (1 - this.axes.padding.bottom),
+            bottom = this.axes.size.height * this.axes.padding.top;
 
         this.global.scale = (bottom - top) / (this.global.max - this.global.min);
         this.global.translate = top - (bottom - top) /

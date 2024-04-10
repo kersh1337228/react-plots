@@ -24,7 +24,7 @@ export default class ObjectNumericData extends PointData<
             max: Math.max.apply(null, xs)
         };
 
-        this.local = { ...this.global };
+        this.local = structuredClone(this.global);
     }
 
     public override globalize(

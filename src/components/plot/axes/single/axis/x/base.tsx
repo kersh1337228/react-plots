@@ -10,6 +10,7 @@ import {
 } from '../../../../../../utils/constants/plot';
 import {
     AxisGrid,
+    Bounds,
     Font
 } from '../../../../../../utils/types/display';
 import NumberRange from '../../../../../../utils/classes/iterable/NumberRange';
@@ -25,6 +26,7 @@ export default abstract class XAxis<
     protected constructor(
         axes: AxesReal,
         public readonly data: DataT,
+        delta: Bounds,
         visible: boolean = true,
         scrollSpeed: number = 1,
         name: string = 'x',
@@ -40,8 +42,27 @@ export default abstract class XAxis<
     ) {
         super(axes, 'x', visible, scrollSpeed, name, grid, font);
 
+        this.delta = {
+            ...this.delta,
+            ...delta
+        };
+
+        for (const {
+            data: {
+                global: {
+                    x: {
+                        min,
+                        max
+                    }
+                }
+            }
+        } of this.axes.drawings) {
+            this.global.min = min < this.global.min ? min : this.global.min;
+            this.global.max = this.global.max < max ? max : this.global.max;
+        }
+
         this.init();
-        this.local = { ...this.global };
+        this.local = structuredClone(this.global);
         if (this.global.max > this.delta.max) {
             this.local.min = this.global.max - this.delta.max;
 
@@ -58,20 +79,6 @@ export default abstract class XAxis<
     public override init() {
         const left = this.axes.size.width * this.axes.padding.left,
             right = this.axes.size.width * (1 - this.axes.padding.right);
-
-        for (const {
-            data: {
-                global: {
-                    x: {
-                        min,
-                        max
-                    }
-                }
-            }
-        } of this.axes.drawings) {
-            this.global.min = min < this.global.min ? min : this.global.min;
-            this.global.max = this.global.max < max ? max : this.global.max;
-        }
 
         this.global.scale = (right - left) / (this.global.max - this.global.min);
         this.global.translate = left - (right - left) /

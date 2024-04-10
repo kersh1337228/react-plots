@@ -11,15 +11,18 @@ import {
 } from 'react';
 import FigureObjectTree from './objectTree/ObjectTree';
 import './Settings.css'
+import FigureGrid from './grid/Grid';
 
 export default function FigureSettings(
     {
         name,
         children,
+        rerender,
         visible = true
     }: {
         name: string;
         children: (AxesReal | AxesGroupReal)[];
+        rerender: () => void;
         visible?: boolean
     }
 ) {
@@ -44,7 +47,7 @@ export default function FigureSettings(
             title={name}
             tabs={{
                 'Object Tree': <FigureObjectTree children={children}/>,
-                // 'Axes Grid': <FigureGrid figure={this.props.figure}/>
+                'Components Grid': <FigureGrid children={children} rerender={rerender}/>
             }}
             active={active}
             close={() => {

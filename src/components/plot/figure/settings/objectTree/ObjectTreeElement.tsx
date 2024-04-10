@@ -21,13 +21,24 @@ export default function FigureObjectTreeElement(
             </td>
         </tr>
         <tr className={'figure object-tree-element'}>
-            <td className={'indent'}></td>
-            <td>
-                {child instanceof AxesReal ?
-                    <AxesObjectTree axes={child} /> :
-                    <GroupObjectTree group={child} />
-                }
-            </td>
+            {child instanceof AxesReal ? <>
+                <td className={'indent'}></td>
+                <td>
+                    <table className={'group object-tree'}>
+                        <tbody>
+                            <tr className={'group object-tree-element'}>
+                                <td className={'indent fake'}></td>
+                                <AxesObjectTree axes={child}/>
+                            </tr>
+                        </tbody>
+                    </table>
+                </td>
+            </> : <>
+                <td className={'indent'}></td>
+                <td>
+                    <GroupObjectTree group={child}/>
+                </td>
+            </>}
         </tr>
     </>;
 }

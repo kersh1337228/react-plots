@@ -27,11 +27,20 @@ export default class XAxisTimeSeries extends XAxis<
             size: 10
         }
     ) {
-        super(axes, data, visible, 0.01, name, grid, font);
-
         const spread = data.length;
-        this.delta.min = 5 < spread ? 5 : spread;
-        this.delta.max = 500 < spread ? 500 : spread;
+        super(
+            axes,
+            data,
+            {
+                min: 5 < spread ? 5 : spread,
+                max: 500 < spread ? 500 : spread
+            },
+            visible,
+            0.01,
+            name,
+            grid,
+            font
+        );
     }
 
     public override drawGrid() {

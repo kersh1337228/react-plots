@@ -188,13 +188,9 @@ export class AxesGroupReal extends AxesBase<
         useEffect(() => {
             tooltipRef.current?.addEventListener(
                 'wheel', this.x.wheelHandler, { passive: false });
-            const x = this.axes[0].x;
-            this.localize({
-                start: x.local.min / x.global.max,
-                end: x.local.max / x.global.max,
-            });
-            this.draw();
-        }, []);
+
+            this.x.drawTicks();
+        }, [this.size.width, this.size.height]);
 
         return <div
             className={'group-grid'}

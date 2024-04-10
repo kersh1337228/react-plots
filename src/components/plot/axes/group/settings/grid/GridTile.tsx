@@ -33,12 +33,13 @@ export default function GridTile(
 
     function dragEndHandler(_: React.DragEvent): void {}
 
-    console.log(position.column.start, position.column.end)
     return <div
         className={'grid-tile'}
         style={{
             gridRowStart: position.row.start,
-            gridRowEnd: position.row.end
+            gridRowEnd: position.row.end,
+            gridColumnStart: position.column.start,
+            gridColumnEnd: position.column.end,
         }}
         draggable={true}
         onDragStart={dragStartHandler}

@@ -15,7 +15,7 @@ export default abstract class AxesBase<
     // @ts-ignore
     public x: XAxisT;
     public size: Size;
-    protected readonly axisSize: Point;
+    public readonly axisSize: Point;
     protected drag: boolean = false;
     public mousePos: Point = {
         x: 0,

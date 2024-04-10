@@ -12,34 +12,19 @@
 }
 
 .group.object-tree {
-    margin: -8px 0 -8px 0;
     padding: 0;
     list-style: none;
-
-    border-spacing: 0 8px;
 }
 
 .settings-header {
     font-weight: bold;
 }
 
-.group.grid {
-    display: grid;
-    padding: 8px;
-    grid-gap: 8px;
+.group.component-grid {
     width: 150px;
 }
 
-.group.grid .grid-tile {
-    padding: 8px;
-
+.group.component-grid .grid-tile {
     grid-column-start: 1;
     grid-column-end: 2;
-
-    border: solid white 1px;
-    border-radius: 7px;
-
-    text-align: center;
-
-    cursor: pointer;
 }

@@ -29,11 +29,21 @@ export default class XAxisNumeric extends XAxis<
             size: 10
         }
     ) {
-        super(axes, data, visible, 0.01, name, grid, font);
-
         const spread = (data.at(-1) as number) - (data.at(0) as number);
-        this.delta.min = data.freq * 5 < spread ? data.freq * 5 : spread;
-        this.delta.max = data.freq * 500 < spread ? data.freq * 500 : spread;
+
+        super(
+            axes,
+            data,
+            {
+                min: data.freq * 5 < spread ? data.freq * 5 : spread,
+                max: data.freq * 500 < spread ? data.freq * 500 : spread
+            },
+            visible,
+            0.01,
+            name,
+            grid,
+            font
+        );
     }
 
     public override drawGrid() {

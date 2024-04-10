@@ -22,7 +22,7 @@ export default class ObjectTimeSeriesData extends ObjectData<
             max: data.length
         };
 
-        this.local = { ...this.global };
+        this.local = structuredClone(this.global);
     }
 
     public override globalize(

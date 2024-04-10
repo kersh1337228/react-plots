@@ -19,7 +19,7 @@ export default class PointTimeSeriesData extends PointData<
             max: data.length
         };
 
-        this.local = { ...this.global };
+        this.local = structuredClone(this.global);
     }
 
     public override globalize(

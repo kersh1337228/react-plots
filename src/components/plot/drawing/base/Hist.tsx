@@ -85,10 +85,6 @@ export class HistReal extends Drawing<
         }
     }
 
-    public override drawTooltip(_: number) {
-        // TODO: hist draw tooltip
-    }
-
     public override settings() {
         return super.settings(<>
             <colgroup>

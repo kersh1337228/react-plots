@@ -71,11 +71,13 @@ export default abstract class Drawing<
 
     public abstract draw(): void;
 
-    public abstract drawTooltip(
-        localX: number
-    ): void;
+    public drawTooltip(
+        _: number
+    ) {};
 
-    public settings(children?: React.ReactNode) {
+    public settings(
+        children?: React.ReactNode
+    ) {
         return <table
             key={this.name}
             className={'drawing-settings'}

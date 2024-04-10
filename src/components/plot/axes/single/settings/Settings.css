@@ -14,15 +14,14 @@
 }
 
 .axes.object-tree {
-    margin: 0 -16px 0 -16px;
+    /*margin: 0 -16px 0 -16px;*/
     padding: 0;
     list-style: none;
-    border-spacing: 16px 0;
 }
 
 .axes.object-tree-element td {
     margin: 0;
-    padding: 0;
+    padding: 0 8px 0 0;
 }
 
 .axes.object-tree-element td svg {

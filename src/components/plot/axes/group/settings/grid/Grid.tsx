@@ -1,3 +1,4 @@
+import React from 'react';
 import {
     AxesGroupReal
 } from '../../AxesGroup';
@@ -29,22 +30,19 @@ export default function GroupGrid(
         drag.size = structuredClone(drop.size);
         drag.x.init();
         drag.y.init();
-        drag.x.reScale(0);
         group.axes[dropIndex] = drag;
 
         drop.position = position;
         drop.size = size;
         drop.x.init();
         drop.y.init();
-        drop.x.reScale(0);
         group.axes[dragIndex] = drop;
 
-        group.draw();
         group.rerender();
     }
 
     return <div
-        className={'group grid'}
+        className={'group component-grid'}
         style={{
             gridTemplateRows: `repeat(${group.rows - 1}, 1fr)`,
         }}

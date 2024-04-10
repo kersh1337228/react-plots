@@ -1,0 +1,16 @@
+.modal-dynamic {
+    position: fixed;
+    width: max-content;
+    height: max-content;
+    pointer-events: none;
+    user-select: none;
+    background: rgba(255, 255, 255, 0);
+    opacity: 0;
+    transition: opacity 0.3s;
+    cursor: default;
+}
+
+.modal-dynamic.active {
+    pointer-events: all;
+    opacity: 1;
+}

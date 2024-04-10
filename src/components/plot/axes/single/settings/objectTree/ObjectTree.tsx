@@ -12,7 +12,7 @@ export default function AxesObjectTree(
 ) {
     return <table className={'axes object-tree'}>
         <colgroup>
-            <col span={1} width={32}/>
+            <col span={1} width={128}/>
             <col span={1} width={128}/>
             <col span={1} width={14}/>
             <col span={1} width={16}/>

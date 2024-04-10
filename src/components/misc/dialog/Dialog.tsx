@@ -1,5 +1,5 @@
 import React from 'react'
-import ModalDynamic from "../modals/ModalDynamic"
+import ModalDynamic from "../modal/dynamic/ModalDynamic"
 import './Dialog.css'
 import {
     Point,

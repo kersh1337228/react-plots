@@ -6,7 +6,8 @@ import {
 	DrawingProps
 } from '../../../components/plot/drawing/base/Drawing';
 import {
-	epsComp, unique
+	epsComp,
+	unique
 } from '../../functions/numberProcessing';
 
 export default class NumberRange extends TypedRange<

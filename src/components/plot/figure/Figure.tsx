@@ -37,8 +37,6 @@ declare type FigureProps = {
     settings?: boolean;
 };
 
-declare type FigureState = {}; // TODO: Figure state
-
 export default function Figure(
     props: FigureProps
 ) {
@@ -130,7 +128,11 @@ export default function Figure(
             else
                 throw Error("Only <Axes> and <AxesGroup> are allowed to be <Figure> children.")
         });
-    }, []);
+    }, [
+        props.children,
+        props.width,
+        props.height
+    ]);
 
     return <div
         className={'figure-layout'}
@@ -138,6 +140,7 @@ export default function Figure(
         <FigureSettings
             name={props.name}
             children={children}
+            rerender={rerender}
             visible={props.settings}
         />
         <div
