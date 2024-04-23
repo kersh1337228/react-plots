@@ -70,8 +70,7 @@ export default abstract class XAxis<
             right = this.axes.size.width * (1 - this.axes.padding.right);
 
         this.global.scale = (right - left) / (this.global.max - this.global.min);
-        this.global.translate = left - (right - left) /
-            (this.global.max - this.global.min) * this.global.min;
+        this.global.translate = left - this.global.scale * this.global.min;
     }
 
     public override reset() {
@@ -142,14 +141,12 @@ export default abstract class XAxis<
         const viewportSize = right - left,
             dtgs = this.delta.translate / this.global.scale;
 
-        this.delta.translate += dt;
-
         const multiplier = viewportSize / (
             viewportSize + this.delta.scale * (this.global.max - this.global.min));
         let offset = multiplier * dtgs;
         const min = this.global.max * (1 - multiplier) + offset,
             max = this.global.min * (1 - multiplier) + offset;
-        this.delta.translate -= (
+        this.delta.translate += dt - (
             (min < 0 ? min : 0) + (0 < max ? max : 0)
         ) * (this.local.scale + this.delta.scale);
 

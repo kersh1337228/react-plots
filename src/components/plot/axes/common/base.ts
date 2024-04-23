@@ -83,9 +83,9 @@ export default abstract class AxesBase<
                 y = event.clientY - window.top;
             if (this.drag) {
                 this.x.reTranslate(x - this.mousePos.x);
+                this.draw();
             }
             this.mousePos = { x, y };
-            this.draw();
             this.drawTooltip(x, y);
         }
     };
