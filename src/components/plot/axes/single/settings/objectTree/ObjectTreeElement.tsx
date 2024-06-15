@@ -1,5 +1,6 @@
 'use client';
 
+import React from 'react';
 import Drawing from '../../../../drawing/base/Drawing';
 import SettingsIcon from '../../../../../misc/icons/SettingsIcon';
 import Dialog from '../../../../../misc/dialog/Dialog';

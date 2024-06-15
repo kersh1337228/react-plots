@@ -1,4 +1,4 @@
-import React from 'react'
+import React from 'react';
 
 export default function CrossIcon(): JSX.Element {
 	return <svg xmlns="http://www.w3.org/2000/svg" viewBox="6 6 11 11" width="11" height="11" fill="none">

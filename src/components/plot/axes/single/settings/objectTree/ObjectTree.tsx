@@ -1,3 +1,4 @@
+import React from 'react';
 import ObjectTreeElement from './ObjectTreeElement';
 import {
     AxesReal

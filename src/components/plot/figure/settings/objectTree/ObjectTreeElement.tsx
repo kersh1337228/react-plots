@@ -1,3 +1,4 @@
+import React from 'react';
 import AxesObjectTree from '../../../axes/single/settings/objectTree/ObjectTree';
 import {
     AxesReal

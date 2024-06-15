@@ -1,8 +1,7 @@
 type DataPoint<T extends number | string> = [ T, number | null ];
 type DataObject<T extends number | string> = {
 	timestamp: T;
-	[ numericType: string ]: number | null;
-	[ anyType: string ]: any;
+	[ key: string ]: any;
 };
 
 export type PointNumeric = DataPoint<number>;

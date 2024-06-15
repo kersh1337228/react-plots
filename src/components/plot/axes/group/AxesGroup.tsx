@@ -76,7 +76,7 @@ export class AxesGroupReal extends AxesBase<
                 xAxisLabels = [...xAxisData];
             } else {
                 xAxisData = DateTimeRange.plotDateTimeRange(drawings);
-                xAxisLabels = [...xAxisData.format('%Y-%m-%d')];
+                xAxisLabels = [...xAxisData.format()];
             }
         else
             throw Error('<Axes> drawings inside of <AxesGroup> must have uniform data type.');

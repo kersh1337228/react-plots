@@ -1,7 +1,21 @@
 export class Duration {
+	public readonly format: string;
 	private constructor(
 		private readonly duration: number
-	) {}
+	) {
+		if (duration >= 31536000000)
+			this.format = '%Y';
+		else if (duration >= 2592000000)
+			this.format = '%Y-%m';
+		else if (duration >= 86400000)
+			this.format = '%Y-%m-%d';
+		else if (duration >= 3600000)
+			this.format = '%Y-%m-%d %H';
+		else if (duration >= 60000)
+			this.format = '%Y-%m-%d %H:%M';
+		else
+			this.format = '%Y-%m-%d %H:%M:%S';
+	}
 	// Constructors
 	public static milliseconds(n: number): Duration {
 		return new Duration(n)
@@ -52,7 +66,7 @@ export class Duration {
 	};
 
 	public get months(): number {
-		return Math.floor(this.years * 12);
+		return Math.floor(this.days / 30);
 	};
 
 	public get years(): number {
@@ -70,8 +84,7 @@ export class DateTime {
 	) {
 		if (datetime instanceof Date) {
 			this.obj = datetime;
-			const iso = datetime.toISOString();
-			this.str = `${iso.slice(0, 10)} ${iso.slice(11, 19)}`;
+			this.str = datetime.toLocaleString('sv');
 		} else if (datetime instanceof DateTime) {
 			this.obj = datetime.obj;
 			this.str = datetime.str;

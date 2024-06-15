@@ -1,3 +1,4 @@
+import React from 'react';
 import {
     AxesReal
 } from '../../../axes/single/Axes';

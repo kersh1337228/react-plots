@@ -1,6 +1,6 @@
 'use client';
 
-import {
+import React, {
     useState
 } from 'react';
 import Dialog from '../../../../misc/dialog/Dialog';

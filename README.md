@@ -29,28 +29,28 @@ interface Quotes extends ObjectTimeSeries {
 
 ### Drawing data
 ```ts
-    const sin: PointNumeric[] = [],
-        cos: PointNumeric[] = [];
-    for (let i = 0; i < 10; i += 0.1) {
-        const j = round(i, 1);
-        sin.push([j, j + Math.sin(j)]);
-        cos.push([j + 1, Math.cos(j + 1)]);
+const sin: PointNumeric[] = [],
+    cos: PointNumeric[] = [];
+for (let i = 0; i < 10; i += 0.1) {
+    const j = round(i, 1);
+    sin.push([j, j + Math.sin(j)]);
+    cos.push([j + 1, Math.cos(j + 1)]);
+}
+
+const raw = {
+    timestamp: ibm.chart.result[0].timestamp,
+    ...ibm.chart.result[0].indicators.quote[0]
+};
+const quotes = new Array(raw.timestamp.length).fill(0).map((_, i) => {
+    return {
+        timestamp: new Date(raw.timestamp[i] * 1000).toLocaleDateString('sv'),
+        open: raw.open[i],
+        high:raw.high[i],
+        low: raw.low[i],
+        close: raw.close[i],
+        volume: raw.volume[i]
     }
-    
-    const raw = {
-        timestamp: ibm.chart.result[0].timestamp,
-        ...ibm.chart.result[0].indicators.quote[0]
-    };
-    const quotes = new Array(raw.timestamp.length).fill(0).map((_, i) => {
-        return {
-            timestamp: new Date(raw.timestamp[i] * 1000).toLocaleDateString('sv'),
-            open: raw.open[i],
-            high:raw.high[i],
-            low: raw.low[i],
-            close: raw.close[i],
-            volume: raw.volume[i]
-        }
-    }) as Quotes[];
+}) as Quotes[];
 ```
 
 ### Component usage

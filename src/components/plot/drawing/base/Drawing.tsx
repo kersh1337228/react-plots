@@ -1,3 +1,4 @@
+import React from 'react';
 import {
     ObjectNumeric,
     ObjectTimeSeries,
@@ -5,7 +6,6 @@ import {
     PlotDataName,
     PointNumeric, PointTimeSeries
 } from '../../../../utils/types/plotData';
-import React from 'react';
 import {
     plotDataType
 } from '../../../../utils/functions/plotDataProcessing';

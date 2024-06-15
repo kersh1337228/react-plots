@@ -76,11 +76,12 @@ export function fillData(
 
 		let i = -1;
 		for (const label of labels)
-			if (!labelsPresent.includes(label))
+			if (!labelsPresent.includes(label)) {
 				filled.push({
 					...obj, // @ts-ignore
 					timestamp: label
 				});
+			}
 			else
 				filled.push(data[++i]);
 	} else

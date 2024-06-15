@@ -34,7 +34,7 @@ export default class NumberRange extends TypedRange<
 	};
 
 	public override format(
-		fstring: string
+		fstring: string = '%.2f'
 	): string[] {
 		const matches = [...fstring.matchAll(/%\.(\d*)f/g)];
 		return this.container.map(num => {
@@ -60,7 +60,7 @@ export default class NumberRange extends TypedRange<
 
 	public override formatAt(
 		i: number,
-		fstring: string
+		fstring: string = '%.2f'
 	) {
 		const num = this.container.at(i);
 		if (num !== undefined) {

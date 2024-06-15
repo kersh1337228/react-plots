@@ -1,11 +1,8 @@
+import React from 'react';
 import DrawingData from '../base';
 import {
-    Point,
-    PointNumeric
+    Point
 } from '../../../../../../utils/types/plotData';
-import {
-    round
-} from '../../../../../../utils/functions/numberProcessing';
 import {
     DataRange
 } from '../../../../../../utils/types/display';

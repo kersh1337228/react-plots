@@ -5,8 +5,10 @@ import {
     AxesReal
 } from '../axes/single/Axes';
 import React, {
-    Children, JSXElementConstructor,
-    useMemo, useState
+    Children,
+    JSXElementConstructor,
+    useMemo,
+    useState
 } from 'react';
 import NumberRange from '../../../utils/classes/iterable/NumberRange';
 import DateTimeRange from '../../../utils/classes/iterable/DateTimeRange';
@@ -76,7 +78,7 @@ export default function Figure(
                             xAxisLabels = [...xAxisData];
                         } else {
                             xAxisData = DateTimeRange.plotDateTimeRange(drawingsArray);
-                            xAxisLabels = [...xAxisData.format('%Y-%m-%d')];
+                            xAxisLabels = [...xAxisData.format()];
                         }
                     else
                         throw Error("<Axes> drawings must have uniform data type.");

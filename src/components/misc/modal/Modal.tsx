@@ -1,7 +1,7 @@
 import React from 'react';
-import './ModalDynamic.css';
+import './Modal.css';
 
-export default function ModalDynamic(
+export default function Modal(
     {
         children,
         active,

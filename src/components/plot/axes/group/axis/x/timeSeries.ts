@@ -61,7 +61,7 @@ export default class XAxisTimeSeries extends XAxis {
                 ctx.stroke();
                 ctx.closePath();
 
-                const text = (axis.data as DateTimeRange).formatAt(t, '%Y-%m-%d');
+                const text = (axis.data as DateTimeRange).formatAt(t);
                 ctx.textAlign = 'center';
                 ctx.fillText(
                     text ? text : '',
@@ -101,16 +101,16 @@ export default class XAxisTimeSeries extends XAxis {
             const globalX = (t + 0.55) * scale + translate;
             ctx.fillRect(
                 truncate(
-                    globalX - 30,
+                    globalX - 45,
                     0,
-                    this.axes.size.width - 60
+                    this.axes.size.width - 90
                 ),
                 0,
-                60,
+                90,
                 25
             );
 
-            const text = axis.data.formatAt(t, '%Y-%m-%d');
+            const text = axis.data.formatAt(t);
             ctx.textAlign = 'center';
             ctx.font = `${this.font.size}px ${this.font.family}`;
             ctx.fillStyle = '#ffffff';

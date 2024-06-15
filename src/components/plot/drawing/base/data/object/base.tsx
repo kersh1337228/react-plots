@@ -1,3 +1,4 @@
+import React from 'react';
 import DrawingData from '../base';
 import {
     Object as ObjecT

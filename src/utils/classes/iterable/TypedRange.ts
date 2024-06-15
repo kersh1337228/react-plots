@@ -24,12 +24,12 @@ export default abstract class TypedRange<
 	): TypedRange<DataT, FreqT>;
 
 	public abstract format(
-		fstring: string
+		fstring?: string
 	): string[];
 
 	public abstract formatAt(
 		i: number,
-		fstring: string
+		fstring?: string
 	): string | undefined;
 
 	public [Symbol.iterator]() {

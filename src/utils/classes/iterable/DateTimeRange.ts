@@ -1,3 +1,4 @@
+import React from 'react';
 import {
 	DateTime,
 	Duration
@@ -21,26 +22,57 @@ export default class DateTimeRange extends TypedRange<
 	public constructor(
 		start: DateTime | Date | string,
 		end: DateTime | Date | string,
-		freq: Duration = Duration.days(1)
+		freq: Duration
+	);
+
+	public constructor(
+		container: number[],
+		freq: Duration
+	);
+
+	public constructor(
+		startOrContainer: (DateTime | Date | string) | number[],
+		endOrFreq: (DateTime | Date | string) | Duration,
+		freq?: Duration
 	) {
-		const first = new DateTime(start),
-			last = new DateTime(end);
+		if (freq === undefined) {
+			super(
+				(startOrContainer as number[]).map(
+					timestamp => new DateTime(
+						new Date(timestamp)
+					)
+				),
+				endOrFreq as Duration,
+				1
+			);
+		} else {
+			const first = new DateTime(
+				startOrContainer as DateTime | Date | string);
+			const last = new DateTime(
+				endOrFreq as DateTime | Date | string);
 
-		const n = DateTime.diff(last, first).milliseconds / freq.milliseconds;
-		super(
-			new Array<DateTime>(n),
-			freq,
-			1
-		);
+			const n = DateTime.diff(last, first).milliseconds / freq.milliseconds;
+			super(
+				new Array<DateTime>(n),
+				freq,
+				1
+			);
 
-		for (let i = 0; i < n; ++i)
-			this.container[i] = new DateTime(new Date(
-				first.object.getTime() + i * freq.milliseconds));
+			for (let i = 0; i < n; ++i)
+				this.container[i] = new DateTime(
+					new Date(
+						first.object.getTime() + i * freq.milliseconds
+					)
+				);
+		}
 	};
 
-	public override format(fstring: string): string[] {
+	public override format(
+		fstring?: string
+	): string[] {
 		return this.container.map(
-			dt => dt.format(fstring));
+			dt => dt.format(fstring ?? this.freq.format)
+		);
 	};
 
 	public override at(i: number): DateTime | undefined {
@@ -49,9 +81,11 @@ export default class DateTimeRange extends TypedRange<
 
 	public override formatAt(
 		i: number,
-		fstring: string
+		fstring?: string
 	) {
-		return this.container.at(i)?.format(fstring);
+		return this.container.at(i)?.format(
+			fstring ?? this.freq.format
+		);
 	};
 
 	public override slice(
@@ -66,16 +100,19 @@ export default class DateTimeRange extends TypedRange<
 	};
 
 	public static plotDateTimeRange(
-		drawings: React.ReactElement<DrawingProps<any>>[]
+		drawings: React.ReactElement<DrawingProps<any>>[],
+		fill: boolean = false
 	): DateTimeRange {
 		const dates = [...new Set(([] as Array<number>)
 			.concat(...drawings.map(drawing => {
 				if (plotDataType(drawing.props.data) === 'PointTimeSeries')
-					return (drawing.props.data as PointTimeSeries[]).map(arr =>
-						new Date(arr[0]).getTime());
+					return (drawing.props.data as PointTimeSeries[]).map(
+						arr => Date.parse(arr[0])
+					);
 				else
-					return (drawing.props.data as ObjectTimeSeries[]).map(arr =>
-						new Date(arr.timestamp).getTime());
+					return (drawing.props.data as ObjectTimeSeries[]).map(
+						arr => Date.parse(arr.timestamp)
+					);
 			})).sort((a, b) => a > b ? 1 : a < b ? -1 : 0))];
 
 		let freq = Infinity;
@@ -84,10 +121,16 @@ export default class DateTimeRange extends TypedRange<
 			freq = delta < freq ? delta : freq;
 		}
 
-		return new DateTimeRange(
-			new Date(dates[0]),
-			new Date(dates.at(-1) as number),
-			Duration.milliseconds(freq)
-		);
+		if (fill)
+			return new DateTimeRange(
+				new Date(dates[0]),
+				new Date(dates.at(-1) as number),
+				Duration.milliseconds(freq)
+			);
+		else
+			return new DateTimeRange(
+				dates,
+				Duration.milliseconds(freq)
+			);
 	};
 }

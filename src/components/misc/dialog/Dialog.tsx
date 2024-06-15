@@ -1,11 +1,13 @@
-import React from 'react'
-import ModalDynamic from "../modal/dynamic/ModalDynamic"
-import './Dialog.css'
+'use client';
+
+import React from 'react';
+import Modal from '../modal/Modal';
 import {
     Point,
     Size
-} from "../../../utils/types/display"
-import CrossIcon from "../icons/CrossIcon"
+} from '../../../utils/types/display';
+import CrossIcon from '../icons/CrossIcon';
+import './Dialog.css';
 
 interface DialogProps {
     title: string,
@@ -41,8 +43,6 @@ export default class Dialog extends React.Component<
                 translate: {x: 0, y: 0}
             }
         }
-        this.cancel = this.cancel.bind(this)
-        this.ok = this.ok.bind(this)
         this.changePosition = this.changePosition.bind(this)
     }
     public get offset(): { x: number | string, y: number | string } {
@@ -63,15 +63,9 @@ export default class Dialog extends React.Component<
             }})
         }
     }
-    public cancel() {
-        // this.props.close()
-    }
-    public ok() {
-        // this.props.close()
-    }
     public render(): React.ReactNode {
         return (
-            <ModalDynamic
+            <Modal
                 active={this.props.active}
                 translate={{
                     x: `calc(${this.state.drag.translate.x}px + ${this.offset.x} + 55%)`,
@@ -116,12 +110,8 @@ export default class Dialog extends React.Component<
                     <div className={'dialogActiveTab'}>
                         {this.props.tabs[this.state.activeTab]}
                     </div>
-                    {/*<div className={'dialogButtons'}>*/}
-                    {/*    <button onClick={this.cancel}>Cancel</button>*/}
-                    {/*    <button onClick={this.ok}>Ok</button>*/}
-                    {/*</div>*/}
                 </div>
-            </ModalDynamic>
+            </Modal>
         )
     }
 }

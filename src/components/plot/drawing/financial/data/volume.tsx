@@ -1,3 +1,4 @@
+import React from 'react';
 import {
     Quotes
 } from '../../../../../utils/types/plotData';

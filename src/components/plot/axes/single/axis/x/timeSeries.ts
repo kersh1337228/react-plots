@@ -103,7 +103,7 @@ export default class XAxisTimeSeries extends XAxis<
                 ctx.stroke();
                 ctx.closePath();
 
-                const text = this.data.formatAt(t, '%Y-%m-%d');
+                const text = this.data.formatAt(t);
                 ctx.textAlign = 'center';
                 ctx.fillText(
                     text ? text : '',
@@ -155,7 +155,7 @@ export default class XAxisTimeSeries extends XAxis<
                 25
             );
 
-            const text = this.data.formatAt(t, '%Y-%m-%d');
+            const text = this.data.formatAt(t);
             ctx.textAlign = 'center';
             ctx.font = `${this.font.size}px ${this.font.family}`;
             ctx.fillStyle = '#ffffff';
