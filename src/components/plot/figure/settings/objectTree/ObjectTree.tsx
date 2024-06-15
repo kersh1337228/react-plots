@@ -16,7 +16,10 @@ export default function FigureObjectTree(
     return <table className={'figure object-tree'}>
         <tbody>
             {children.map((child, i) =>
-                <FigureObjectTreeElement key={i} child={child}/>
+                <FigureObjectTreeElement
+                    key={i}
+                    child={child}
+                />
             )}
         </tbody>
     </table>;

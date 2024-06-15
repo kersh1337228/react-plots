@@ -8,7 +8,8 @@ import {
     AxesGroupReal
 } from '../../AxesGroup';
 import {
-    numberPower, truncate
+    numberPower,
+    truncate
 } from '../../../../../../utils/functions/numberProcessing';
 
 export default class XAxisNumeric extends XAxis {

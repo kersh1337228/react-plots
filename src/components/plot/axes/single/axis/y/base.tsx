@@ -1,3 +1,5 @@
+'use client';
+
 import {
     axisSize_
 } from '../../../../../../utils/constants/plot';
@@ -6,7 +8,8 @@ import React, {
     useEffect
 } from 'react';
 import {
-    numberPower, truncate
+    numberPower,
+    truncate
 } from '../../../../../../utils/functions/numberProcessing';
 import {
     AxesReal

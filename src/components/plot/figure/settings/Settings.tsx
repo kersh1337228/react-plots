@@ -1,3 +1,5 @@
+'use client';
+
 import SettingsIcon from '../../../misc/icons/SettingsIcon';
 import Dialog from '../../../misc/dialog/Dialog';
 import {
@@ -10,8 +12,8 @@ import {
     useState
 } from 'react';
 import FigureObjectTree from './objectTree/ObjectTree';
-import './Settings.css'
 import FigureGrid from './grid/Grid';
+import './Settings.css';
 
 export default function FigureSettings(
     {
@@ -28,26 +30,23 @@ export default function FigureSettings(
 ) {
     const [active, setActive] = useState(false);
 
-    return visible ? <div
-        className={'figure-settings'}
-        style={{
-            // width: axisSize_.width,
-            // height: axisSize_.height
-        }}
-    >
+    return visible ? <div className={'figure-settings'}>
         <div className={'figure-settings-header'}>
-            <SettingsIcon onClick={() => {
-                setActive(active => !active);
-            }}/>
-            <h1>
-                {name}
-            </h1>
+            <SettingsIcon
+                onClick={() => setActive(active => !active)}
+            />
+            <h1>{name}</h1>
         </div>
         <Dialog
             title={name}
             tabs={{
-                'Object Tree': <FigureObjectTree children={children}/>,
-                'Components Grid': <FigureGrid children={children} rerender={rerender}/>
+                'Object Tree': <FigureObjectTree
+                    children={children}
+                />,
+                'Components Grid': <FigureGrid
+                    children={children}
+                    rerender={rerender}
+                />
             }}
             active={active}
             close={() => {

@@ -1,3 +1,5 @@
+'use client';
+
 import {
     AxesGroupReal
 } from '../../AxesGroup';

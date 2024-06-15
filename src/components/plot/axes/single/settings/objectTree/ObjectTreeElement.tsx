@@ -1,3 +1,5 @@
+'use client';
+
 import Drawing from '../../../../drawing/base/Drawing';
 import SettingsIcon from '../../../../../misc/icons/SettingsIcon';
 import Dialog from '../../../../../misc/dialog/Dialog';
@@ -32,9 +34,7 @@ export default function AxesObjectTreeElement(
                     Settings: drawing.settings()
                 }}
                 active={active}
-                close={() => {
-                    setActive(false);
-                }}
+                close={() => setActive(false)}
                 zIndex={12}
             />
         </td>

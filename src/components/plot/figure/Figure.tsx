@@ -1,3 +1,5 @@
+'use client';
+
 import {
     AxesPlaceholderProps,
     AxesReal
@@ -21,24 +23,21 @@ import {
 } from '../axes/group/AxesGroup';
 import drawingModule from '../drawing/index';
 import FigureSettings from './settings/Settings';
-import './Figure.css';
-
-declare type FigureProps = {
-    width: number;
-    height: number;
-    name: string;
-    children: React.ReactElement<
-        AxesPlaceholderProps
-        | AxesGroupPlaceholderProps
-    > | React.ReactElement<
-        AxesPlaceholderProps
-        | AxesGroupPlaceholderProps
-    >[];
-    settings?: boolean;
-};
 
 export default function Figure(
-    props: FigureProps
+    props: {
+        width: number;
+        height: number;
+        name: string;
+        children: React.ReactElement<
+            AxesPlaceholderProps
+            | AxesGroupPlaceholderProps
+        > | React.ReactElement<
+            AxesPlaceholderProps
+            | AxesGroupPlaceholderProps
+        >[];
+        settings?: boolean;
+    }
 ) {
     const [_, setState] = useState({}),
         rerender = () => { setState({}); }
@@ -138,7 +137,10 @@ export default function Figure(
     ]);
 
     return <div
-        className={'figure-layout'}
+        style={{
+            width: 'max-content',
+            height: 'max-content'
+        }}
     >
         <FigureSettings
             name={props.name}
@@ -149,6 +151,9 @@ export default function Figure(
         <div
             className={'figure-grid'}
             style={{
+                display: 'grid',
+                gridAutoRows: 'minmax(min-content, max-content)',
+                gridAutoColumns: 'minmax(min-content, max-content)',
                 width: props.width,
                 height: props.height
             }}

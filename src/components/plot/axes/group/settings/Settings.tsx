@@ -1,3 +1,5 @@
+'use client';
+
 import {
     useState
 } from 'react';
@@ -10,8 +12,8 @@ import GroupObjectTree from './objectTree/ObjectTree';
 import {
     axisSize_
 } from '../../../../../utils/constants/plot';
-import './Settings.css';
 import GroupGrid from './grid/Grid';
+import './Settings.css';
 
 export default function AxesGroupSettings(
     {

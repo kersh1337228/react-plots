@@ -1,3 +1,5 @@
+'use client';
+
 import GridTile from '../../../axes/group/settings/grid/GridTile';
 import React, {
     useMemo
