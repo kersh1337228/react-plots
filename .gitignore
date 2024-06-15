@@ -1,8 +1,6 @@
-node_modules
-.idea
-public
-src/App.tsx
-src/index.tsx
-src/ibm.js
-src/ibm_sma.js
+/.idea/
+/node_modules/
+/public/
+/src/App.tsx
+/src/index.tsx
 package-lock.json

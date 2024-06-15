@@ -5,5 +5,5 @@ export const axisSize_ = {
 
 export const delta_ = {
     min: 5,
-    max: 100000
+    max: 1000
 };
