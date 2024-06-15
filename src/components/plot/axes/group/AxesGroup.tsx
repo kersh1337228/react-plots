@@ -31,7 +31,7 @@ import './AxesGroup.css';
 import AxesBase from '../common/base';
 import AxesGroupSettings from './settings/Settings';
 
-export declare type AxesGroupPlaceholderProps = {
+export type AxesGroupPlaceholderProps = {
     children: React.ReactElement<AxesPlaceholderProps>
         | React.ReactElement<AxesPlaceholderProps>[];
     position: GridPosition;

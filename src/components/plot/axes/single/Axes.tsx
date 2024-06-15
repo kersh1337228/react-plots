@@ -23,7 +23,7 @@ import './Axes.css';
 import AxesBase from '../common/base';
 import AxesSettings from './settings/Settings';
 
-export declare type AxesPlaceholderProps = {
+export type AxesPlaceholderProps = {
     children: React.ReactElement<DrawingProps<any>>
         | React.ReactElement<DrawingProps<any>>[];
     position: GridPosition;

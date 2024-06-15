@@ -1,26 +1,26 @@
-export declare type Point = {
+export type Point = {
 	x: number;
 	y: number;
 };
 
-export declare type DataRange = {
+export type DataRange = {
 	start: number;
 	end: number;
 };
 
-export declare type Size = {
+export type Size = {
 	width: number;
 	height: number;
 };
 
-export declare type Padding = {
+export type Padding = {
 	left: number;
 	top: number;
 	right: number;
 	bottom: number;
 };
 
-export declare type GridPosition = {
+export type GridPosition = {
 	row: {
 		start: number;
 		end: number;
@@ -31,23 +31,23 @@ export declare type GridPosition = {
 	};
 };
 
-export declare type AxisGrid = {
+export type AxisGrid = {
 	amount: number;
 	color: string;
 	width: number;
 };
 
-export declare type Font = {
+export type Font = {
 	family: string;
 	size: number
 };
 
-export declare type Bounds = {
+export type Bounds = {
 	min: number;
 	max: number;
 };
 
-export declare interface AxisData extends Bounds {
+export interface AxisData extends Bounds {
 	scale: number;
 	translate: number;
 }

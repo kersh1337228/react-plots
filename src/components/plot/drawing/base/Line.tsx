@@ -7,7 +7,7 @@ import {
 import NumberRange from '../../../../utils/classes/iterable/NumberRange';
 import DateTimeRange from '../../../../utils/classes/iterable/DateTimeRange';
 
-declare type LineStyle = {
+type LineStyle = {
     color: string
     width: number
 };

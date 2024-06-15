@@ -7,7 +7,7 @@ import {
 import NumberRange from '../../../../utils/classes/iterable/NumberRange';
 import DateTimeRange from '../../../../utils/classes/iterable/DateTimeRange';
 
-export declare type HistStyle = {
+export type HistStyle = {
     color: {
         pos: string;
         neg: string;
@@ -18,7 +18,7 @@ export default function Hist(_: DrawingProps<HistStyle>) {
     return null;
 }
 
-export declare type HistGeometry = {
+export type HistGeometry = {
     pos: Path2D;
     neg: Path2D;
 };

@@ -8,7 +8,7 @@ import {
 } from '../../../../../utils/types/display';
 import Drawing from '../Drawing';
 
-export declare type DataBounds = {
+export type DataBounds = {
     x: Bounds;
     y: Bounds;
 };

@@ -6,7 +6,7 @@ import {
 } from '../../../../utils/types/plotData';
 import QuotesData from './data/quotes';
 
-export declare type CandleStyle = {
+export type CandleStyle = {
     color: {
         pos: string;
         neg: string;
@@ -18,7 +18,7 @@ export default function Candle(_: DrawingProps<CandleStyle>) {
     return null;
 }
 
-declare type CandleGeometry = {
+type CandleGeometry = {
     wick: {
         pos: Path2D;
         neg: Path2D;

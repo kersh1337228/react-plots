@@ -1,33 +1,33 @@
 type DataPoint<T extends number | string> = [ T, number | null ];
 type DataObject<T extends number | string> = {
-	timestamp: T
-	[ numericType: string ]: number | null
-	[ anyType: string ]: any
+	timestamp: T;
+	[ numericType: string ]: number | null;
+	[ anyType: string ]: any;
 };
 
-export declare type PointNumeric = DataPoint<number>;
-export declare type ObjectNumeric = DataObject<number>;
-export declare type Numeric = PointNumeric | ObjectNumeric;
+export type PointNumeric = DataPoint<number>;
+export type ObjectNumeric = DataObject<number>;
+export type Numeric = PointNumeric | ObjectNumeric;
 
-export declare type PointTimeSeries = DataPoint<string>;
-export declare type ObjectTimeSeries = DataObject<string>;
-export declare type TimeSeries = PointTimeSeries | ObjectTimeSeries;
+export type PointTimeSeries = DataPoint<string>;
+export type ObjectTimeSeries = DataObject<string>;
+export type TimeSeries = PointTimeSeries | ObjectTimeSeries;
 
-export declare type Point = PointNumeric | PointTimeSeries;
-export declare type Object = ObjectNumeric | ObjectTimeSeries;
+export type Point = PointNumeric | PointTimeSeries;
+export type Object = ObjectNumeric | ObjectTimeSeries;
 
-export declare interface Quotes extends ObjectTimeSeries {
-	open: number | null
-	high: number | null
-	low: number | null
-	close: number | null
-	volume: number | null
+export interface Quotes extends ObjectTimeSeries {
+	open: number | null;
+	high: number | null;
+	low: number | null;
+	close: number | null;
+	volume: number | null;
 }
 
-export declare type PlotData = Numeric | TimeSeries;
-export declare type PlotDataName =
+export type PlotData = Numeric | TimeSeries;
+export type PlotDataName =
 	'PointNumeric'
 	| 'ObjectNumeric'
 	| 'PointTimeSeries'
 	| 'ObjectTimeSeries';
-export declare type VectorizedPlotDataName = 'Numeric' | 'TimeSeries';
+export type VectorizedPlotDataName = 'Numeric' | 'TimeSeries';

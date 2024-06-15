@@ -19,7 +19,7 @@ import ObjectNumericData from './data/object/numeric';
 import ObjectTimeSeriesData from './data/object/timeSeries';
 import './Drawing.css';
 
-export declare type DrawingProps<
+export type DrawingProps<
     StyleT extends Record<string, any>
 > = {
     data: PlotData[];
