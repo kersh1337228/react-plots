@@ -5,7 +5,6 @@ import {
     AxesReal
 } from '../axes/single/Axes';
 import React, {
-    Fragment,
     JSXElementConstructor,
     useMemo,
     useState
