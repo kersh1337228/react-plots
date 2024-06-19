@@ -21,6 +21,7 @@ import {
     DrawingProps
 } from '../../drawing/base/Drawing';
 import {
+    expandFragments,
     fillData,
     plotDataTypeVectorised
 } from '../../../../utils/functions/plotDataProcessing';
@@ -32,8 +33,7 @@ import AxesBase from '../common/base';
 import AxesGroupSettings from './settings/Settings';
 
 export type AxesGroupPlaceholderProps = {
-    children: React.ReactElement<AxesPlaceholderProps>
-        | React.ReactElement<AxesPlaceholderProps>[];
+    children: any;
     position: GridPosition;
     name: string;
     xAxis?: boolean;
@@ -55,21 +55,22 @@ export class AxesGroupReal extends AxesBase<
 
     public constructor(
         public rerender: () => void,
-        axes: React.ReactElement<AxesPlaceholderProps>
-            | React.ReactElement<AxesPlaceholderProps>[],
+        axes: React.ReactElement<AxesPlaceholderProps>[],
         public position: GridPosition,
         public readonly name: string,
         size: Size,
         xAxis: boolean = true,
         settings: boolean = false
     ) {
-        const drawings = new Array<
-            React.ReactElement<DrawingProps<any>>
-        >().concat(...Children.map(axes, child => child.props.children));
+        const drawings = axes.flatMap(child =>
+            expandFragments(child.props.children)
+        );
 
         const dType = plotDataTypeVectorised(drawings);
+
         let xAxisData: NumberRange | DateTimeRange,
             xAxisLabels: number[] | string[];
+
         if (dType)
             if (dType === 'Numeric') {
                 xAxisData = NumberRange.plotNumberRange(drawings);
@@ -105,8 +106,12 @@ export class AxesGroupReal extends AxesBase<
         this.rows = rows - 1;
         const cellHeight = size.height / this.rows;
 
-        this.axes = Children.map(axes, child => {
-            const drawings = Children.map(child.props.children, drawing => {
+        this.axes = axes.map(child => {
+            const flat = expandFragments(
+                child.props.children
+            ) as React.ReactElement<DrawingProps<any>>[];
+
+            const drawings = flat.map(drawing => {
                 if (!drawing.props.data.length)
                     throw Error('Drawing data can\'t be empty.');
                 // @ts-ignore

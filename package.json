@@ -1,6 +1,6 @@
 {
     "name": "react-plots",
-    "version": "1.0.0",
+    "version": "1.0.2",
     "type": "module",
     "files": [
         "dist",
@@ -26,14 +26,21 @@
         "react": "latest",
         "react-dom": "latest"
     },
+    "peerDependenciesMeta": {
+        "@types/node": {
+            "optional": true
+        },
+        "@types/react": {
+            "optional": true
+        },
+        "@types/react-dom": {
+            "optional": true
+        }
+    },
     "devDependencies": {
         "@rollup/plugin-commonjs": "latest",
         "@rollup/plugin-node-resolve": "latest",
         "@rollup/plugin-typescript": "latest",
-        "@types/node": "latest",
-        "@types/react": "latest",
-        "@types/react-dom": "latest",
-        "react-scripts": "^5.0.1",
         "rollup": "latest",
         "rollup-plugin-dts": "latest",
         "rollup-plugin-peer-deps-external": "latest",
@@ -41,24 +48,11 @@
         "typescript": "latest"
     },
     "scripts": {
-        "build": "rollup -c --bundleConfigAsCjs",
-        "start": "react-scripts start"
+        "build": "rollup -c --bundleConfigAsCjs"
     },
-    "eslintConfig": {
-        "extends": [
-            "react-app"
-        ]
-    },
-    "browserslist": {
-        "production": [
-            ">0.2%",
-            "not dead",
-            "not op_mini all"
-        ],
-        "development": [
-            "last 1 chrome version",
-            "last 1 firefox version",
-            "last 1 safari version"
-        ]
-    }
+    "keywords": [
+        "charts",
+        "plots",
+        "react"
+    ]
 }

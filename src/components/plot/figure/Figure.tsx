@@ -5,7 +5,7 @@ import {
     AxesReal
 } from '../axes/single/Axes';
 import React, {
-    Children,
+    Fragment,
     JSXElementConstructor,
     useMemo,
     useState
@@ -14,7 +14,8 @@ import NumberRange from '../../../utils/classes/iterable/NumberRange';
 import DateTimeRange from '../../../utils/classes/iterable/DateTimeRange';
 import {
     fillData,
-    plotDataTypeVectorised
+    plotDataTypeVectorised,
+    expandFragments
 } from '../../../utils/functions/plotDataProcessing';
 import {
     DrawingProps
@@ -31,28 +32,32 @@ export default function Figure(
         width: number;
         height: number;
         name: string;
-        children: React.ReactElement<
-            AxesPlaceholderProps
-            | AxesGroupPlaceholderProps
-        > | React.ReactElement<
-            AxesPlaceholderProps
-            | AxesGroupPlaceholderProps
-        >[];
+        children: any;
         settings?: boolean;
     }
 ) {
     const [_, setState] = useState({}),
         rerender = () => { setState({}); }
 
+    const flat = expandFragments(props.children) as React.ReactElement<
+        AxesPlaceholderProps | AxesGroupPlaceholderProps>[];
+
     const children = useMemo(() => {
-        const rows = Math.max.apply(null, Children.map(props.children,
-                    child => child.props.position.row.end)) - 1,
-            columns = Math.max.apply(null, Children.map(props.children,
-                    child => child.props.position.column.end)) - 1;
+        const rows = Math.max.apply(null,
+                flat.map(child =>
+                    child.props.position.row.end
+                )
+            ) - 1;
+        const columns = Math.max.apply(null,
+                flat.map(child =>
+                    child.props.position.column.end
+                )
+            ) - 1;
+
         const cellWidth = props.width / columns,
             cellHeight = props.height / rows;
 
-        return Children.map(props.children, child => {
+        return flat.map(child => {
             const size = {
                 width: (
                     child.props.position.column.end -
@@ -63,9 +68,9 @@ export default function Figure(
                     child.props.position.row.start
                 ) * cellHeight
             };
-
-            const drawingsArray = Children.map(child.props.children, d => d) as
-                React.ReactElement<DrawingProps<any>>[];
+            const drawingsArray = expandFragments(
+                child.props.children
+            ) as React.ReactElement<DrawingProps<any>>[];
 
             if ((child.type as JSXElementConstructor<any>).name === 'Axes') {
                 let xAxisData: NumberRange | DateTimeRange,
@@ -120,9 +125,7 @@ export default function Figure(
             } else if ((child.type as JSXElementConstructor<any>).name === 'AxesGroup')
                 return new AxesGroupReal(
                     rerender,
-                    child.props.children as
-                        React.ReactElement<AxesPlaceholderProps>
-                        | React.ReactElement<AxesPlaceholderProps>[],
+                    expandFragments(child.props.children),
                     child.props.position,
                     child.props.name,
                     size,

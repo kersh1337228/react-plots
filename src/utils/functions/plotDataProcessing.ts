@@ -11,7 +11,9 @@ import {
 import {
 	DrawingProps
 } from '../../components/plot/drawing/base/Drawing';
-import React from 'react';
+import React, {
+	Children
+} from 'react';
 
 export function plotDataType(
 	data: PlotData[]
@@ -88,4 +90,24 @@ export function fillData(
 		throw Error('Data type is undefined.');
 
 	return filled;
+}
+
+const supportedTypes = [
+	'Figure',
+	'Axes',
+	'AxesGroup',
+	'Line',
+	'Hist',
+	'Candle',
+	'VolumeHist'
+];
+
+export function expandFragments(
+	children: React.ReactElement | React.ReactElement[]
+): React.ReactElement[] {
+	return Children.map(children, child =>
+		// @ts-ignore
+		!supportedTypes.includes(child.type.name) ?
+			child.props.children : child
+	);
 }

@@ -15,17 +15,13 @@ import React, {
 import YAxis from './axis/y/base';
 import XAxisNumeric from './axis/x/numeric';
 import XAxisTimeSeries from './axis/x/timeSeries';
-import {
-    DrawingProps
-} from '../../drawing/base/Drawing';
 import Drawing from '../../drawing/base/Drawing';
 import './Axes.css';
 import AxesBase from '../common/base';
 import AxesSettings from './settings/Settings';
 
 export type AxesPlaceholderProps = {
-    children: React.ReactElement<DrawingProps<any>>
-        | React.ReactElement<DrawingProps<any>>[];
+    children: any;
     position: GridPosition;
     name: string;
     xAxis?: boolean;

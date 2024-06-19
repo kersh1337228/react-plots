@@ -53,11 +53,17 @@ export default abstract class PointData<
         const i = this.globalize(localX);
         if (i in this.data) {
             const [_, y] = this.data[i];
-            return <li key={this.drawing.name} className={'drawing-tooltips'}>
+            return <li
+                key={this.drawing.name}
+                className={'drawing-tooltips'}
+            >
                 {this.drawing.name}: {y !== null ? y.toFixed(2) : '-'}
             </li>;
         }
-        return <li key={this.drawing.name} className={'drawing-tooltips'}>
+        return <li
+            key={this.drawing.name}
+            className={'drawing-tooltips'}
+        >
             {this.drawing.name}: -
         </li>;
     }

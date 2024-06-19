@@ -37,6 +37,11 @@ export default class PointTimeSeriesData extends PointData<
     public override point(
         at: number
     ) {
-        return [at + 0.55, this.data[at][1]] as PointNumeric;
+        return [
+            at + 0.55,
+            at in this.data ?
+                this.data[at][1]
+                : null
+        ] as PointNumeric;
     }
 }

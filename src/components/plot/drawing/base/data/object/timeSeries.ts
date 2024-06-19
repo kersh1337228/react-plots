@@ -42,7 +42,9 @@ export default class ObjectTimeSeriesData extends ObjectData<
     ) {
         return [
             at + 0.55,
-            this.data[at][this.vField]
+            at in this.data ?
+                this.data[at][this.vField]
+                : null
         ] as PointNumeric;
     }
 }

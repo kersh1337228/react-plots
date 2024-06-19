@@ -62,7 +62,10 @@ export default abstract class ObjectData<
         const i = this.globalize(localX);
         if (i in this.data) {
             const point = this.data[i];
-            return <li key={this.drawing.name} className={'drawing-tooltips'}>
+            return <li
+                key={this.drawing.name}
+                className={'drawing-tooltips'}
+            >
                 <ul>
                     {Object.entries(point).map(([key, value]) =>
                         key !== 'timestamp' ? <li key={key}>
