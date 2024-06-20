@@ -10,8 +10,9 @@ import {
     HistStyle
 } from '../base/Hist';
 import VolumeData from './data/volume';
+import { RecursivePartial } from '../../../../utils/types/display';
 
-export default function VolumeHist(_: DrawingProps<HistStyle>) {
+export default function VolumeHist(_: DrawingProps<RecursivePartial<HistStyle>>) {
     return null;
 }
 
@@ -22,12 +23,20 @@ export class VolumeHistReal extends Drawing<
     public constructor(
         data: Quotes[],
         name: string,
-        style: HistStyle = {
+        {
             color: {
-                pos: '#53e9b5',
-                neg: '#da2c4d'
-            },
-        }
+                pos = 'green',
+                neg = 'red'
+            } = {
+                pos: 'green',
+                neg: 'red'
+            }
+        }: RecursivePartial<HistStyle> = {
+            color: {
+                pos: 'green',
+                neg: 'red'
+            }
+        },
     ) {
         super(
             data,
@@ -36,7 +45,7 @@ export class VolumeHistReal extends Drawing<
                 pos: new Path2D(),
                 neg: new Path2D()
             },
-            style,
+            { color: { pos, neg } },
             'volume',
             VolumeData
         );

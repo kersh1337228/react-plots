@@ -13,7 +13,9 @@
 }
 
 .drawing-tooltips {
-
+    display: flex;
+    flex-direction: row;
+    gap: 2px
 }
 
 .drawing-tooltips ul {

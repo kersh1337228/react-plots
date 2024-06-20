@@ -57,14 +57,26 @@ export default abstract class PointData<
                 key={this.drawing.name}
                 className={'drawing-tooltips'}
             >
-                {this.drawing.name}: {y !== null ? y.toFixed(2) : '-'}
+                 <span style={{
+                     color: this.drawing.color
+                 }}>
+                     {this.drawing.name}
+                 </span>: {y !== null ? <span style={{
+                     color: y > 0 ?
+                         this.drawing.colors.pos : y < 0 ?
+                             this.drawing.colors.neg : this.drawing.colors.net
+                 }}>{y.toFixed(2)}</span> : '-'}
             </li>;
         }
         return <li
             key={this.drawing.name}
             className={'drawing-tooltips'}
         >
-            {this.drawing.name}: -
+             <span style={{
+                 color: this.drawing.color
+             }}>
+                 {this.drawing.name}
+             </span>: -
         </li>;
     }
 }

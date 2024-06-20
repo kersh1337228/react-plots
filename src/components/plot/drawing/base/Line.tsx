@@ -9,11 +9,11 @@ import NumberRange from '../../../../utils/classes/iterable/NumberRange';
 import DateTimeRange from '../../../../utils/classes/iterable/DateTimeRange';
 
 type LineStyle = {
-    color: string
-    width: number
+    color: string;
+    width: number;
 };
 
-export default function Line(_: DrawingProps<LineStyle>) {
+export default function Line(_: DrawingProps<Partial<LineStyle>>) {
     return null;
 }
 
@@ -24,14 +24,17 @@ export class LineReal extends Drawing<
     public constructor(
         data: PlotData[],
         name: string,
-        style: LineStyle = {
+        {
+            color = '#000000',
+            width = 1
+        }: Partial<LineStyle> = {
             color: '#000000',
             width: 1
         },
         _: NumberRange | DateTimeRange,
         vField?: string
     ) {
-        super(data, name, new Path2D(), style, vField);
+        super(data, name, new Path2D(), { color, width }, vField);
 
         const points = data.map(
             (_, i) => this.data.point(i));
@@ -122,5 +125,9 @@ export class LineReal extends Drawing<
                 </tr>
             </tbody>
         </>);
+    }
+
+    public override get color() {
+        return this.style.color;
     }
 }

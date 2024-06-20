@@ -3,6 +3,9 @@ import Drawing, {
     DrawingProps
 } from '../base/Drawing';
 import {
+    RecursivePartial
+} from '../../../../utils/types/display';
+import {
     Quotes
 } from '../../../../utils/types/plotData';
 import QuotesData from './data/quotes';
@@ -15,7 +18,7 @@ export type CandleStyle = {
     width: number;
 };
 
-export default function Candle(_: DrawingProps<CandleStyle>) {
+export default function Candle(_: DrawingProps<RecursivePartial<CandleStyle>>) {
     return null;
 }
 
@@ -37,10 +40,19 @@ export class CandleReal extends Drawing<
     public constructor(
         data: Quotes[],
         name: string,
-        style: CandleStyle = {
+        {
             color: {
-                pos: '#53e9b5',
-                neg: '#da2c4d'
+                pos = 'green',
+                neg = 'red'
+            } = {
+                pos: 'green',
+                neg: 'red'
+            },
+            width = 1
+        }: RecursivePartial<CandleStyle> = {
+            color: {
+                pos: 'green',
+                neg: 'red'
             },
             width: 1
         },
@@ -54,7 +66,13 @@ export class CandleReal extends Drawing<
                 pos: new Path2D(),
                 neg: new Path2D()
             }
-        }, style, '', QuotesData);
+        }, {
+            color: {
+                pos,
+                neg
+            },
+            width
+        }, '', QuotesData);
 
         for (let i = 0; i < data.length; ++i) {
             const {

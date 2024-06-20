@@ -5,6 +5,9 @@ import Drawing, {
 import {
     PlotData
 } from '../../../../utils/types/plotData';
+import {
+    RecursivePartial
+} from '../../../../utils/types/display';
 import NumberRange from '../../../../utils/classes/iterable/NumberRange';
 import DateTimeRange from '../../../../utils/classes/iterable/DateTimeRange';
 
@@ -15,7 +18,7 @@ export type HistStyle = {
     };
 };
 
-export default function Hist(_: DrawingProps<HistStyle>) {
+export default function Hist(_: DrawingProps<RecursivePartial<HistStyle>>) {
     return null;
 }
 
@@ -31,11 +34,19 @@ export class HistReal extends Drawing<
     public constructor(
         data: PlotData[],
         name: string,
-        style: HistStyle = {
+        {
             color: {
-                pos: '#53e9b5',
-                neg: '#da2c4d'
-            },
+                pos = 'green',
+                neg = 'red'
+            } = {
+                pos: 'green',
+                neg: 'red'
+            }
+        }: RecursivePartial<HistStyle> = {
+            color: {
+                pos: 'green',
+                neg: 'red'
+            }
         },
         xAxisData: NumberRange | DateTimeRange,
         vField?: string,
@@ -47,7 +58,7 @@ export class HistReal extends Drawing<
                 pos: new Path2D(),
                 neg: new Path2D()
             },
-            style,
+            { color: { pos, neg } },
             vField
         );
 
@@ -125,5 +136,16 @@ export class HistReal extends Drawing<
                 </tr>
             </tbody>
         </>);
+    }
+
+    public override get colors() {
+        return {
+            ...super.colors,
+            ...this.style.color
+        };
+    }
+
+    public override get color() {
+        return this.style.color.pos;
     }
 }

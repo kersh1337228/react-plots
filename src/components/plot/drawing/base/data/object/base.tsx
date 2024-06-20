@@ -66,11 +66,20 @@ export default abstract class ObjectData<
                 key={this.drawing.name}
                 className={'drawing-tooltips'}
             >
+                <span style={{
+                    color: this.drawing.color
+                }}>
+                    {this.drawing.name}:
+                </span>
                 <ul>
                     {Object.entries(point).map(([key, value]) =>
                         key !== 'timestamp' ? <li key={key}>
                             {key}: {typeof value === 'number' ?
-                            value.toFixed(2) : typeof value === 'string' ?
+                            <span style={{
+                                color: value > 0 ?
+                                    this.drawing.colors.pos : value < 0 ?
+                                        this.drawing.colors.neg : this.drawing.colors.net
+                            }}>{value.toFixed(2)}</span> : typeof value === 'string' ?
                                 value : '-'}
                         </li> : null
                     )}
@@ -79,6 +88,11 @@ export default abstract class ObjectData<
         }
         const point = this.data[0];
         return <li key={this.drawing.name} className={'drawing-tooltips'}>
+             <span style={{
+                 color: this.drawing.color
+             }}>
+                 {this.drawing.name}:
+             </span>
             <ul>
                 {Object.entries(point).map(([key, _]) =>
                     key !== 'timestamp' ? <li key={key}>

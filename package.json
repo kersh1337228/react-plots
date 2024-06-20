@@ -1,10 +1,9 @@
 {
     "name": "react-plots",
-    "version": "1.0.2",
+    "version": "1.0.4",
     "type": "module",
     "files": [
-        "dist",
-        "demo.png"
+        "dist"
     ],
     "main": "dist/index.js",
     "module": "dist/index.js",
@@ -40,6 +39,7 @@
     "devDependencies": {
         "@rollup/plugin-commonjs": "latest",
         "@rollup/plugin-node-resolve": "latest",
+        "@rollup/plugin-terser": "latest",
         "@rollup/plugin-typescript": "latest",
         "rollup": "latest",
         "rollup-plugin-dts": "latest",
@@ -49,10 +49,5 @@
     },
     "scripts": {
         "build": "rollup -c --bundleConfigAsCjs"
-    },
-    "keywords": [
-        "charts",
-        "plots",
-        "react"
-    ]
+    }
 }

@@ -84,5 +84,17 @@ export default abstract class Drawing<
         >
             {children}
         </table>;
-    }
+    };
+
+    public get colors() {
+        return {
+            pos: 'green',
+            neg: 'red',
+            net: 'orange'
+        };
+    };
+
+    public get color() {
+        return 'black';
+    };
 }
